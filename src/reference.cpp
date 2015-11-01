@@ -140,6 +140,12 @@ static void processDefineSchema(const DefineSchema& d)
    // Resize the relations vector to fit all relations
    relations.clear();
    relations.resize(d.relationCount);
+
+   cerr << "Relations = " << d.relationCount << endl;
+   for(uint32_t i = 0; i < d.relationCount; i++)
+   {
+      cerr << "Relation " << i << ": Column Count = " << d.columnCounts[i] << endl;
+   }
 }
 //---------------------------------------------------------------------------
 static void processTransaction(const Transaction& t)
