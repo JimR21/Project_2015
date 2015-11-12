@@ -1,14 +1,12 @@
 #include <iostream>
 #include <stdint.h>
-#include <vector>
-
-using namespace std;
+#include "DArray.h"
 
 class JournalRecord {
 
 private:
     uint64_t transaction_id;
-    vector<uint64_t> values;
+    DArray* values;
 
 public:
     JournalRecord(uint64_t);

@@ -1,15 +1,13 @@
 #include <iostream>
 #include <stdint.h>
-#include <vector>
 #include "JournalRecord.h"
 
-using namespace std;
 
 class Journal {
 
 private:
     uint32_t relation_id;
-    vector <JournalRecord*> Records;
+    DArray* Records;
     int start;  // start offset
     int end;    // end offset
     int prev_t_id;
