@@ -3,7 +3,7 @@
 #include <string.h>
 #include "BF.h"
 
-typedef struct { 
+typedef struct {
 	int id;
 	char name[15];
 	char surname[20];
@@ -48,11 +48,11 @@ int HT_CreateIndex(char *fileName, char attrType, char* attrName, int attrLength
 	char fileType = '2';			//2-> arxeio hash
 	void* ptr = &fileType;
 	void* block;
-	
+
 	BF_Init();
-	
+
 	if (BF_CreateFile(fileName) < 0) return -1;
-	
+
 	info.fileDesc = BF_OpenFile(fileName);
 	if(info.fileDesc < 0) return -2;
 	info.attrType = attrType;
@@ -64,42 +64,42 @@ int HT_CreateIndex(char *fileName, char attrType, char* attrName, int attrLength
 	int bucketsNum = 1;
 	for(i=0;i<depth;i++) bucketsNum = bucketsNum*2;		//bucketsNum = 2^depth
 	//printf("\nbuckets = %d\n", bucketsNum);
-	
+
 	if(BF_AllocateBlock(info.fileDesc)) return -3;
 	if(BF_ReadBlock(info.fileDesc, 0, &block) < 0) return -4;		//arxikopoihsh prwtou block
-	
+
 	memcpy(block, ptr, 1);					//adigrafi pliroforias arxeiou
 	block++;
 	memcpy(block, &info, sizeof(HT_info));
-	
+
 	//free(info.attrName);
 	if(BF_WriteBlock(info.fileDesc, 0) < 0) return -5;
-	
+
 	if(BF_AllocateBlock(info.fileDesc)) return -6;				//2o block gia to evretirio
 	if(BF_ReadBlock(info.fileDesc, 1, &block) < 0) return -7;
 	int* index = malloc(bucketsNum*sizeof(int));
 	for(i=0;i<bucketsNum;i++) index[i] = i+2;					//arxikopoihsh tou evretiriou
 	memcpy(block, index, bucketsNum*sizeof(int));
 	if(BF_WriteBlock(info.fileDesc, 1) < 0) return -8;
-	
+
 	//free(index);
 	//BF_ReadBlock(info.fileDesc, 1, &block);
-	
+
 	for(i=0;i<bucketsNum;i++) {		//desmeusi kai arxikopoihsei twn buckets/blocks
 		if(BF_AllocateBlock(info.fileDesc)) return -9;
 		if(BF_ReadBlock(info.fileDesc, i+2, &block) < 0) return -10;
 		//if(i != BF_GetBlockCounter(info.fileDesc)-1-2) {//printf("STOP\n");getchar();}
-		
+
 		temp = depth;		//topiko vathos = oliko vathos
 		ptr = &temp;
 		memcpy(block, ptr, sizeof(int));
-		
+
 		block += sizeof(int);
-		
+
 		temp = 0;		//arthmos eggrafwn, arxika einai 0
 		ptr = &temp;
 		memcpy(block, ptr, sizeof(int));
-		
+
 		if(BF_WriteBlock(info.fileDesc, i+2) < 0) return -11;
 	}
 	//getchar();
@@ -114,12 +114,12 @@ HT_info* HT_OpenIndex(char* fileName) {
 	char fileType;
 	void* block;
 	HT_info* info;
-	
+
 	int fileDesc = BF_OpenFile(fileName);
 	if(fileDesc < 0) return NULL;
-	
+
 	if(BF_ReadBlock(fileDesc, 0, &block) < 0) return NULL;
-	
+
 	memcpy(&fileType, block, 1);
 	if(fileType != '2') return NULL;
 
@@ -147,7 +147,7 @@ int HT_CloseIndex(HT_info* header_info) {
 	if(BF_ReadBlock(header_info->fileDesc, 0, &block) < 0) return -14;
 	memcpy(index, block, bucketsNum*sizeof(int));
 	free(index);
-	
+
 	if(BF_CloseFile(header_info->fileDesc) < 0) return -15;
 	return 0;
 }
@@ -159,7 +159,7 @@ int HT_InsertEntry(HT_info* header_info, Record record) {
 	int* temp;
 	void* block;
 	for(i=0;i<header_info->depth;i++) bucketsNum = bucketsNum*2;		//bucketsNum = 2^depth
-	
+
 	if(!strcmp(header_info->attrName, "id")) {
 		fieldNum = 1;
 	} else if(!strcmp(header_info->attrName, "name")) {
@@ -181,15 +181,15 @@ int HT_InsertEntry(HT_info* header_info, Record record) {
 	}
 	int destBucket = hashFunction(record, header_info->depth, fieldNum);		//se poio bucket tha mpei i eggrafi
 	//printf("i eggrafi tha eisaxthei sto bucket %d\n", destBucket);
-	
+
 	int insert = insertRecord(header_info, record, destBucket);
 	if(insert == 0) return 0;		//i eisagwgi oloklirwthike
 	else {							//uperxeilusi -> koitazw tis 2 periptwseis
 		int* recordsNum;
-		
+
 		if(BF_ReadBlock(header_info->fileDesc, 1, &block) < 0) return -21;
 		int* index = block;
-		
+
 		if(BF_ReadBlock(header_info->fileDesc, index[destBucket], &block) < 0) return -1;	//diavazw to topiko vathos tou block pou tha eisagw
 		temp = block;							//o temp deixnei sto topiko vathos tou destBucket
 		if(*temp < header_info->depth) {		//topiko vathos < oliko -> spaw ta filarakia kai eisagw tin eggrafi
@@ -207,7 +207,7 @@ int HT_InsertEntry(HT_info* header_info, Record record) {
 				return insert;
 			}
 		} else {	//to oliko vathos au3anetai -> diplasiasmos twn kadwn
-			
+
 			insert = insertRecord_overflow_2(header_info, record, destBucket, fieldNum);
 			//printf("insertRecord_overflow_2, insert = %d\n", insert);
 			//getchar();
@@ -220,13 +220,13 @@ int HT_InsertEntry(HT_info* header_info, Record record) {
 
 int insertRecord(HT_info* header_info, Record record, int destBucket) {
 	void* block;
-	
+
 	if(BF_ReadBlock(header_info->fileDesc, 1, &block) < 0) return -405;
 	int* index = block;
-	
+
 	if(BF_ReadBlock(header_info->fileDesc, index[destBucket], &block) < 0) return -37;
 	void* block_ptr = block;
-	
+
 	block += sizeof(int);
 	int* temp = block;
 	//printf("\narithmos eggrafwn %dou block = %d\n", index[destBucket],*temp);
@@ -234,7 +234,7 @@ int insertRecord(HT_info* header_info, Record record, int destBucket) {
 		block += sizeof(int);				//prospernaw ton int me ton arithmo eggrafwn
 		block += (*temp)*sizeof(Record);	//prospernaw tin uparxouses eggrafes gia na grapsw tin kainouria
 		memcpy(block, &record, sizeof(Record));
-		
+
 		(*temp)++;					//o neos arithmos eggrafwn tou block
 		block_ptr += sizeof(int);	//i arxi tou block pou tha deixnei ston 2o int
 		BF_WriteBlock(header_info->fileDesc, index[destBucket]);
@@ -252,12 +252,12 @@ int insertRecord_overflow(HT_info* header_info, Record record, int destBucket, i
 
 	if(BF_ReadBlock(header_info->fileDesc, 1, &block) < 0) return -410;
 	int* index = block;
-	
+
 	//printf("i uperxeilusi egine sto bucket: %d ,\t pou einai sto block: %d\n", destBucket, index[destBucket]);
 	if(BF_ReadBlock(header_info->fileDesc, index[destBucket], &block) < 0) return -39;
 	int* localDepth = block;		//pairnw to vathos, 3erw oti d'<d
 	recordsNum = block + sizeof(int);
-	
+
 	Record* recordsList = malloc((*recordsNum+1)*sizeof(Record));	//xwros gia tin eggrafi pou tha eisagoume
 
 	int count = 0;
@@ -273,7 +273,7 @@ int insertRecord_overflow(HT_info* header_info, Record record, int destBucket, i
 	////printf("adigrafikan %d eggrafes\n", count);
 	recordsList[*recordsNum] = record;	//i nea eggrafi pou theloume na eisagoume
 	int totalRecords = (*recordsNum) + 1;
-	
+
 	if(BF_ReadBlock(header_info->fileDesc, 1, &block) < 0) return -40;
 	index = block;				//o index deixnei ston pinaka deiktwn
 	int pointer = 0;
@@ -283,14 +283,14 @@ int insertRecord_overflow(HT_info* header_info, Record record, int destBucket, i
 			break;
 		}
 	}
-	
+
 	if(BF_ReadBlock(header_info->fileDesc, index[destBucket], &block) < 0) return -39;
 	localDepth = block;		//pairnw to vathos, 3erw oti d'<d
-	
+
 	int pointersNum = 1;
 	for(i=0;i<header_info->depth-(*localDepth);i++) pointersNum = pointersNum*2;	//arithmos deiktwn pou deixnoun ston kado uperxeilusis
-	
-	
+
+
 	if(BF_ReadBlock(header_info->fileDesc, index[destBucket], &block) < 0) return -476;
 	localDepth = block;
 	int tmp = *localDepth;
@@ -305,10 +305,10 @@ int insertRecord_overflow(HT_info* header_info, Record record, int destBucket, i
 	*localDepth = tmp;
 	if(BF_WriteBlock(header_info->fileDesc, index[destBucket]) < 0) return -942;
 	//getchar();
-	
+
 	if(BF_AllocateBlock(header_info->fileDesc)) return -3;
 	//printf("last block = %d\n", BF_GetBlockCounter(header_info->fileDesc)-1);
-	
+
 	//metakinw ta block uperxeilusis sto telos kai eleutherwnw to block gia eggrafes
 	if(OVERFLOW_BUCKETS_NUM > 0) {
 		//printf("HAZARD overflow buckets = %d\n", OVERFLOW_BUCKETS_NUM);
@@ -327,8 +327,8 @@ int insertRecord_overflow(HT_info* header_info, Record record, int destBucket, i
 			}
 			if(BF_WriteBlock(header_info->fileDesc, i) < 0) return -99;
 		}
-		
-		
+
+
 		//allazw to block pou tha deixnei to prwto block tis alusidas uperxeilusis (an exw uperxeilusi)
 		void* block1;
 		if(BF_ReadBlock(header_info->fileDesc, 0, &block1) < 0) return -239;
@@ -348,7 +348,7 @@ int insertRecord_overflow(HT_info* header_info, Record record, int destBucket, i
 			(*nea_alusida)++;
 			BF_WriteBlock(header_info->fileDesc, *overflowNum);
 		}
-		
+
 		//metakinw ola ta block uperxeilusis 1 block de3ia na pane sto telos tou arxeiou
 		void* block_2;
 		for(i=0;i<OVERFLOW_BUCKETS_NUM;i++) {
@@ -357,10 +357,10 @@ int insertRecord_overflow(HT_info* header_info, Record record, int destBucket, i
 			if(BF_ReadBlock(header_info->fileDesc, lastBlock-i, &block_2) < 0) BF_PrintError("ox");
 			if(BF_ReadBlock(header_info->fileDesc, lastBlock-1-i, &block) < 0) BF_PrintError("ax");
 			memcpy(block_2, block, BLOCK_SIZE);
-			
+
 			if(BF_WriteBlock(header_info->fileDesc, lastBlock-i) < 0) BF_PrintError("ix");
 		}
-	
+
 		//midenizw to block prin ta block uperxeilusis gia to spasimo sta filarakia, einai bucket
 		if(BF_ReadBlock(header_info->fileDesc, t, &block) < 0) BF_PrintError("ex");
 		////printf("midenismos: t = %d,\ttotal blocks=%d,\toverflowblocks=%d\n", t,BF_GetBlockCounter(header_info->fileDesc)-1,OVERFLOW_BUCKETS_NUM);
@@ -373,17 +373,17 @@ int insertRecord_overflow(HT_info* header_info, Record record, int destBucket, i
 		}
 		if(BF_WriteBlock(header_info->fileDesc, t) < 0) return -94;
 	}
-	
+
 	//printf("pointer = %d\n", pointer);
 	//tropopoiw to evretirio kai arxikopoiw to neo block
-	
+
 	if(BF_ReadBlock(header_info->fileDesc, 1, &block) < 0) return -410;
 	index = block;
-	
+
 	if(BF_ReadBlock(header_info->fileDesc, index[pointer], &block) < 0) return -421;
 	localDepth = block;
 	int initializeDepth = *localDepth;
-	
+
 	int newBlockNum = BF_GetBlockCounter(header_info->fileDesc)-1-OVERFLOW_BUCKETS_NUM;
 	if(BF_ReadBlock(header_info->fileDesc, newBlockNum, &block) < 0) return -420;
 	localDepth = block;
@@ -407,14 +407,14 @@ int insertRecord_overflow(HT_info* header_info, Record record, int destBucket, i
 			////printf("to local depth tou block %d einai: %d\n", index[pointer+i],*localDepth);
 			recordsNum = block + sizeof(int);
 			(*recordsNum) = 0;		//adeiazw ta block gia eisagwgi twn eggrafwn me d'+1
-			
+
 			BF_WriteBlock(header_info->fileDesc, index[pointer+i]);
 		}
 	}
 
 	//printSituation(header_info);
 	//getchar();
-	
+
 	int insert;
 	//printf("eisagwgi eggrafwn sta buckets,\tarithmos eggrafwn = %d\n", totalRecords);
 	//getchar();
@@ -436,7 +436,7 @@ int insertRecord_overflow(HT_info* header_info, Record record, int destBucket, i
 				//getchar();
 			} else { 	//2i periptwsi uperxeilusis
 				free(recordsList);
-				return -2;	
+				return -2;
 			}
 
 			if(insert != 0) { 	//i insertRecord_overflow apetuxe, paw stin 2i periptwsi uperxeilusis
@@ -444,12 +444,12 @@ int insertRecord_overflow(HT_info* header_info, Record record, int destBucket, i
 				return -2;
 			}
 		}
-		
+
 	}
-	
+
 	//printSituation(header_info);
 	//getchar();
-	
+
 	free(recordsList);
 	return 0;
 }
@@ -467,11 +467,11 @@ int insertRecord_overflow_2(HT_info* header_info, Record record, int destBucket,
 	//printSituation(header_info);
 	//printf("YPERXEILUSI 2 -> 2PLASIASMOS PINAKA\n");
 	//getchar();
-	
+
 	for(i=0;i<header_info->depth;i++) bucketsNum = bucketsNum*2;
 
 	if(header_info->depth < 7) {
-	
+
 		if(BF_ReadBlock(header_info->fileDesc, 0, &block) < 0) return -16;
 		HT_info* ht_infoPtr = block+1;
 		(ht_infoPtr->depth)++;		//to oliko vathos au3anetai
@@ -480,7 +480,7 @@ int insertRecord_overflow_2(HT_info* header_info, Record record, int destBucket,
 
 
 		//orizw to neo euretirio
-		if(BF_ReadBlock(header_info->fileDesc, 1, &block) < 0) return -21;	
+		if(BF_ReadBlock(header_info->fileDesc, 1, &block) < 0) return -21;
 		index = block;		//prospernaw ton int me ton arithmo twn kadwn uperxeilusis
 		int* newIndex = malloc(2*bucketsNum*sizeof(int));
 		for(i=0;i<bucketsNum;i++) {		//arxikopoiw tous deiktes tou newIndex
@@ -491,10 +491,10 @@ int insertRecord_overflow_2(HT_info* header_info, Record record, int destBucket,
 		//getchar();
 		memcpy(block, newIndex, 2*bucketsNum*sizeof(int));		//apothikeuw to neo euretirio
 		BF_WriteBlock(header_info->fileDesc, 1);
-		
+
 		//printSituation(header_info);
 		//getchar();
-		
+
 
 		//3amadokimazw tin insert_overflow me tous diplasious deiktes
 		//printf("mpainw stin insert overflow\n");
@@ -502,9 +502,9 @@ int insertRecord_overflow_2(HT_info* header_info, Record record, int destBucket,
 		destBucket = 2*destBucket;		//ta diplasiasa pio panw
 		insert = insertRecord_overflow(header_info, record, destBucket, fieldNum);
 		//printf("insertRecord_overflow,\tinsert = %d\n", insert);
-		if(insert != 0) {					
+		if(insert != 0) {
 			//anadromika 3anadiplasiazw tou deiktes
-			
+
 			if(header_info->depth < 7) {
 				insert = insertRecord_overflow_2(header_info, record, destBucket, fieldNum);
 				//printf("insertRecord_overflow_2, insert = %d\n", insert);
@@ -533,20 +533,20 @@ int createOverflowBucket(HT_info* header_info, Record record, int destBucket) {
 	int* temp;
 
 	//printf("ftiaxnw kado uperxeilusis\n");
-	
-	if(BF_ReadBlock(header_info->fileDesc, 1, &block) < 0) return -217;	
+
+	if(BF_ReadBlock(header_info->fileDesc, 1, &block) < 0) return -217;
 	index = block;
 
 	//printf("to block pou egine i uperxeilusi: %d,\tarithmos bucket: %d\n", index[destBucket],destBucket);
-	
+
 	if(BF_ReadBlock(header_info->fileDesc, index[destBucket], &block) < 0) return -29; 	//isws den xreiazetai, to ekana prin
 	int t = index[destBucket];
 	recordsNum = block + sizeof(int);		//o recordsNum deixnei ston arithmo eggrafwn
 	int* overflowBucket = block + 2*sizeof(int) + (*recordsNum)*sizeof(Record);		//prepei *recordsNum = 7(ama den itan gematos tha ginotan swsta i insert)
 	void* overflowBucket_ptr;
-	
+
 	//printf("records num = %d, prepei na einai 7\toveflow bucket = %d\n", *recordsNum,*overflowBucket);
-	//getchar();		
+	//getchar();
 
 	int mpika = 0;
 	while(*overflowBucket != 0) {
@@ -560,7 +560,7 @@ int createOverflowBucket(HT_info* header_info, Record record, int destBucket) {
 			memcpy(block, &record, sizeof(Record));		//adigrafw tin eggrafi sto block
 			(*recordsNum)++;	//exw 1 parapanw eggrafi sto bucket
 			if(BF_WriteBlock(header_info->fileDesc, *overflowBucket) < 0) return -31;
-			
+
 			/*char* c = overflowBucket_ptr;
 			//printf("\n-------------------------\n");
 			for(i=0;i<BLOCK_SIZE;i++) {
@@ -569,9 +569,9 @@ int createOverflowBucket(HT_info* header_info, Record record, int destBucket) {
 			}
 			//printf("ektupwsi block uperxeilusisOUA\n");
 			getchar();*/
-			
+
 			return 0;
-		} else {				//elegxw an exw allo kado uperxeilusis stin alusida	
+		} else {				//elegxw an exw allo kado uperxeilusis stin alusida
 			t = *overflowBucket;
 			//printf("t = %d\n");
 			//getchar();
@@ -591,7 +591,7 @@ int createOverflowBucket(HT_info* header_info, Record record, int destBucket) {
 		temp = block + 2*sizeof(int) + (*recordsNum)*sizeof(Record);
 		*temp = BF_GetBlockCounter(header_info->fileDesc);		//to neo block uperxeilusis
 		if(BF_WriteBlock(header_info->fileDesc, t) < 0) return -310;
-		
+
 		if(mpika == 0) {
 			if(BF_ReadBlock(header_info->fileDesc, 0, &block) < 0) return -227;
 			block += 100;			//to 100 einai authaireti timi!
@@ -602,7 +602,7 @@ int createOverflowBucket(HT_info* header_info, Record record, int destBucket) {
 			(*overflowBlocksNum)++;
 			BF_WriteBlock(header_info->fileDesc, 0);
 		}
-		
+
 		if(BF_AllocateBlock(header_info->fileDesc)) return -32;
 		int lastBlock = BF_GetBlockCounter(header_info->fileDesc)-1;
 		if(BF_ReadBlock(header_info->fileDesc, lastBlock, &block) < 0) return -33;
@@ -614,7 +614,7 @@ int createOverflowBucket(HT_info* header_info, Record record, int destBucket) {
 		if(BF_WriteBlock(header_info->fileDesc, lastBlock) < 0) return -34;
 		//printSituation(header_info);
 		//getchar();
-		
+
 		/*if(BF_ReadBlock(header_info->fileDesc, t, &block) < 0) return -353;
 		char* c = block;
 		//printf("\n-------------------------\n");
@@ -634,7 +634,7 @@ int createOverflowBucket(HT_info* header_info, Record record, int destBucket) {
 		}
 		getchar();*/
 	}
-	
+
 	return 0;
 }
 
@@ -651,12 +651,12 @@ void HT_GetAllEntries(HT_info* header_info, void* value) {
 	int* overflowBucket;
 	Record record;
 	Record* record_ptr;
-	
+
 	blocksNo = BF_GetBlockCounter(header_info->fileDesc);
 	//if(blocksNo < 0) {//printf("\nerror_1\n"); return;}
 
 	printf("\n\n\n--------------EKTIPWNW--------------------\n\n\n");
-	
+
 	if(value == NULL) {
 		int blocksNum = BF_GetBlockCounter(header_info->fileDesc)-1;
 		for(i=2;i<blocksNum-OVERFLOW_BUCKETS_NUM+1;i++) {
@@ -671,14 +671,14 @@ void HT_GetAllEntries(HT_info* header_info, void* value) {
 				printRecord(*record_ptr);
 				count++;
 			}
-			
+
 			if(*recordsNum !=  BLOCK_SIZE/sizeof(Record)) continue;
-		
+
 			overflowBucket = block;
-			
+
 			if(BF_ReadBlock(header_info->fileDesc, 1, &block) < 0) BF_PrintError("\nerror_02");
 			index = block;
-			
+
 			while(*overflowBucket != 0) {
 				 if(BF_ReadBlock(header_info->fileDesc, *overflowBucket, &block) < 0) BF_PrintError("\nerror_04");
 				recordsNum = block;
@@ -698,44 +698,44 @@ void HT_GetAllEntries(HT_info* header_info, void* value) {
 
 	char* fieldName = header_info->attrName;
 	printf("fieldName = %s\n", fieldName);
-	
+
 	if(!strcmp(fieldName, "id")) {
 		int* value_ptr = malloc(sizeof(header_info->attrLength));
 		printf("attrLength = %d,\t(prepei = 4)\n", header_info->attrLength);
 		memcpy(value_ptr, value, header_info->attrLength);
-		
+
 		printf("ta pedia id pou psaxnw: %d\n", *value_ptr);
-		
+
 		record.id = *value_ptr;
 		bucketNum = hashFunction(record, header_info->depth, 1);
 		if(BF_ReadBlock(header_info->fileDesc, 1, &block) < 0) BF_PrintError("\nerror_1");
 		index = block;
 		searchBlock = index[bucketNum];
-		
+
 		if(BF_ReadBlock(header_info->fileDesc, searchBlock, &block) < 0) BF_PrintError("\nerror_11");
 		recordsNum = block + sizeof(int);
 		block += 2*sizeof(int);
-		
+
 		for(i=0;i<*recordsNum;i++) {		//gia kathe eggrafi tou arxeiou
 			record_ptr = block;
-			
+
 			if(record_ptr->id == record.id) {
 				printRecord(*record_ptr);
 				count++;
 			}
-			
+
 			block += sizeof(Record);
 		}
 		if(*recordsNum !=  BLOCK_SIZE/sizeof(Record)) {
 			printf("#eggrafwn pou ektipwthikan: %d\n", count);
 			return;
 		}
-		
+
 		overflowBucket = block;
-		
+
 		if(BF_ReadBlock(header_info->fileDesc, 1, &block) < 0) BF_PrintError("\nerror_12");
 		index = block;
-		
+
 		if(BF_ReadBlock(header_info->fileDesc, searchBlock, &block) < 0) BF_PrintError("\nerror_13");
 		while(*overflowBucket != 0) {
 			if(BF_ReadBlock(header_info->fileDesc, *overflowBucket, &block) < 0) BF_PrintError("\nerror_14");
@@ -751,44 +751,44 @@ void HT_GetAllEntries(HT_info* header_info, void* value) {
 			}
 			overflowBucket = block;
 		}
-		
+
 	} else if(!strcmp(fieldName, "name")) {
 		char* value_ptr = malloc(sizeof(header_info->attrLength+1));
 		printf("attrLength = %d\n", header_info->attrLength);
 		memcpy(value_ptr, value, header_info->attrLength);
 		value_ptr[header_info->attrLength] = 0;		//termatikos xaraktiras
 		printf("ta pedia name pou psaxnw: %s\n", value_ptr);
-		
+
 		strcpy(record.name, value_ptr);
 		bucketNum = hashFunction(record, header_info->depth, 2);
 		if(BF_ReadBlock(header_info->fileDesc, 1, &block) < 0) BF_PrintError("\nerror_2");
 		index = block;
 		searchBlock = index[bucketNum];
-		
+
 		if(BF_ReadBlock(header_info->fileDesc, searchBlock, &block) < 0) BF_PrintError("\nerror_21");
 		recordsNum = block + sizeof(int);
 		block += 2*sizeof(int);
-		
+
 		for(i=0;i<*recordsNum;i++) {		//gia kathe eggrafi tou arxeiou
 			record_ptr = block;
-			
+
 			if(!strcmp(record_ptr->name, record.name)) {
 				printRecord(*record_ptr);
 				count++;
 			}
-			
+
 			block += sizeof(Record);
 		}
 		if(*recordsNum !=  BLOCK_SIZE/sizeof(Record)) {
 			printf("#eggrafwn pou ektipwthikan: %d\n", count);
 			return;
 		}
-		
+
 		overflowBucket = block;
-		
+
 		if(BF_ReadBlock(header_info->fileDesc, 1, &block) < 0) BF_PrintError("\nerror_22");
 		index = block;
-		
+
 		if(BF_ReadBlock(header_info->fileDesc, searchBlock, &block) < 0) BF_PrintError("\nerror_23");
 		while(*overflowBucket != 0) {
 			if(BF_ReadBlock(header_info->fileDesc, *overflowBucket, &block) < 0) BF_PrintError("\nerror_24");
@@ -816,31 +816,31 @@ void HT_GetAllEntries(HT_info* header_info, void* value) {
 		if(BF_ReadBlock(header_info->fileDesc, 1, &block) < 0) BF_PrintError("\nerror_3");
 		index = block;
 		searchBlock = index[bucketNum];
-		
+
 		if(BF_ReadBlock(header_info->fileDesc, searchBlock, &block) < 0) BF_PrintError("\nerror_31");
 		recordsNum = block + sizeof(int);
 		block += 2*sizeof(int);
-		
+
 		for(i=0;i<*recordsNum;i++) {		//gia kathe eggrafi tou arxeiou
 			record_ptr = block;
-			
+
 			if(!strcmp(record_ptr->surname, record.surname)) {
 				printRecord(*record_ptr);
 				count++;
 			}
-			
+
 			block += sizeof(Record);
 		}
 		if(*recordsNum !=  BLOCK_SIZE/sizeof(Record)) {
 			printf("#eggrafwn pou ektipwthikan: %d\n", count);
 			return;
 		}
-		
+
 		overflowBucket = block;
-		
+
 		if(BF_ReadBlock(header_info->fileDesc, 1, &block) < 0) BF_PrintError("\nerror_32");
 		index = block;
-		
+
 		if(BF_ReadBlock(header_info->fileDesc, searchBlock, &block) < 0) BF_PrintError("\nerror_33");
 		while(*overflowBucket != 0) {
 			if(BF_ReadBlock(header_info->fileDesc, *overflowBucket, &block) < 0) BF_PrintError("\nerror_34");
@@ -856,43 +856,43 @@ void HT_GetAllEntries(HT_info* header_info, void* value) {
 			}
 			overflowBucket = block;
 		}
-	
+
 	} else if(!strcmp(fieldName, "status")) {	//statis -> status
 		char* value_ptr = malloc(sizeof(header_info->attrLength));
 		printf("attrLength = %d,\t(prepei = 1)\n", header_info->attrLength);
 		memcpy(value_ptr, value, header_info->attrLength);
 		printf("ta pedia status pou psaxnw: %c\n", value_ptr[0]);
-		
+
 		record.status[0] = value_ptr[0];
 		bucketNum = hashFunction(record, header_info->depth, 4);
 		if(BF_ReadBlock(header_info->fileDesc, 1, &block) < 0) BF_PrintError("\nerror_4");
 		index = block;
 		searchBlock = index[bucketNum];
-		
+
 		if(BF_ReadBlock(header_info->fileDesc, searchBlock, &block) < 0) BF_PrintError("\nerror_41");
 		recordsNum = block + sizeof(int);
 		block += 2*sizeof(int);
-		
+
 		for(i=0;i<*recordsNum;i++) {		//gia kathe eggrafi tou arxeiou
 			record_ptr = block;
-			
+
 			if(record_ptr->status[0] == record.status[0]) {
 				printRecord(*record_ptr);
 				count++;
 			}
-			
+
 			block += sizeof(Record);
 		}
 		if(*recordsNum !=  BLOCK_SIZE/sizeof(Record)) {
 			printf("#eggrafwn pou ektipwthikan: %d\n", count);
 			return;
 		}
-		
+
 		overflowBucket = block;
-		
+
 		if(BF_ReadBlock(header_info->fileDesc, 1, &block) < 0) BF_PrintError("\nerror_42");
 		index = block;
-		
+
 		if(BF_ReadBlock(header_info->fileDesc, searchBlock, &block) < 0) BF_PrintError("\nerror_43");
 		while(*overflowBucket != 0) {
 			if(BF_ReadBlock(header_info->fileDesc, *overflowBucket, &block) < 0) BF_PrintError("\nerror_44");
@@ -908,44 +908,44 @@ void HT_GetAllEntries(HT_info* header_info, void* value) {
 			}
 			overflowBucket = block;
 		}
-	
+
 	} else if(!strcmp(fieldName, "dateOfBirth")) {
 		char* value_ptr = malloc(sizeof(header_info->attrLength+1));
 		printf("attrLength = %d\n", header_info->attrLength);
 		memcpy(value_ptr, value, header_info->attrLength);
 		value_ptr[header_info->attrLength] = 0;		//termatikos xaraktiras
 		printf("ta pedia dateOfBirth pou psaxnw: %s\n", value_ptr);
-		
+
 		strcpy(record.surname, value_ptr);
 		bucketNum = hashFunction(record, header_info->depth, 5);
 		if(BF_ReadBlock(header_info->fileDesc, 1, &block) < 0) BF_PrintError("\nerror_5");
 		index = block;
 		searchBlock = index[bucketNum];
-		
+
 		if(BF_ReadBlock(header_info->fileDesc, searchBlock, &block) < 0) BF_PrintError("\nerror_51");
 		recordsNum = block + sizeof(int);
 		block += 2*sizeof(int);
-		
+
 		for(i=0;i<*recordsNum;i++) {		//gia kathe eggrafi tou arxeiou
 			record_ptr = block;
-			
+
 			if(!strcmp(record_ptr->dateOfBirth, record.dateOfBirth)) {
 				printRecord(*record_ptr);
 				count++;
 			}
-			
+
 			block += sizeof(Record);
 		}
 		if(*recordsNum !=  BLOCK_SIZE/sizeof(Record)) {
 			printf("#eggrafwn pou ektipwthikan: %d\n", count);
 			return;
 		}
-		
+
 		overflowBucket = block;
-		
+
 		if(BF_ReadBlock(header_info->fileDesc, 1, &block) < 0) BF_PrintError("\nerror_32");
 		index = block;
-		
+
 		if(BF_ReadBlock(header_info->fileDesc, searchBlock, &block) < 0) BF_PrintError("\nerror_53");
 		while(*overflowBucket != 0) {
 			if(BF_ReadBlock(header_info->fileDesc, *overflowBucket, &block) < 0) BF_PrintError("\nerror_54");
@@ -961,43 +961,43 @@ void HT_GetAllEntries(HT_info* header_info, void* value) {
 			}
 			overflowBucket = block;
 		}
-	
+
 	} else if(!strcmp(fieldName, "salary")) {
 		int* value_ptr = malloc(sizeof(header_info->attrLength));
 		printf("attrLength = %d,\t(prepei = 4)\n", header_info->attrLength);
 		memcpy(value_ptr, value, header_info->attrLength);
 		printf("ta pedia salary pou psaxnw: %d\n", *value_ptr);
-		
+
 		record.salary = *value_ptr;
 		bucketNum = hashFunction(record, header_info->depth, 6);
 		if(BF_ReadBlock(header_info->fileDesc, 1, &block) < 0) BF_PrintError("\nerror_6");
 		index = block;
 		searchBlock = index[bucketNum];
-		
+
 		if(BF_ReadBlock(header_info->fileDesc, searchBlock, &block) < 0) BF_PrintError("\nerror_61");
 		recordsNum = block + sizeof(int);
 		block += 2*sizeof(int);
-		
+
 		for(i=0;i<*recordsNum;i++) {		//gia kathe eggrafi tou arxeiou
 			record_ptr = block;
-			
+
 			if(record_ptr->salary == record.salary) {
 				printRecord(*record_ptr);
 				count++;
 			}
-			
+
 			block += sizeof(Record);
 		}
 		if(*recordsNum !=  BLOCK_SIZE/sizeof(Record)) {
 			printf("#eggrafwn pou ektipwthikan: %d\n", count);
 			return;
 		}
-		
+
 		overflowBucket = block;
-		
+
 		if(BF_ReadBlock(header_info->fileDesc, 1, &block) < 0) BF_PrintError("\nerror_62");
 		index = block;
-		
+
 		if(BF_ReadBlock(header_info->fileDesc, searchBlock, &block) < 0) BF_PrintError("\nerror_63");
 		while(*overflowBucket != 0) {
 			if(BF_ReadBlock(header_info->fileDesc, *overflowBucket, &block) < 0) BF_PrintError("\nerror_64");
@@ -1013,43 +1013,43 @@ void HT_GetAllEntries(HT_info* header_info, void* value) {
 			}
 			overflowBucket = block;
 		}
-	
+
 	} else if(!strcmp(fieldName, "section")) {
 		char* value_ptr = malloc(sizeof(header_info->attrLength));
 		printf("attrLength = %d,\t(prepei = 1)\n", header_info->attrLength);
 		memcpy(value_ptr, value, header_info->attrLength);
 		printf("ta pedia section pou psaxnw: %c\n", value_ptr[0]);
-		
+
 		record.status[0] = value_ptr[0];
 		bucketNum = hashFunction(record, header_info->depth, 7);
 		if(BF_ReadBlock(header_info->fileDesc, 1, &block) < 0) BF_PrintError("\nerror_7");
 		index = block;
 		searchBlock = index[bucketNum];
-		
+
 		if(BF_ReadBlock(header_info->fileDesc, searchBlock, &block) < 0) BF_PrintError("\nerror_71");
 		recordsNum = block + sizeof(int);
 		block += 2*sizeof(int);
-		
+
 		for(i=0;i<*recordsNum;i++) {		//gia kathe eggrafi tou arxeiou
 			record_ptr = block;
-			
+
 			if(record_ptr->section[0] == record.section[0]) {
 				printRecord(*record_ptr);
 				count++;
 			}
-			
+
 			block += sizeof(Record);
 		}
 		if(*recordsNum !=  BLOCK_SIZE/sizeof(Record)) {
 			printf("#eggrafwn pou ektipwthikan: %d\n", count);
 			return;
 		}
-		
+
 		overflowBucket = block;
-		
+
 		if(BF_ReadBlock(header_info->fileDesc, 1, &block) < 0) BF_PrintError("\nerror_72");
 		index = block;
-		
+
 		if(BF_ReadBlock(header_info->fileDesc, searchBlock, &block) < 0) BF_PrintError("\nerror_73");
 		while(*overflowBucket != 0) {
 			if(BF_ReadBlock(header_info->fileDesc, *overflowBucket, &block) < 0) BF_PrintError("\nerror_74");
@@ -1065,43 +1065,43 @@ void HT_GetAllEntries(HT_info* header_info, void* value) {
 			}
 			overflowBucket = block;
 		}
-	
+
 	} else if(!strcmp(fieldName, "daysOff")) {
 		int* value_ptr = malloc(sizeof(header_info->attrLength));
 		printf("attrLength = %d,\t(prepei = 4)\n", header_info->attrLength);
 		memcpy(value_ptr, value, header_info->attrLength);
 		printf("ta pedia daysOff pou psaxnw: %d\n", *value_ptr);
-		
+
 		record.daysOff = *value_ptr;
 		bucketNum = hashFunction(record, header_info->depth, 8);
 		if(BF_ReadBlock(header_info->fileDesc, 1, &block) < 0) BF_PrintError("\nerror_8");
 		index = block;
 		searchBlock = index[bucketNum];
-		
+
 		if(BF_ReadBlock(header_info->fileDesc, searchBlock, &block) < 0) BF_PrintError("\nerror_81");
 		recordsNum = block + sizeof(int);
 		block += 2*sizeof(int);
-		
+
 		for(i=0;i<*recordsNum;i++) {		//gia kathe eggrafi tou arxeiou
 			record_ptr = block;
-			
+
 			if(record_ptr->daysOff == record.daysOff) {
 				printRecord(*record_ptr);
 				count++;
 			}
-			
+
 			block += sizeof(Record);
 		}
 		if(*recordsNum !=  BLOCK_SIZE/sizeof(Record)) {
 			printf("#eggrafwn pou ektipwthikan: %d\n", count);
 			return;
 		}
-		
+
 		overflowBucket = block;
-		
+
 		if(BF_ReadBlock(header_info->fileDesc, 1, &block) < 0) BF_PrintError("\nerror_82");
 		index = block;
-		
+
 		if(BF_ReadBlock(header_info->fileDesc, searchBlock, &block) < 0) BF_PrintError("\nerror_83");
 		while(*overflowBucket != 0) {
 			if(BF_ReadBlock(header_info->fileDesc, *overflowBucket, &block) < 0) BF_PrintError("\nerror_84");
@@ -1117,43 +1117,43 @@ void HT_GetAllEntries(HT_info* header_info, void* value) {
 			}
 			overflowBucket = block;
 		}
-	
+
 	} else if(!strcmp(fieldName, "prevYears")) {
 		int* value_ptr = malloc(sizeof(header_info->attrLength));
 		printf("attrLength = %d,\t(prepei = 4)\n", header_info->attrLength);
 		memcpy(value_ptr, value, header_info->attrLength);
 		printf("ta pedia prevYears pou psaxnw: %d\n", *value_ptr);
-		
+
 		record.prevYears = *value_ptr;
 		bucketNum = hashFunction(record, header_info->depth, 6);
 		if(BF_ReadBlock(header_info->fileDesc, 1, &block) < 0) BF_PrintError("\nerror_8");
 		index = block;
 		searchBlock = index[bucketNum];
-		
+
 		if(BF_ReadBlock(header_info->fileDesc, searchBlock, &block) < 0) BF_PrintError("\nerror_91");
 		recordsNum = block + sizeof(int);
 		block += 2*sizeof(int);
-		
+
 		for(i=0;i<*recordsNum;i++) {		//gia kathe eggrafi tou arxeiou
 			record_ptr = block;
-			
+
 			if(record_ptr->prevYears == record.prevYears) {
 				printRecord(*record_ptr);
 				count++;
 			}
-			
+
 			block += sizeof(Record);
 		}
 		if(*recordsNum !=  BLOCK_SIZE/sizeof(Record)) {
 			printf("#eggrafwn pou ektipwthikan: %d\n", count);
 			return;
 		}
-		
+
 		overflowBucket = block;
-		
+
 		if(BF_ReadBlock(header_info->fileDesc, 1, &block) < 0) BF_PrintError("\nerror_92");
 		index = block;
-		
+
 		if(BF_ReadBlock(header_info->fileDesc, searchBlock, &block) < 0) BF_PrintError("\nerror_93");
 		while(*overflowBucket != 0) {
 			if(BF_ReadBlock(header_info->fileDesc, *overflowBucket, &block) < 0) BF_PrintError("\nerror_94");
@@ -1169,7 +1169,7 @@ void HT_GetAllEntries(HT_info* header_info, void* value) {
 			}
 			overflowBucket = block;
 		}
-	
+
 	} else printf("\nINPUT ERROR!\n");
 
 	printf("#eggrafwn pou ektipwthikan: %d\n", count);
@@ -1184,11 +1184,11 @@ int main(void) {
 	int temp = HT_CreateIndex("file1", 'c', "id", 4, 3);
 	printf("create index: %d", temp);
 
-	HT_info* header_info = malloc(sizeof(HT_info)); 
+	HT_info* header_info = malloc(sizeof(HT_info));
 	header_info = HT_OpenIndex("file1");
 	printf("\nopening file...");
 	printHT_info(*header_info);
-	
+
 	int count = 0;
 	while(1) {
 		count++;
@@ -1201,16 +1201,16 @@ int main(void) {
 		if(count == 300) break;
 	}
 	fclose(input);
-	
-	
+
+
 	int aa = 274;
 	char* name = "Marina";
 	HT_GetAllEntries(header_info, NULL);
-	
+
 	printf("\n\n\n\n\n");
 	HT_GetAllEntries(header_info, &aa);
-	
-	
+
+
 	temp = HT_CloseIndex(header_info);
 	printf("\nclosing file = %d\n", temp);
 	//free(header_info);
@@ -1224,7 +1224,7 @@ int hashFunction(Record record, int depth, int field) {	//epistrefei to bucket e
 	int len;
 	int t;
 	for(i=0;i<depth;i++) bucketsNum = bucketsNum*2;		//bucketsNum = 2^depth
-	
+
 	if(field == 1) {
 		key = &(record.id);
 		len = sizeof(int);
@@ -1301,38 +1301,38 @@ void printSituation(HT_info* header_info) {
 	int* localDepth;
 	int* idNum;
 	for(i=0;i<header_info->depth;i++) bucketsNum = bucketsNum*2;		//gia tous deiktes
-	
+
 	BF_ReadBlock(header_info->fileDesc, 1, &block);
 	index = block;
 
 	blocksNum = BF_GetBlockCounter(header_info->fileDesc)-2-OVERFLOW_BUCKETS_NUM;
-	
+
 	printf("buckets number: %d ,\tblocks number: %d\t", bucketsNum,blocksNum);
 	printf("depth: %d ,\toverflow bucket = %d\n", header_info->depth,OVERFLOW_BUCKETS_NUM);
-	
+
 	printf("index (pinakas deiktwn\n-------------------------------\n");
 	for(i=0;i<bucketsNum;i++) //printf("%d ", index[i]);
 	printf("\n--------------------\n");
-	
+
 	printf("++++++++++++++++ START +++++++++++++++++\n");
-	
+
 	for(i=0;i<blocksNum;i++) {
 		if(BF_ReadBlock(header_info->fileDesc, i+2, &block) < 0) BF_PrintError("o dias gamietai 1");
-		
+
 		localDepth = block;
 		recordsNum = block + sizeof(int);
-		
+
 		if(BF_ReadBlock(header_info->fileDesc, 1, &block) < 0) BF_PrintError("o dias gamietai 12");
 		index = block;
-		
+
 		for(j=0;j<bucketsNum;j++) {
 			if(index[j] == i+2 ) printf(", %d", j);
 		}
-			
+
 		printf("  ->");
 		printf("\nblock %d:\t\t", i+2);
-		
-		
+
+
 		if(BF_ReadBlock(header_info->fileDesc, i+2, &block) < 0) BF_PrintError("o dias gamietai 13");
 		block += 2*sizeof(int);
 		for(j=0;j<(*recordsNum);j++) {
@@ -1342,7 +1342,7 @@ void printSituation(HT_info* header_info) {
 		}
 		printf("\nlocal depth: %d", *localDepth);
 
-		
+
 		if(i == blocksNum-1) printf("\n++++++++++++++  END  +++++++++++++++++\n");
 		else printf("\n-------------------------------------------------\n");
 	}
@@ -1352,9 +1352,9 @@ void printSituation(HT_info* header_info) {
 		for(i=0;i<OVERFLOW_BUCKETS_NUM;i++) {
 			BF_ReadBlock(header_info->fileDesc, blocksNum+i+2, &block);
 			recordsNum = block;
-			
+
 			printf("block uperxeilusis %d sto block %d:\n", i,blocksNum+i+2);
-			
+
 			block += sizeof(int);
 			for(j=0;j<*recordsNum;j++) {
 				idNum = block;
@@ -1395,5 +1395,3 @@ void printRecord(Record record) {
 	printf("prev years : %d", record.prevYears);
 	printf("\n------------------------------------------------------\n");
 }
-
-

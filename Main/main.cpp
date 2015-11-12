@@ -102,7 +102,7 @@ Journal** Journals = NULL;       // keeps the Journal for every relation
 //================================================================================================
 static void processDefineSchema(DefineSchema *s){
 
-	int i;
+	unsigned int i;
 
 	cout << "DefineSchema " << s->relationCount << " |";
 
@@ -129,7 +129,7 @@ static void processDefineSchema(DefineSchema *s){
 //================================================================================================
 static void processTransaction(Transaction *t){
 
-    int i;
+    unsigned int i;
     const char* reader = t->operations;
     JournalRecord* record;
 
@@ -150,7 +150,7 @@ static void processTransaction(Transaction *t){
 
         record = new JournalRecord(t->transactionId);	// JournalRecord to be inserted
 
-        for(int j = 0; j < schema[o->relationId]; j++)
+        for(unsigned int j = 0; j < schema[o->relationId]; j++)
             record->addValue(rec->getValue(j));  // copy the rest columns from the one found
 
         Journals[o->relationId]->insertJournalRecord(record);	// insert delete record to Journal
@@ -172,7 +172,7 @@ static void processTransaction(Transaction *t){
         printf("opins rid %u #rows %u | ", o->relationId, o->rowCount);
     	printf("(");
 
-		for(int j = 0; j< o->rowCount * schema[o->relationId]; j++) {	// iterate over values array
+		for(unsigned int j = 0; j< o->rowCount * schema[o->relationId]; j++) {	// iterate over values array
 			if(j % schema[o->relationId] == 0) {		// start of group
 				record = new JournalRecord(t->transactionId);
         	}
