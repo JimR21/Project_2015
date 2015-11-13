@@ -18,6 +18,8 @@ protected:
 
     Bucket();
 
+    Bucket(unsigned ikey, int idata, unsigned ilocalDepth);
+
     ~Bucket();
 
 public:

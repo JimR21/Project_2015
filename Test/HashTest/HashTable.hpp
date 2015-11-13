@@ -11,9 +11,7 @@ class HashTable
 {
     friend class Bucket;
 private:
-    // TODO deikths se arxh journal
-
-    unsigned prime_it;  // Prime iterator
+    // TODO: deikths se arxh journal
 
     unsigned size;
 

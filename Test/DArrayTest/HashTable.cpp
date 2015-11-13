@@ -18,7 +18,7 @@ HashTable::HashTable()
     size = HASHTABLE_SIZE;
 
     // Initiate bucketArray
-    // TODO: Change to DArray
+    // #CHANGE:20 Change to DArray
     for(unsigned i = 0; i < HASHTABLE_SIZE; i++)
     {
         bucketArray.push_back(new Bucket());
@@ -29,8 +29,8 @@ HashTable::HashTable()
 HashTable::~HashTable()
 {
     // Delete bucketArray
-    // TODO: Change to DArray
-    // TODO: Delete
+    // #TODO:0 Change to DArray
+    // #TODO:30 Delete
 
     /*for(std::vector<Bucket*>::iterator it = bucketArray.begin(); it != bucketArray.end(); ++it)
     {
@@ -69,7 +69,7 @@ int HashTable::insert(unsigned int key, int data)
     {
         if(tempBucket->key == key)
         {
-            // TODO: Array of tids
+            // #TODO:20 Array of tids
         }
         else
         {
@@ -82,7 +82,7 @@ int HashTable::insert(unsigned int key, int data)
             }
             if(bhashed_key != hashed_key)
             {
-                bucketArray[hashed_key] = new Bucket();     // TODO: New constructor
+                bucketArray[hashed_key] = new Bucket();     // #TODO:50 New constructor
                 bucketArray[hashed_key]->insert(key, data);
             }
             else

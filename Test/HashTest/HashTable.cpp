@@ -2,24 +2,15 @@
 #include "HashTable.hpp"
 #include <iostream>
 
-extern unsigned primes[25] =
-{
-    193,389,769,1543,3079,6151,12289,24593,
-    49157,98317,196613,393241,786433,1572869,3145739,
-    6291469,12582917,25165843,50331653,100663319,
-    201326611,402653189,805306457,1610612741
-};
-
 using namespace std;
 
 HashTable::HashTable()
 {
     globalDepth = 7;    // HASHTABLE_SIZE 97 and 2^7 = 128
-    prime_it = 0;       // Initialize prime iterator
     size = HASHTABLE_SIZE;
 
     // Initiate bucketArray
-    // TODO: Change to DArray
+    // #CHANGE:0 Change to DArray
     for(unsigned i = 0; i < HASHTABLE_SIZE; i++)
     {
         bucketArray.push_back(new Bucket());
@@ -30,8 +21,8 @@ HashTable::HashTable()
 HashTable::~HashTable()
 {
     // Delete bucketArray
-    // TODO: Change to DArray
-    // TODO: Delete
+    // #CHANGE:10 Change to DArray
+    // #TODO:40 Delete
 
     /*for(std::vector<Bucket*>::iterator it = bucketArray.begin(); it != bucketArray.end(); ++it)
     {
@@ -41,19 +32,17 @@ HashTable::~HashTable()
 
 int HashTable::hashFunction(unsigned int key)
 {
-    key =  key * 2654435761 % 4294967296;    // Knuth: hash(i)=i*2654435761 mod 2^32
-    return (key % (size));
+    return (key * 2654435761 % 4294967296);    // Knuth: hash(i)=i*2654435761 mod 2^32
 }
 
 void HashTable::doubleTableSize()
 {
     globalDepth++;
-    unsigned new_size = primes[prime_it];
+    unsigned new_size = size*2;
     for(unsigned i = size; i < new_size; i++)
     {
         bucketArray.push_back(bucketArray[i-size]);
     }
-    prime_it++;
     size = new_size;
 }
 
@@ -61,7 +50,7 @@ int HashTable::insert(unsigned int key, int data)
 {
     unsigned hashed_key;
     hashed_key = hashFunction(key);
-    Bucket* tempBucket = bucketArray[hashed_key];
+    Bucket* tempBucket = bucketArray[hashed_key % size];
     if(tempBucket->empty == true)
     {
         tempBucket->insert(key, data);
@@ -70,21 +59,20 @@ int HashTable::insert(unsigned int key, int data)
     {
         if(tempBucket->key == key)
         {
-            // TODO: Array of tids
+            // #TODO:10 Array of tids
         }
         else
         {
+            // #TODO:70 Update with local and globalDepth
             unsigned bhashed_key = hashFunction(tempBucket->key);  // Bucket hashed key
-            while(bhashed_key == hashed_key)
+            while(bhashed_key % size == hashed_key % size)
             {
                 doubleTableSize();
-                bhashed_key = hashFunction(tempBucket->key);
-                hashed_key = hashFunction(key);
             }
-            if(bhashed_key != hashed_key)
+            if(bhashed_key % size != hashed_key % size)
             {
-                bucketArray[hashed_key] = new Bucket();     // TODO: New constructor
-                bucketArray[hashed_key]->insert(key, data);
+                bucketArray[hashed_key % size] = new Bucket(key, data, globalDepth);     // #DONE:60 New constructor
+                bucketArray[bhashed_key % size]->localDepth++;
             }
             else
             {
@@ -99,7 +87,7 @@ int HashTable::insert(unsigned int key, int data)
 int HashTable::get(int key)
 {
     unsigned hashed_key;
-    hashed_key = hashFunction(key);
+    hashed_key = hashFunction(key) % size;
     Bucket* tempBucket = bucketArray[hashed_key];
     if((tempBucket->empty == false) && (tempBucket->key == key))
         return tempBucket->data;
