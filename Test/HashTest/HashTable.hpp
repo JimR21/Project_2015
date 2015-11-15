@@ -1,7 +1,7 @@
 #ifndef HASHTABLE_HPP
 #define HASHTABLE_HPP
-#include <vector>
 #include <bitset>
+#include "DArray.hpp"
 
 #define HASHTABLE_SIZE 97
 
@@ -15,7 +15,7 @@ private:
 
     unsigned size;
 
-    std::vector<Bucket*> bucketArray;  // Pointers to Buckets
+    DArray<Bucket*> bucketArray;  // Pointers to Buckets
 
     // Returns hashed number
     int hashFunction(unsigned int key);

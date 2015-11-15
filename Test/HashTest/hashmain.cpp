@@ -17,12 +17,12 @@ int main(int argc, char const *argv[])
 
     srand(time(0));
     int r;
-    for (unsigned i = 0; i < 150000; i++)
+    for (unsigned i = 0; i < 1000; i++)
     {
-        r = rand() % 1000;
+        r = rand() % 1000000;
         table.insert(r, 6);
         table.get(r);
-        cout << "Random = " << r << " found!" << endl;
+        cout << i << " Random = " << r << " found!" << endl;
     }
 
     cout << "HashTable size = " << table.getsize() << endl;
