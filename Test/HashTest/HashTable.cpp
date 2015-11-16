@@ -24,11 +24,11 @@ HashTable::~HashTable()
     // #CHANGE:20 Change to DArray
     // #TODO:40 Delete
 
-    /*unsigned size = bucketArray.size();
-    for(unsigned i = 0; i < size-1; i++)
+    unsigned size = bucketArray.size();
+    for(unsigned i = 0; i < size; i++)
     {
-        delete bucketArray[i];
-    }*/
+        delete bucketArray.get(i);
+    }
 }
 
 int HashTable::hashFunction(unsigned int key)
