@@ -1,24 +1,16 @@
 #include "Bucket.hpp"
 #include "HashTable.hpp"
-
-extern unsigned primes[25] =
-{
-    193,389,769,1543,3079,6151,12289,24593,
-    49157,98317,196613,393241,786433,1572869,3145739,
-    6291469,12582917,25165843,50331653,100663319,
-    201326611,402653189,805306457,1610612741
-};
+#include <iostream>
 
 using namespace std;
 
 HashTable::HashTable()
 {
     globalDepth = 7;    // HASHTABLE_SIZE 97 and 2^7 = 128
-    prime_it = 0;       // Initialize prime iterator
     size = HASHTABLE_SIZE;
 
     // Initiate bucketArray
-    // #CHANGE:20 Change to DArray
+    // #CHANGE:0 Change to DArray
     for(unsigned i = 0; i < HASHTABLE_SIZE; i++)
     {
         bucketArray.push_back(new Bucket());
@@ -29,30 +21,35 @@ HashTable::HashTable()
 HashTable::~HashTable()
 {
     // Delete bucketArray
-    // #TODO:0 Change to DArray
-    // #TODO:30 Delete
+    // #CHANGE:20 Change to DArray
+    // #TODO:40 Delete
 
-    /*for(std::vector<Bucket*>::iterator it = bucketArray.begin(); it != bucketArray.end(); ++it)
+    /*unsigned size = bucketArray.size();
+    for(unsigned i = 0; i < size-1; i++)
     {
-        delete *it;
+        delete bucketArray[i];
     }*/
 }
 
 int HashTable::hashFunction(unsigned int key)
 {
-    key =  key * 2654435761 % 4294967296;    // Knuth: hash(i)=i*2654435761 mod 2^32
-    return (key % (size));
+    return (key * 2654435761 % 4294967296);    // Knuth: hash(i)=i*2654435761 mod 2^32
 }
+
+int HashTable::getBucketIndex(int hash, int depth)
+{
+	return hash & ( (1 << depth) - 1);
+}
+
 
 void HashTable::doubleTableSize()
 {
     globalDepth++;
-    unsigned new_size = primes[prime_it];
+    unsigned new_size = size*2;
     for(unsigned i = size; i < new_size; i++)
     {
-        bucketArray.push_back(bucketArray[i-size]);
+        bucketArray.push_back(bucketArray.get(i-size));
     }
-    prime_it++;
     size = new_size;
 }
 
@@ -60,7 +57,8 @@ int HashTable::insert(unsigned int key, int data)
 {
     unsigned hashed_key;
     hashed_key = hashFunction(key);
-    Bucket* tempBucket = bucketArray[hashed_key];
+    int index = getBucketIndex(hashed_key, globalDepth); // koitaw ta globaldepth deksia bits gia na dw se poio index tha paw
+    Bucket* tempBucket = bucketArray.get(index);
     if(tempBucket->empty == true)
     {
         tempBucket->insert(key, data);
@@ -69,21 +67,22 @@ int HashTable::insert(unsigned int key, int data)
     {
         if(tempBucket->key == key)
         {
-            // #TODO:20 Array of tids
+            // #TODO:0 Array of tids
         }
         else
         {
+            // #DONE:30 Update with local and globalDepth
             unsigned bhashed_key = hashFunction(tempBucket->key);  // Bucket hashed key
-            while(bhashed_key == hashed_key)
+            while(getBucketIndex(bhashed_key, globalDepth) == getBucketIndex(hashed_key, globalDepth))
             {
                 doubleTableSize();
-                bhashed_key = hashFunction(tempBucket->key);
-                hashed_key = hashFunction(key);
             }
-            if(bhashed_key != hashed_key)
+            int index2 = getBucketIndex(bhashed_key, globalDepth);
+            index = getBucketIndex(hashed_key, globalDepth);
+            if(index != index2)
             {
-                bucketArray[hashed_key] = new Bucket();     // #TODO:50 New constructor
-                bucketArray[hashed_key]->insert(key, data);
+                bucketArray.set(index, new Bucket(key, data, globalDepth));     // #DONE:0 New constructor
+                bucketArray.get(index2)->localDepth++;
             }
             else
             {
@@ -95,11 +94,11 @@ int HashTable::insert(unsigned int key, int data)
     return 1;
 }
 
-int HashTable::get(int key)
+int HashTable::get(unsigned key)
 {
     unsigned hashed_key;
-    hashed_key = hashFunction(key);
-    Bucket* tempBucket = bucketArray[hashed_key];
+    hashed_key = hashFunction(key) % size;
+    Bucket* tempBucket = bucketArray.get(hashed_key);
     if((tempBucket->empty == false) && (tempBucket->key == key))
         return tempBucket->data;
     else

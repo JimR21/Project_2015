@@ -3,7 +3,7 @@
 #include <bitset>
 #include "DArray.hpp"
 
-#define HASHTABLE_SIZE 97
+#define HASHTABLE_SIZE 128
 
 class Bucket;
 
@@ -36,7 +36,9 @@ public:
     int insert(unsigned int key, int data);
 
     // Returns Bucket address
-    int get(int key);
+    int get(unsigned key);
+
+    int getBucketIndex(int hash, int depth);
 
     unsigned getsize();
 

@@ -10,7 +10,7 @@ HashTable::HashTable()
     size = HASHTABLE_SIZE;
 
     // Initiate bucketArray
-    // #CHANGE:0 Change to DArray
+    // #CHANGE:10 Change to DArray
     for(unsigned i = 0; i < HASHTABLE_SIZE; i++)
     {
         bucketArray.push_back(new Bucket());
@@ -21,8 +21,8 @@ HashTable::HashTable()
 HashTable::~HashTable()
 {
     // Delete bucketArray
-    // #CHANGE:10 Change to DArray
-    // #TODO:40 Delete
+    // #CHANGE:30 Change to DArray
+    // #TODO:50 Delete
 
     /*for(std::vector<Bucket*>::iterator it = bucketArray.begin(); it != bucketArray.end(); ++it)
     {
@@ -54,70 +54,55 @@ void HashTable::doubleTableSize()
 int HashTable::insert(unsigned int key, int data)
 {
     unsigned hashed_key;
-    hashed_key = hashFunction(key);	// pernw to hashed key
-	int index = getBucketIndex(hashed_key, globalDepth); // koitaw ta globaldepth deksia bits gia na dw se poio index tha paw
-    Bucket* tempBucket = bucketArray[index];	// fere mou to bucket apo auto to index
-
-	cout << getBucketIndex(hashed_key, globalDepth) << endl;
-
-    if(tempBucket->empty == true)	// an to bucket einai empty
+    hashed_key = hashFunction(key);
+    int index = getBucketIndex(hashed_key, globalDepth); // koitaw ta globaldepth deksia bits gia na dw se poio index tha paw
+    Bucket* tempBucket = bucketArray[index];
+    if(tempBucket->empty == true)
     {
-		cout << "==============================================" << endl;
-		cout << "Bucket is empty. Inserting data with key -> " << key << endl;
-		cout << "==============================================" << endl;
+        cout << "==============================================" << endl;
+        cout << "Bucket is empty. Inserting data with key -> " << key << endl;
+        cout << "==============================================" << endl;
+
         tempBucket->insert(key, data);
     }
-    else	// an den einai empty
+    else
     {
         if(tempBucket->key == key)
         {
             // #TODO:10 Array of tids
-			cout << "Same key case" << endl;
         }
         else
         {
-			cout << "==============================================" << endl;
-			cout << "Trying to insert different key in full bucket " << endl;
-			cout << "==============================================" << endl;
-			if (tempBucket->localDepth == globalDepth)	// an einai idio to local tou bucket me to global
-			{
-				cout << "Global Depth equals Local Depth -> Double array size" << endl;
+            cout << "==============================================" << endl;
+            cout << "Trying to insert different key in full bucket " << endl;
+            cout << "==============================================" << endl;
 
-				unsigned bucket_hashed_key = hashFunction(tempBucket->key);  // redistribute to yparxon key tou bucket
+            // #DONE:40 Update with local and globalDepth
+            unsigned bhashed_key = hashFunction(tempBucket->key);  // Bucket hashed key
+            while(getBucketIndex(bhashed_key, globalDepth) == getBucketIndex(hashed_key, globalDepth))
+            {
+                doubleTableSize();
+                cout << "DOUBLEING" << endl;
+            }
+            int index2 = getBucketIndex(bhashed_key, globalDepth);
 
-				// oso synexizei na benei sto idio bucket para ton diplasiasmo, sunexise na diplasiazeis
-				while (getBucketIndex(bucket_hashed_key, globalDepth) == getBucketIndex(hashed_key, globalDepth)){
-					doubleTableSize();
-					cout << "DOUBLEING" << endl;
-				}
+            cout << "To neo index tou yparxodos bucket: " << index2 << endl;
+            cout << "EKEI POU THA PAW = " << index2 << endl;
+            cout << "EKEI POU HMOYN = " << index << endl;
 
-				int index2 = getBucketIndex(bucket_hashed_key, globalDepth); // koitaw ta new globaldepth bits (exoun auksithei)
-				cout << "To neo index tou yparxodos bucket: " << index2 << endl;
+            index = getBucketIndex(hashed_key, globalDepth);
 
-				cout << "EKEI POU THA PAW = " << index2 << endl;
-				cout << "EKEI POU HMOYN = " << index << endl;
-
-				if (index2 != index){ //redistribute to yparxon key tou bucket
-
-					bucketArray[index2] = new Bucket(tempBucket->key, tempBucket->data, globalDepth);
-
-					index = getBucketIndex(hashed_key, globalDepth);
-					cout << "To neo index tou neou bucket: " << index << endl;
-
-					bucketArray[index]->localDepth++;
-					bucketArray[index]->data = data;
-		            bucketArray[index]->key = key;
-				}
-				else {	// tha minei ekei pou einai
-					index = getBucketIndex(hashed_key, globalDepth);
-					bucketArray[index] = new Bucket(key, data, globalDepth);
-					bucketArray[index2]->localDepth++;
-				}
-			}
-			else if (tempBucket->localDepth < globalDepth)	// split pointers case
-			{
-
-			}
+            cout << "To neo index tou neou bucket: " << index << endl;
+            if(index != index2)
+            {
+                bucketArray[index] = new Bucket(key, data, globalDepth);     // #DONE:10 New constructor
+                bucketArray[index2]->localDepth++;
+            }
+            else
+            {
+                cout << "Error: HashTable::insert" << endl;
+                return -1;
+            }
         }
     }
     return 1;

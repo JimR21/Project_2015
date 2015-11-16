@@ -11,21 +11,21 @@ using get_time = chrono::steady_clock ;
 
 int main(int argc, char const *argv[])
 {
-    HashTable table;
+    HashTable* table = new HashTable();
 
     auto start = get_time::now(); //use auto keyword to minimize typing strokes :)
 
     srand(time(0));
-    int r;
-    for (unsigned i = 0; i < 1000; i++)
+    unsigned r;
+    for (unsigned i = 0; i < 100000; i++)
     {
         r = rand() % 1000000;
-        table.insert(r, 6);
-        table.get(r);
+        table->insert(r, i);
+        table->get(r);
         cout << i << " Random = " << r << " found!" << endl;
     }
 
-    cout << "HashTable size = " << table.getsize() << endl;
+    cout << "HashTable size = " << table->getsize() << endl;
 
     auto end = get_time::now();
     auto diff = end - start;

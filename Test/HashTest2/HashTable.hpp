@@ -37,6 +37,7 @@ public:
 
     // Returns Bucket address
     int get(unsigned int key);
+
     int getBucketIndex(int hash, int depth);
 
     unsigned getsize();

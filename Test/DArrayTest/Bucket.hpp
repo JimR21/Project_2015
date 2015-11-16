@@ -16,16 +16,15 @@ protected:
     unsigned int localDepth;
     bool empty;
 
-
-public:
-
     Bucket();
+
+    Bucket(unsigned ikey, int idata, unsigned ilocalDepth);
 
     ~Bucket();
 
-    void insert(unsigned int key, int data);
+public:
 
-    unsigned getkey();
+    void insert(unsigned int key, int data);
 
 };
 
