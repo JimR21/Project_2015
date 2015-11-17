@@ -7,7 +7,6 @@ Bucket::Bucket()
 {
     localDepth = 7;     // Equal to globalDepth at start
     key = 0;
-    //data = 0;
     empty = true;
 }
 
@@ -29,4 +28,9 @@ void Bucket::insert(unsigned ikey, BucketData* idata)
 	data.push_back(idata);
     // data = idata;
     empty = false;
+}
+
+BucketData* Bucket::getdataLast()   // NEW
+{
+    return data.get(data.size()-1);
 }

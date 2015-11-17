@@ -3,26 +3,17 @@
 
 using namespace std;
 
-unsigned BucketData::getTid()
-{
-    return tid;
-};
-
-DArray<unsigned> BucketData::getrangeArray()
-{
-    return rangeArray;
-};
-
 Bucket::Bucket()
 {
     localDepth = 7;     // Equal to globalDepth at start
     key = 0;
-    //data = 0;
     empty = true;
 }
 
-Bucket::Bucket(unsigned ikey, unsigned ilocalDepth) : key(ikey), localDepth(ilocalDepth)
+Bucket::Bucket(unsigned ikey, BucketData* bdata, unsigned ilocalDepth) : key(ikey), localDepth(ilocalDepth)
 {
+    key = ikey;
+	data.push_back(bdata);
     empty = false;
 }
 
@@ -31,9 +22,15 @@ Bucket::~Bucket()
 
 }
 
-void Bucket::insert(unsigned ikey, int idata)
+void Bucket::insert(unsigned ikey, BucketData* idata)
 {
     key = ikey;
-    data = idata;
+	data.push_back(idata);
+    // data = idata;
     empty = false;
+}
+
+BucketData* Bucket::getdataLast()   // NEW
+{
+    return data.get(data.size()-1);
 }

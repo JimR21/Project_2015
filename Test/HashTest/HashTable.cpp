@@ -9,8 +9,6 @@ HashTable::HashTable()
     globalDepth = 7;    // HASHTABLE_SIZE 97 and 2^7 = 128
     size = HASHTABLE_SIZE;
 
-    // Initiate bucketArray
-    // #CHANGE:0 Change to DArray
     for(unsigned i = 0; i < HASHTABLE_SIZE; i++)
     {
         bucketArray.push_back(new Bucket());
@@ -21,9 +19,6 @@ HashTable::HashTable()
 HashTable::~HashTable()
 {
     // Delete bucketArray
-    // #CHANGE:20 Change to DArray
-    // #TODO:40 Delete
-
     unsigned size = bucketArray.size();
     for(unsigned i = 0; i < size; i++)
     {
@@ -53,12 +48,17 @@ void HashTable::doubleTableSize()
     size = new_size;
 }
 
-int HashTable::insert(unsigned int key, int data)
+int HashTable::insert(unsigned int key, unsigned tid, unsigned offset)
 {
     unsigned hashed_key;
     hashed_key = hashFunction(key);
     int index = getBucketIndex(hashed_key, globalDepth); // koitaw ta globaldepth deksia bits gia na dw se poio index tha paw
     Bucket* tempBucket = bucketArray.get(index);
+
+	// create BucketData to store
+	BucketData* data = new BucketData(tid, offset);
+
+
     if(tempBucket->empty == true)
     {
         tempBucket->insert(key, data);
@@ -67,11 +67,22 @@ int HashTable::insert(unsigned int key, int data)
     {
         if(tempBucket->key == key)
         {
-            // #TODO:0 Array of tids
+			bool done = false;
+			for(int i=0;i<tempBucket->data.size();i++) {
+				if(tempBucket->data.get(i)->tid == tid) {
+					tempBucket->data.get(i)->rangeArray.push_back(offset);
+					done = true;
+					break;
+				}
+			}
+			if(!done) {
+		        tempBucket->insert(key, data);
+			}
+
         }
         else
         {
-            // #DONE:30 Update with local and globalDepth
+            // // #DONE:30 Update with local and globalDepth
             unsigned bhashed_key = hashFunction(tempBucket->key);  // Bucket hashed key
             while(getBucketIndex(bhashed_key, globalDepth) == getBucketIndex(hashed_key, globalDepth))
             {
@@ -79,34 +90,55 @@ int HashTable::insert(unsigned int key, int data)
             }
             int index2 = getBucketIndex(bhashed_key, globalDepth);
             index = getBucketIndex(hashed_key, globalDepth);
-            if(index != index2)
-            {
-                bucketArray.set(index, new Bucket(key, data, globalDepth));     // #DONE:0 New constructor
-                bucketArray.get(index2)->localDepth++;
-            }
-            else
-            {
-                cout << "Error: HashTable::insert" << endl;
-                return -1;
-            }
+
+            bucketArray.set(index, new Bucket(key, data, globalDepth));     // #DONE:0 New constructor
+            bucketArray.get(index2)->localDepth++;
         }
     }
     return 1;
 }
 
-int HashTable::get(unsigned key)
+DArray<DArray<unsigned>>*  HashTable::get(unsigned key)
 {
     unsigned hashed_key;
-    hashed_key = hashFunction(key) % size;
-    Bucket* tempBucket = bucketArray.get(hashed_key);
-    if((tempBucket->empty == false) && (tempBucket->key == key))
-        return tempBucket->data;
+    hashed_key = hashFunction(key);
+	int index = getBucketIndex(hashed_key, globalDepth); // koitaw ta globaldepth deksia bits gia na dw se poio index tha paw
+    Bucket* tempBucket = bucketArray.get(index);
+
+	hashed_key = hashFunction(key);
+
+	DArray<DArray<unsigned>>* array = new DArray<DArray<unsigned>>();
+
+    if((tempBucket->empty == false) && (tempBucket->key == key)){
+		for (int i = 0; i < tempBucket->data.size(); i++){
+			array->push_back(tempBucket->data.get(i)->rangeArray);
+		}
+		return array;
+	}
     else
         cout << "Key not found" << endl;
-    return -1;
+	return NULL;
 }
 
 unsigned HashTable::getsize()
 {
     return size;
+}
+
+unsigned HashTable::getLastJournalInsert(unsigned key)  // NEW
+{
+    unsigned hashed_key;
+    hashed_key = hashFunction(key);
+    unsigned idx = getBucketIndex(hashed_key, globalDepth);
+    Bucket* tempBucket = bucketArray.get(idx);
+
+    //  TESTING IF
+    if((tempBucket->empty == false) && (tempBucket->key == key))
+    {
+        BucketData* bdata = tempBucket->getdataLast();
+        return bdata->getrangeArrayLast();
+    }
+    else
+        cout << "Key not found" << endl;
+    return 0;
 }

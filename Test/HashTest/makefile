@@ -1,7 +1,7 @@
 CC=g++
 CFLAGS=-c -Wall -g -std=c++0x
 LDFLAGS=
-SOURCES=hashmain.cpp HashTable.cpp Bucket.cpp
+SOURCES=hashmain.cpp HashTable.cpp Bucket.cpp BucketData.cpp
 OBJECTS=$(SOURCES:.cpp=.o)
 EXECUTABLE=test.out
 

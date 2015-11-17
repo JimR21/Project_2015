@@ -16,14 +16,16 @@ int main(int argc, char const *argv[])
     auto start = get_time::now(); //use auto keyword to minimize typing strokes :)
 
     srand(time(0));
-    unsigned r;
-    for (unsigned i = 0; i < 1000000; i++)
+    unsigned key, tid, offset, ret;
+    for (unsigned i = 0; i < 100000; i++)
     {
-        r = rand() % 1000000;
-        table->insert(r, i);
-        table->get(r);
-        //cout << i << " Random = " << r << " found!" << endl;
+        key = rand() % 1000000;
+        table->insert(5, 5, i);
+
     }
+
+    ret = table->getLastJournalInsert(5);
+    cout << " Random = " << 5 << " found!" << "Offset = " << ret << endl;
 
     cout << "HashTable size = " << table->getsize() << endl;
 
@@ -32,7 +34,6 @@ int main(int argc, char const *argv[])
     cout<<"Elapsed time is :  "<< chrono::duration_cast<ns>(diff).count()<<" ms "<<endl;
 
     delete table;
-
 
     return 0;
 }

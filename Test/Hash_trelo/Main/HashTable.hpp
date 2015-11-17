@@ -1,6 +1,7 @@
 #ifndef HASHTABLE_HPP
 #define HASHTABLE_HPP
 #include <bitset>
+#include "DArray.hpp"
 
 #define HASHTABLE_SIZE 128
 
@@ -34,12 +35,13 @@ public:
 
     int insert(unsigned int key, unsigned int tid, unsigned int offset);
 
-    // Returns Bucket address
-    int get(unsigned key);
+    DArray<DArray<unsigned>>* get(unsigned key);
 
     int getBucketIndex(int hash, int depth);
 
     unsigned getsize();
+
+    unsigned getLastJournalInsert(unsigned key);
 
 };
 

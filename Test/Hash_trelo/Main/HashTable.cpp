@@ -9,8 +9,6 @@ HashTable::HashTable()
     globalDepth = 7;    // HASHTABLE_SIZE 97 and 2^7 = 128
     size = HASHTABLE_SIZE;
 
-    // Initiate bucketArray
-    // #CHANGE:0 Change to DArray
     for(unsigned i = 0; i < HASHTABLE_SIZE; i++)
     {
         bucketArray.push_back(new Bucket());
@@ -21,9 +19,6 @@ HashTable::HashTable()
 HashTable::~HashTable()
 {
     // Delete bucketArray
-    // #CHANGE:20 Change to DArray
-    // #TODO:40 Delete
-
     unsigned size = bucketArray.size();
     for(unsigned i = 0; i < size; i++)
     {
@@ -103,20 +98,47 @@ int HashTable::insert(unsigned int key, unsigned tid, unsigned offset)
     return 1;
 }
 
-int HashTable::get(unsigned key)
+DArray<DArray<unsigned>>*  HashTable::get(unsigned key)
 {
     unsigned hashed_key;
-    hashed_key = hashFunction(key) % size;
-    Bucket* tempBucket = bucketArray.get(hashed_key);
-    if((tempBucket->empty == false) && (tempBucket->key == key))
-		cout << "La" << endl;
-        // return tempBucket->data;
+    hashed_key = hashFunction(key);
+	int index = getBucketIndex(hashed_key, globalDepth); // koitaw ta globaldepth deksia bits gia na dw se poio index tha paw
+    Bucket* tempBucket = bucketArray.get(index);
+
+	hashed_key = hashFunction(key);
+
+	DArray<DArray<unsigned>>* array = new DArray<DArray<unsigned>>();
+
+    if((tempBucket->empty == false) && (tempBucket->key == key)){
+		for (int i = 0; i < tempBucket->data.size(); i++){
+			array->push_back(tempBucket->data.get(i)->rangeArray);
+		}
+		return array;
+	}
     else
         cout << "Key not found" << endl;
-    return -1;
+	return NULL;
 }
 
 unsigned HashTable::getsize()
 {
     return size;
+}
+
+unsigned HashTable::getLastJournalInsert(unsigned key)  // NEW
+{
+    unsigned hashed_key;
+    hashed_key = hashFunction(key);
+    unsigned idx = getBucketIndex(hashed_key, globalDepth);
+    Bucket* tempBucket = bucketArray.get(idx);
+
+    //  TESTING IF
+    if((tempBucket->empty == false) && (tempBucket->key == key))
+    {
+        BucketData* bdata = tempBucket->getdataLast();
+        return bdata->getrangeArrayLast();
+    }
+    else
+        cout << "Key not found" << endl;
+    return 0;
 }

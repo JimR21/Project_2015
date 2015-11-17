@@ -1,3 +1,7 @@
+#ifndef DARRAY_HPP
+#define  DARRAY_HPP
+
+
 #include <iostream>
 #include <stdint.h>
 #include <new>          // std::bad_alloc
@@ -94,3 +98,4 @@ template <class T>
   const T& DArray<T>::operator[](int i) const {
     return arr[i];
 }*/
+#endif
