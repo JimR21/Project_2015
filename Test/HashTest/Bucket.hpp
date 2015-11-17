@@ -1,7 +1,20 @@
 #ifndef BUCKET_HPP
 #define BUCKET_HPP
+#include "DArray.hpp"
+
 
 class HashTable;
+
+class BucketData
+{
+    unsigned tid;
+    DArray<unsigned> rangeArray;
+
+ public:
+     unsigned getTid();
+
+     DArray<unsigned> getrangeArray();
+};
 
 
 class Bucket
@@ -12,9 +25,9 @@ private:
 
 protected:
     unsigned int key;
-    int data;
     unsigned int localDepth;
     bool empty;
+    DArray<BucketData> data;
 
     Bucket();
 
