@@ -23,4 +23,5 @@ public:
     int getEndOffset();
     void setStartOffset(int);
     void setEndOffset(int);
+	int getRecordsSize();
 };

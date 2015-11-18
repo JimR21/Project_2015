@@ -84,3 +84,7 @@ void Journal::setStartOffset(int s){
 
 void Journal::setEndOffset(int e){
     end = e; }
+
+int Journal::getRecordsSize(){
+	return Records->size();
+}

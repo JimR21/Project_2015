@@ -41,7 +41,7 @@ public:
 
     unsigned getsize();
 
-    unsigned getLastJournalInsert(unsigned key);
+    int getLastJournalInsert(unsigned key);
 
 };
 

@@ -9,11 +9,10 @@ HashTable::HashTable()
     globalDepth = 7;    // HASHTABLE_SIZE 97 and 2^7 = 128
     size = HASHTABLE_SIZE;
 
-    for(unsigned i = 0; i < HASHTABLE_SIZE; i++)
-    {
-        bucketArray.push_back(new Bucket());
-    }
+	cout << "Hash Table created!" << endl;
 
+    for(unsigned i = 0; i < HASHTABLE_SIZE; i++)
+        bucketArray.push_back(new Bucket());
 }
 
 HashTable::~HashTable()
@@ -82,7 +81,6 @@ int HashTable::insert(unsigned int key, unsigned tid, unsigned offset)
         }
         else
         {
-            // // #DONE:30 Update with local and globalDepth
             unsigned bhashed_key = hashFunction(tempBucket->key);  // Bucket hashed key
             while(getBucketIndex(bhashed_key, globalDepth) == getBucketIndex(hashed_key, globalDepth))
             {
@@ -125,7 +123,7 @@ unsigned HashTable::getsize()
     return size;
 }
 
-unsigned HashTable::getLastJournalInsert(unsigned key)  // NEW
+int HashTable::getLastJournalInsert(unsigned key)  // NEW
 {
     unsigned hashed_key;
     hashed_key = hashFunction(key);
@@ -140,5 +138,5 @@ unsigned HashTable::getLastJournalInsert(unsigned key)  // NEW
     }
     else
         cout << "Key not found" << endl;
-    return 0;
+    return -1;
 }

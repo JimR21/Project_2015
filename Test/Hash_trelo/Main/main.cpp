@@ -97,6 +97,7 @@ struct Forget {
 
 static uint32_t* schema = NULL;  // keeps the # of columns for every relation
 Journal** Journals = NULL;       // keeps the Journal for every relation
+HashTable** hash_tables;		 // Extendible hashing for every relation
 
 //=====================================================
 //=================== FUNCTIONS =======================
@@ -112,6 +113,7 @@ static void processDefineSchema(DefineSchema *s){
 
   	schema = (uint32_t*)malloc(sizeof(uint32_t) * s->relationCount);	// allocate space for the relations
   	Journals = (Journal**)malloc(sizeof(Journal*) * s->relationCount); 	// allocate space for pointers to Journals
+	hash_tables = (HashTable**)malloc(sizeof(HashTable*) * s->relationCount);
 
 	for(i = 0; i < s->relationCount; i++){
     	cout << " " << s->columnCounts[i] << " ";	// print columns for every relation
@@ -124,6 +126,7 @@ static void processDefineSchema(DefineSchema *s){
   	for(i = 0; i < s->relationCount; i++) {   	// For every relation
   		Journal* journal = new Journal(i);    	// Create empty Journal
 		Journals[i] = journal;					// add Journal to Journals array
+		hash_tables[i] = new HashTable();		// Create empty Hash for every rel
   	}
   	cout << "=========================================================" << endl;
 
@@ -151,13 +154,13 @@ static void processTransaction(Transaction *t){
 		//==========================================
 		// TODO: LOOP GIA OLA TA ->KEYS[] TO DELETE
 		//==========================================
-        JournalRecord *rec = NULL;
-        rec = Journals[o->relationId]->searchRecord(o->keys[0]);    // search the Journal for record(c0) == key
-
-        if (rec == NULL) {   // key not found, continue
-			reader += sizeof(TransactionOperationDelete) + (sizeof(uint64_t) * o->rowCount);
-			continue;
-		}
+        // unsigned index;
+        // index = Journals[o->relationId]->searchRecord(o->keys[0]);    // search the Journal for record(c0) == key
+		//
+        // if (rec == NULL) {   // key not found, continue
+		// 	reader += sizeof(TransactionOperationDelete) + (sizeof(uint64_t) * o->rowCount);
+		// 	continue;
+		// }
 		//
         // record = new JournalRecord(t->transactionId);	// JournalRecord to be inserted
 		//
@@ -192,7 +195,22 @@ static void processTransaction(Transaction *t){
 			if((j + 1) % schema[o->relationId] == 0) {	// end of group
 				printf(")");
 
+				//===================================
+				// Insert record to relation's journal
+				//===================================
             	Journals[o->relationId]->insertJournalRecord(record);   // add record to relation's Journal
+
+				int size = Journals[o->relationId]->getRecordsSize();
+				cout << "=========================================================" << endl;
+				cout << "Journal size: " << size << endl;
+				cout << "Offset: " << size - 1 << endl;
+				cout << "Tid: " << t->transactionId << endl;
+				cout << "c0: " << record->getValue(0) << endl;
+				cout << "=========================================================" << endl;
+				//===================================
+				// Update relation's hash
+				//===================================
+				hash_tables[o->relationId]->insert(record->getValue(0), t->transactionId, size - 1);
 
 				if(j + 1 < o->rowCount * schema[o->relationId] ) printf("(");
 
@@ -203,7 +221,16 @@ static void processTransaction(Transaction *t){
 		// Go to the next insert operation
 		reader+=sizeof(TransactionOperationInsert)+(sizeof(uint64_t)*o->rowCount*schema[o->relationId]);
     }
+
+	Journals[1]->printJournal();	// print to journal gia na fainetai
+	// int ret = hash_tables[1]->getLastJournalInsert(2);	// TEST1: den uparxei to 2
+	int ret = hash_tables[1]->getLastJournalInsert(4);	// TEST2: uparxei to 4
+	if (ret != -1)
+    	cout << " c0 = " << 4 << " found!" << " Offset = " << ret << endl;
+
     printf("\n");
+
+	exit(0);
 }
 //================================================================================================
 static void processValidationQueries(ValidationQueries *v){
