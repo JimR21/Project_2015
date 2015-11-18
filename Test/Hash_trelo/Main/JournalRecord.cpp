@@ -10,7 +10,7 @@ JournalRecord::JournalRecord(uint64_t tid){
 }
 
 void JournalRecord::addValue(uint64_t val){
-    cout << "Adding value: " << val << endl;
+    // cout << "Adding value: " << val << endl;
     values->push_back(val);
 }
 

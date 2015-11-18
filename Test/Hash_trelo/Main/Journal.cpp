@@ -4,20 +4,12 @@ using namespace std;
 
 Journal::Journal(uint32_t rel_id){
     relation_id = rel_id;
-    start = -1;
-    end = -1;
-    prev_t_id = -1;
 	Records = new DArray<JournalRecord*>();
     cout << "Created New Journal for Relation: " << relation_id << endl;
 }
 
 void Journal::insertJournalRecord(JournalRecord* record){
     Records->push_back(record);
-    if( prev_t_id != record->getTransactionId() )
-        start = end = end + 1;
-    else
-        end++;
-    prev_t_id = record->getTransactionId();
 }
 
 DArray<DArray<uint64_t>*> * Journal::getJournalRecords(uint64_t start_tid, uint64_t end_tid){
@@ -73,18 +65,10 @@ void Journal::destroyJournal(){
 	}
 }
 
-int Journal::getStartOffset(){
-    return start; }
-
-int Journal::getEndOffset(){
-    return end; }
-
-void Journal::setStartOffset(int s){
-    start = s; }
-
-void Journal::setEndOffset(int e){
-    end = e; }
-
 int Journal::getRecordsSize(){
 	return Records->size();
+}
+
+JournalRecord* Journal::getRecord(int key){
+	return Records->get(key);
 }

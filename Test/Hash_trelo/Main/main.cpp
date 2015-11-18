@@ -135,7 +135,8 @@ static void processDefineSchema(DefineSchema *s){
 //================================================================================================
 static void processTransaction(Transaction *t){
 
-    unsigned int i;
+    unsigned i;
+	int index;
     const char* reader = t->operations;
     JournalRecord* record;
 
@@ -149,26 +150,29 @@ static void processTransaction(Transaction *t){
         cout << "opdel rid " << o->relationId << " #rows " << o->rowCount << " ";
 
 		cout << endl;
-		cout << o->keys[0] << endl;
 
 		//==========================================
 		// TODO: LOOP GIA OLA TA ->KEYS[] TO DELETE
 		//==========================================
-        // unsigned index;
-        // index = Journals[o->relationId]->searchRecord(o->keys[0]);    // search the Journal for record(c0) == key
-		//
-        // if (rec == NULL) {   // key not found, continue
-		// 	reader += sizeof(TransactionOperationDelete) + (sizeof(uint64_t) * o->rowCount);
-		// 	continue;
-		// }
-		//
-        // record = new JournalRecord(t->transactionId);	// JournalRecord to be inserted
-		//
-        // for(unsigned int j = 0; j < schema[o->relationId]; j++)
-        //     record->addValue(rec->getValue(j));  // copy the rest columns from the one found
-		//
-        // Journals[o->relationId]->insertJournalRecord(record);	// insert delete record to Journal
+		for (unsigned k = 0; k < o->rowCount; k++){
+			cout << o->keys[k] << endl;
 
+			index = hash_tables[o->relationId]->getLastJournalInsert(o->keys[k]);
+
+			if (index == -1){	// den to vrika
+				reader += sizeof(TransactionOperationDelete) + (sizeof(uint64_t) * o->rowCount);
+				continue;
+			}
+			else {
+				record = new JournalRecord(t->transactionId);	// JournalRecord to be inserted
+
+				JournalRecord * jr = Journals[o->relationId]->getRecord(index);
+				for(unsigned int j = 0; j < schema[o->relationId]; j++)
+		            record->addValue(jr->getValue(j));  // copy the rest columns from the one found
+
+				Journals[o->relationId]->insertJournalRecord(record);	// insert delete record to Journal
+			}
+		}
 		// print offsets
 		// cout << "ST: " << Journals[o->relationId]->getStartOffset() << " " << "END: " << Journals[o->relationId]->getEndOffset() <<  endl;
 
@@ -222,15 +226,15 @@ static void processTransaction(Transaction *t){
 		reader+=sizeof(TransactionOperationInsert)+(sizeof(uint64_t)*o->rowCount*schema[o->relationId]);
     }
 
-	Journals[1]->printJournal();	// print to journal gia na fainetai
-	// int ret = hash_tables[1]->getLastJournalInsert(2);	// TEST1: den uparxei to 2
-	int ret = hash_tables[1]->getLastJournalInsert(4);	// TEST2: uparxei to 4
-	if (ret != -1)
-    	cout << " c0 = " << 4 << " found!" << " Offset = " << ret << endl;
+	// Journals[1]->printJournal();	// print to journal gia na fainetai
+	// // int ret = hash_tables[1]->getLastJournalInsert(2);	// TEST1: den uparxei to 2
+	// int ret = hash_tables[1]->getLastJournalInsert(4);	// TEST2: uparxei to 4
+	// if (ret != -1)
+    // 	cout << " c0 = " << 4 << " found!" << " Offset = " << ret << endl;
 
     printf("\n");
 
-	exit(0);
+	// exit(0);
 }
 //================================================================================================
 static void processValidationQueries(ValidationQueries *v){
