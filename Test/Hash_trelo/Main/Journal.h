@@ -12,7 +12,7 @@ private:
 public:
     Journal(uint32_t);
     void insertJournalRecord(JournalRecord*);
-    JournalRecord* searchRecord(uint64_t);
+    int searchRecord(uint64_t);
 	DArray<DArray<uint64_t>*> * getJournalRecords(uint64_t, uint64_t);	// returns array of arrays(JournalRecords)
     void printJournal();
 	void destroyJournal();

@@ -9,7 +9,7 @@ HashTable::HashTable()
     globalDepth = 7;    // HASHTABLE_SIZE 97 and 2^7 = 128
     size = HASHTABLE_SIZE;
 
-	cout << "Hash Table created!" << endl;
+	// cout << "Hash Table created!" << endl;
 
     for(unsigned i = 0; i < HASHTABLE_SIZE; i++)
         bucketArray.push_back(new Bucket());
