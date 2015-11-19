@@ -223,7 +223,6 @@ static void processTransaction(Transaction *t){
 
     printf("\n");
 
-	// exit(0);
 }
 //================================================================================================
 static void processValidationQueries(ValidationQueries *v){
@@ -237,7 +236,17 @@ static void processValidationQueries(ValidationQueries *v){
 	for (unsigned i = 0; i != v->queryCount; i++){
 		const Query* q = (Query*)reader;
 
+		int idx = (Journals[q->relationId]->getRecordsSize())-1;	// check an einai entos range
+		JournalRecord *jt = Journals[q->relationId]->getRecord(idx);
+		uint64_t max_tid = jt->getTransactionId();
+
 		cout << "Query on relation: " << q->relationId << endl;
+
+		if (v->from > max_tid){	// mou dwse tid start pou einai megalutero tou max o malakas
+			reader += sizeof(Query)+(sizeof(Query::Column)*q->columnCount);
+			continue;
+		}
+
 
 		// pare ta JournalRecords pou tha prepei na koitaksw gia to sugkekrimeno tid range
 		DArray<DArray<uint64_t>*> * RecordsToCheck = Journals[q->relationId]->getJournalRecords(v->from, v->to);

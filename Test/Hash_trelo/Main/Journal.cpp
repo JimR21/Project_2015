@@ -42,7 +42,7 @@ DArray<DArray<uint64_t>*> * Journal::getJournalRecords(uint64_t start_tid, uint6
 //================================================================================================
 int Journal::searchRecord(uint64_t key){
 
-	cout << "Searching for transaction id: " << key << endl;
+	// cout << "Searching for transaction id: " << key << endl;
     int start = 0;  				// start of the array
     int end = Records->size() - 1;  // end of the array
 	int m;

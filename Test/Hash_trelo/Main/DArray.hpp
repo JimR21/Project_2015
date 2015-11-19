@@ -89,13 +89,4 @@ DArray<T>::~DArray() {       // destructor
     delete[] arr;
 }
 
-/*template <class T>
-T& DArray<T>::operator[](int i) {
-    return arr[i];
-}
-
-template <class T>
-  const T& DArray<T>::operator[](int i) const {
-    return arr[i];
-}*/
 #endif
