@@ -98,6 +98,7 @@ struct Forget {
 static uint32_t* schema = NULL;  // keeps the # of columns for every relation
 Journal** Journals = NULL;       // keeps the Journal for every relation
 HashTable** hash_tables;		 // Extendible hashing for every relation
+DArray<bool> validationResults;	 // den xreiazetai new einai sto scope tis main
 
 //=====================================================
 //=================== FUNCTIONS =======================
@@ -230,6 +231,7 @@ static void processValidationQueries(ValidationQueries *v){
 	cout << "ValidationQueries " << v->validationId << " [" << v->from << ", " << v->to << "] " << v->queryCount << endl;
 	cout << "=====================================================================" << endl;
 
+	bool conflict = false;
 	const char* reader = v->queries;
 
 	// Iterate over the validation's queries
@@ -243,10 +245,15 @@ static void processValidationQueries(ValidationQueries *v){
 		cout << "Query on relation: " << q->relationId << endl;
 
 		if (v->from > max_tid){	// mou dwse tid start pou einai megalutero tou max o malakas
-			reader += sizeof(Query)+(sizeof(Query::Column)*q->columnCount);
-			continue;
+			break;				// no need to check the next queries for this validation
 		}
 
+		cout << "column counts: " << q->columnCount << endl;
+		// iterate over subqueries
+		// for (unsigned w = 0; w < q->columnCount; w++){
+		// 	cout << q->columns[w].op << endl;
+		// 	uint64_t query_value = q->columns[w].value;
+		// }
 
 		// pare ta JournalRecords pou tha prepei na koitaksw gia to sugkekrimeno tid range
 		DArray<DArray<uint64_t>*> * RecordsToCheck = Journals[q->relationId]->getJournalRecords(v->from, v->to);
@@ -257,14 +264,52 @@ static void processValidationQueries(ValidationQueries *v){
 				cout << jr->get(k) << " ";
 			cout << endl;
 		}
+		// gia ola ta records pou prepei na checkarw se auto to tid range
+		for (int j = 0; j < RecordsToCheck->size(); j++){
 
+			DArray<uint64_t> * jr = RecordsToCheck->get(j);
+			bool match = true;
+
+			// iterate over subqueries
+			for (unsigned w = 0; w < q->columnCount; w++){
+
+				bool result = false;
+				uint64_t query_value = q->columns[w].value;
+				uint64_t tuple_value = jr->get(q->columns[w].column);
+				cout << "***********************************" << endl;
+				cout << "Checking subquery: " << w << " for record: " << j << endl;
+				cout << "Query constant value: " << query_value << endl;
+				cout << "Record column [" << q->columns[w].column << "] value: " << tuple_value << endl;
+				cout << "***********************************" << endl;
+				switch (q->columns[w].op) {
+                   case Query::Column::Equal: 		result=(tuple_value == query_value); break;
+                   case Query::Column::NotEqual: 	result=(tuple_value != query_value); break;
+                   case Query::Column::Less: 		result=(tuple_value < query_value); break;
+                   case Query::Column::LessOrEqual: result=(tuple_value <= query_value); break;
+                   case Query::Column::Greater: 	result=(tuple_value > query_value); break;
+                   case Query::Column::GreaterOrEqual: result=(tuple_value >= query_value); break;
+                }
+				cout << "Result: " << result << endl;
+				if (!result){ match = false; break; }
+			}
+			if (match && q->columnCount != 0) {
+               // We found a conflict. Not necessary to evaluate the other queries for this validation
+			   cout << "FOUND CONFLICT MOTHERFUCKER" << endl;
+               conflict=true;
+               break;
+            }
+		}
 		// Go to the next query
         reader += sizeof(Query)+(sizeof(Query::Column)*q->columnCount);
 	}
+	// Store validation's conflict result
+	validationResults.push_back(conflict);
 }
 //================================================================================================
 static void processFlush(Flush *fl){
     cout << "Flush " << fl->validationId << endl;
+	for (unsigned i = 0; i < fl->validationId; i++)
+		cout << "Val result: " << validationResults.get(i) << endl;
 }
 //================================================================================================
 static void processForget(Forget *fo){
