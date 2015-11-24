@@ -96,9 +96,15 @@ int HashTable::insert(unsigned int key, unsigned tid, unsigned offset)
 
             bucketArray.set(index, new Bucket(key, data, globalDepth));     // #DONE:0 New constructor
             maxLocalCounter++;
+
             bucketArray.get(index2)->localDepth++;
             if(bucketArray.get(index2)->localDepth == globalDepth)
                 maxLocalCounter++;
+            // TESTING
+            if(bucketArray.get(index2)->localDepth > globalDepth)
+            {
+                cout << "Problem2!!!!! : offset = " << offset << endl;
+            }
         }
     }
     return 1;
@@ -166,25 +172,33 @@ void HashTable::deleteKey(unsigned key)
         else                                                   // An local = global tote vres
         {
             unsigned idx2 = getBucketIndex(hashed_key, globalDepth-1);
-            if(bucketArray.get(idx2)->localDepth == globalDepth)
-                maxLocalCounter--;
-            bucketArray.get(idx2)->localDepth--;
-            bucketArray.set(idx, bucketArray.get(idx2));
-
-            delete tempBucket;
-            maxLocalCounter--;
-
-            // TESTING
-            if(maxLocalCounter == -1)
+            if(idx2 == idx || idx2 < 128)
             {
-                cout << "Here" << endl;
+                tempBucket->empty = true;
+                tempBucket->key = 0;
             }
-
-            if(maxLocalCounter == 0)
+            else
             {
-                globalDepth--;
-                size = size/2;
-                //bucketArray.get(idx2)->localDepth--;
+                if(bucketArray.get(idx2)->localDepth == globalDepth)
+                    maxLocalCounter--;
+                bucketArray.get(idx2)->localDepth--;
+                bucketArray.set(idx, bucketArray.get(idx2));
+
+                delete tempBucket;
+                maxLocalCounter--;
+
+                // TESTING
+                if(maxLocalCounter == -1)
+                {
+                    cout << "Here" << endl;
+                }
+
+                if(maxLocalCounter == 0)
+                {
+                    globalDepth--;
+                    size = size/2;
+                    //bucketArray.get(idx2)->localDepth--;
+                }
             }
         }
     }
