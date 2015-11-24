@@ -100,6 +100,8 @@ Journal** Journals = NULL;       // keeps the Journal for every relation
 HashTable** hash_tables;		 // Extendible hashing for every relation
 DArray<bool> validationResults;	 // den xreiazetai new einai sto scope tis main
 DArray<Query::Column>* subqueries_to_check;
+
+int val_offset = 0;
 //=====================================================
 //=================== FUNCTIONS =======================
 //================================================================================================
@@ -128,6 +130,8 @@ static void processDefineSchema(DefineSchema *s){
 		Journals[i] = journal;					// add Journal to Journals array
 		hash_tables[i] = new HashTable();		// Create empty Hash for every rel
   	}
+
+
 }
 //================================================================================================
 static void processTransaction(Transaction *t){
@@ -231,7 +235,8 @@ static void processValidationQueries(ValidationQueries *v){
 	cout << "ValidationQueries " << v->validationId << " [" << v->from << ", " << v->to << "] " << v->queryCount << endl;
 	cout << "=====================================================================" << endl;
 
-	DArray<DArray<unsigned>>* array;	// array me ta rangearrays gia to case c0=<x>
+	// DArray<DArray<unsigned>>* array;	// array me ta rangearrays gia to case c0=<x>
+	bool exist = false;
 	bool conflict = false;
 	const char* reader = v->queries;
 
@@ -261,9 +266,10 @@ static void processValidationQueries(ValidationQueries *v){
 			// ean to operation einai '=' kai anaferetai sto primary key (c0)
 			if (q->columns[w].op == Query::Column::Equal && q->columns[w].column == 0){
 				cout << "Found c0 = " << q->columns[w].value << " case" << endl;
-				array = hash_tables[q->relationId]->getHashRecord(q->columns[w].value, v->from, v->to);
+				// array = hash_tables[q->relationId]->getHashRecord(q->columns[w].value, v->from, v->to);
+				exist = hash_tables[q->relationId]->existCheck(q->columns[w].value, v->from, v->to);
 
-				if (array == NULL){
+				if (exist == false){
 					cout << "Den yparxei auto to key sto hash. lol" << endl;
 					hit = false;	// den yparxei auto to key ara kanw to hit false wste na min koitaksw ta alla
 					break;	// den koitame ta alla columns tou AND
@@ -331,9 +337,17 @@ static void processValidationQueries(ValidationQueries *v){
 }
 //================================================================================================
 static void processFlush(Flush *fl){
+
     cout << "Flush " << fl->validationId << endl;
-	for (unsigned i = 0; i <= fl->validationId; i++)
+	cout << "=====================================================================" << endl;
+
+	for (unsigned i = val_offset; i <= validationResults.size() && i<=fl->validationId; i++){
 		cout << "Val result: " << validationResults.get(i) << endl;
+	}
+	val_offset += fl->validationId + 1;
+	//
+	// cout << "New offset: " << val_offset << endl;
+	// exit(0);
 }
 //================================================================================================
 static void processForget(Forget *fo){

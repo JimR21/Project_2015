@@ -33,19 +33,14 @@ public:
 
     ~HashTable();
 
-    int insert(unsigned int key, unsigned int tid, unsigned int offset);
+    int insert(unsigned key, unsigned int tid, unsigned int offset);
 
 	DArray<DArray<unsigned>>* getHashRecord(unsigned key, uint64_t start_tid, uint64_t end_tid);
-
 	DArray<DArray<unsigned>>* getHashRecords(unsigned key);
-
-
+	bool existCheck(unsigned key,uint64_t, uint64_t);
     int getBucketIndex(int hash, int depth);
-
+	int getLastJournalInsert(unsigned key);
     unsigned getsize();
-
-    int getLastJournalInsert(unsigned key);
-
 };
 
 

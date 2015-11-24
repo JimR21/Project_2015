@@ -12,8 +12,8 @@ public:
     JournalRecord(uint64_t);
     void addValue(uint64_t);
 	uint64_t getValue(uint64_t);
+	uint64_t getTransactionId();
     DArray<uint64_t> *getAllValues();
-    uint64_t getTransactionId();
 	~JournalRecord();
     void printRecord();
 };

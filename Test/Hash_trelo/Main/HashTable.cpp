@@ -142,6 +142,23 @@ DArray<DArray<unsigned>>*  HashTable::getHashRecords(unsigned key)
 	return NULL;
 }
 //=======================================================================================================
+bool HashTable::existCheck(unsigned key, uint64_t start_tid, uint64_t end_tid){
+
+	unsigned hashed_key = hashFunction(key);
+	unsigned idx = getBucketIndex(hashed_key, globalDepth);
+    Bucket* tempBucket = bucketArray.get(idx);
+
+	if((tempBucket->empty == false) && (tempBucket->key == key)){
+		for (int i = 0; i < tempBucket->data.size(); i++){
+
+			uint64_t tid = tempBucket->data.get(i)->getTid();	// pare to tid tou current bucketData
+			if (tid >= start_tid && tid <= end_tid)	// an to vrika estw kai mia fora mesa sto tid range gurna to
+				return true;
+		}
+	}
+	return false;
+}
+//=======================================================================================================
 unsigned HashTable::getsize()
 {	return size; }
 //=======================================================================================================
