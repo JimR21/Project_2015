@@ -19,10 +19,10 @@ HashTable::HashTable()
 HashTable::~HashTable()
 {
     // Delete bucketArray
-    unsigned size = bucketArray.size();
     for(unsigned i = 0; i < size; i++)
     {
-        delete bucketArray.get(i);
+        if(bucketArray.get(i)->localDepth != 0)     // Elegxos gia na mh svistei 2 fores to idio
+            delete bucketArray.get(i);
     }
 }
 
