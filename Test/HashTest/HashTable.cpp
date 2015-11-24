@@ -1,5 +1,6 @@
 #include "Bucket.hpp"
 #include "HashTable.hpp"
+#include <math.h>
 #include <iostream>
 
 using namespace std;
@@ -11,7 +12,6 @@ HashTable::HashTable()
     maxLocalCounter = 128;
 
 	// cout << "Hash Table created!" << endl;
-
     for(unsigned i = 0; i < HASHTABLE_SIZE; i++)
         bucketArray.push_back(new Bucket());
 }
@@ -21,7 +21,7 @@ HashTable::~HashTable()
     // Delete bucketArray
     for(unsigned i = 0; i < size; i++)
     {
-        if(bucketArray.get(i)->localDepth != 0)     // Elegxos gia na mh svistei 2 fores to idio
+        if(bucketArray.get(i) == NULL)     // Elegxos gia na mh svistei 2 fores to idio
             delete bucketArray.get(i);
     }
 }
@@ -35,7 +35,8 @@ int HashTable::hashFunction(unsigned int key)
 int HashTable::getBucketIndex(int hash, int depth)
 {
 	//return hash & ( (1 << depth) - 1);
-    return (hash % (2^depth));
+    int p = pow(2, depth);
+    return (hash % p);
 }
 
 
@@ -98,7 +99,6 @@ int HashTable::insert(unsigned int key, unsigned tid, unsigned offset)
             bucketArray.get(index2)->localDepth++;
             if(bucketArray.get(index2)->localDepth == globalDepth)
                 maxLocalCounter++;
-
         }
     }
     return 1;
@@ -173,13 +173,21 @@ void HashTable::deleteKey(unsigned key)
 
             delete tempBucket;
             maxLocalCounter--;
+
+            // TESTING
+            if(maxLocalCounter == -1)
+            {
+                cout << "Here" << endl;
+            }
+
             if(maxLocalCounter == 0)
             {
                 globalDepth--;
                 size = size/2;
+                //bucketArray.get(idx2)->localDepth--;
             }
         }
     }
     else
-        cout << "Delete: Key not fount" << endl;
+        cout << "Delete: Key not found" << endl;
 }

@@ -11,7 +11,7 @@ class HashTable
 {
     friend class Bucket;
 private:
-    unsigned maxLocalCounter;    // Posa buckets exoun localDepth = globalDepth
+    int maxLocalCounter;    // Posa buckets exoun localDepth = globalDepth
 
     unsigned size;
 
