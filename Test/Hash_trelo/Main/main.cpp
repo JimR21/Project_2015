@@ -99,7 +99,7 @@ static uint32_t* schema = NULL;  // keeps the # of columns for every relation
 Journal** Journals = NULL;       // keeps the Journal for every relation
 HashTable** hash_tables;		 // Extendible hashing for every relation
 DArray<bool> validationResults;	 // den xreiazetai new einai sto scope tis main
-
+DArray<Query::Column>* subqueries_to_check;
 //=====================================================
 //=================== FUNCTIONS =======================
 //================================================================================================
@@ -210,7 +210,7 @@ static void processTransaction(Transaction *t){
 				// cout << "Tid: " << t->transactionId << endl;
 				// cout << "c0: " << record->getValue(0) << endl;
 				// cout << "=========================================================" << endl;
-				// //===================================
+				//===================================
 				// Update relation's hash
 				//===================================
 				hash_tables[o->relationId]->insert(record->getValue(0), t->transactionId, size - 1);
@@ -231,76 +231,100 @@ static void processValidationQueries(ValidationQueries *v){
 	cout << "ValidationQueries " << v->validationId << " [" << v->from << ", " << v->to << "] " << v->queryCount << endl;
 	cout << "=====================================================================" << endl;
 
+	DArray<DArray<unsigned>>* array;	// array me ta rangearrays gia to case c0=<x>
 	bool conflict = false;
 	const char* reader = v->queries;
 
 	// Iterate over the validation's queries
 	for (unsigned i = 0; i != v->queryCount; i++){
+
+		subqueries_to_check = new DArray<Query::Column>();
 		const Query* q = (Query*)reader;
 
 		int idx = (Journals[q->relationId]->getRecordsSize())-1;	// check an einai entos range
 		JournalRecord *jt = Journals[q->relationId]->getRecord(idx);
 		uint64_t max_tid = jt->getTransactionId();
 
-		cout << "Query on relation: " << q->relationId << endl;
 
-		if (v->from > max_tid){	// mou dwse tid start pou einai megalutero tou max o malakas
+		if (v->from > max_tid)	// mou dwse tid start pou einai megalutero tou max o malakas
 			break;				// no need to check the next queries for this validation
-		}
 
+		cout << "Query on relation: " << q->relationId << endl;
 		cout << "column counts: " << q->columnCount << endl;
+
+		bool hit = true;
+
 		// iterate over subqueries
-		// for (unsigned w = 0; w < q->columnCount; w++){
-		// 	cout << q->columns[w].op << endl;
-		// 	uint64_t query_value = q->columns[w].value;
-		// }
+		for (unsigned w = 0; w < q->columnCount; w++){
+			cout << "Subquery~> c" << q->columns[w].column << " , operator = " << q->columns[w].op << " , val: " << q->columns[w].value << endl;
 
-		// pare ta JournalRecords pou tha prepei na koitaksw gia to sugkekrimeno tid range
-		DArray<DArray<uint64_t>*> * RecordsToCheck = Journals[q->relationId]->getJournalRecords(v->from, v->to);
+			// ean to operation einai '=' kai anaferetai sto primary key (c0)
+			if (q->columns[w].op == Query::Column::Equal && q->columns[w].column == 0){
+				cout << "Found c0 = " << q->columns[w].value << " case" << endl;
+				array = hash_tables[q->relationId]->getHashRecord(q->columns[w].value, v->from, v->to);
 
-		for (int j = 0; j < RecordsToCheck->size(); j++){
-			DArray<uint64_t> * jr = RecordsToCheck->get(j);
-			for (int k = 0; k < jr->size(); k++)
-				cout << jr->get(k) << " ";
-			cout << endl;
-		}
-		// gia ola ta records pou prepei na checkarw se auto to tid range
-		for (int j = 0; j < RecordsToCheck->size(); j++){
+				if (array == NULL){
+					cout << "Den yparxei auto to key sto hash. lol" << endl;
+					hit = false;	// den yparxei auto to key ara kanw to hit false wste na min koitaksw ta alla
+					break;	// den koitame ta alla columns tou AND
+				}
 
-			DArray<uint64_t> * jr = RecordsToCheck->get(j);
-			bool match = true;
-
-			// iterate over subqueries
-			for (unsigned w = 0; w < q->columnCount; w++){
-
-				bool result = false;
-				uint64_t query_value = q->columns[w].value;
-				uint64_t tuple_value = jr->get(q->columns[w].column);
-				cout << "***********************************" << endl;
-				cout << "Checking subquery: " << w << " for record: " << j << endl;
-				cout << "Query constant value: " << query_value << endl;
-				cout << "Record column [" << q->columns[w].column << "] value: " << tuple_value << endl;
-				cout << "***********************************" << endl;
-				switch (q->columns[w].op) {
-                   case Query::Column::Equal: 		result=(tuple_value == query_value); break;
-                   case Query::Column::NotEqual: 	result=(tuple_value != query_value); break;
-                   case Query::Column::Less: 		result=(tuple_value < query_value); break;
-                   case Query::Column::LessOrEqual: result=(tuple_value <= query_value); break;
-                   case Query::Column::Greater: 	result=(tuple_value > query_value); break;
-                   case Query::Column::GreaterOrEqual: result=(tuple_value >= query_value); break;
-                }
-				cout << "Result: " << result << endl;
-				if (!result){ match = false; break; }
 			}
-			if (match && q->columnCount != 0) {
-               // We found a conflict. Not necessary to evaluate the other queries for this validation
-			   cout << "FOUND CONFLICT MOTHERFUCKER" << endl;
-               conflict=true;
-               break;
-            }
+			else{ // valto se auta pou prepei na koitaksw meta
+				cout << "Query oxi sto primary key ara to koitaw meta" << endl;
+				subqueries_to_check->push_back(q->columns[w]);
+			}
 		}
+		if (hit){ // an den dimiourgei to c0 false sto AND tote tha prepei na dw ta ypoloipa subqueries
+
+			// pare ta JournalRecords pou tha prepei na koitaksw gia to sugkekrimeno tid range
+			DArray<DArray<uint64_t>*> * RecordsToCheck = Journals[q->relationId]->getJournalRecords(v->from, v->to);
+
+			// checkare kathe record
+			for (int j = 0; j < RecordsToCheck->size(); j++){
+				DArray<uint64_t> * jr = RecordsToCheck->get(j);
+				for (int k = 0; k < jr->size(); k++)
+					cout << jr->get(k) << " ";
+				cout << endl;
+
+				bool match = true;
+				// iterate over subqueries left to check
+				for (int w = 0; w < subqueries_to_check->size(); w++){
+					bool result = false;
+					uint64_t query_value = subqueries_to_check->get(w).value;
+					uint64_t tuple_value = jr->get(subqueries_to_check->get(w).column);
+
+					cout << "***********************************" << endl;
+					cout << "Checking subquery: " << w << " for record: " << j << endl;
+					cout << "Query constant value: " << query_value << endl;
+					cout << "Record column [" << subqueries_to_check->get(w).column << "] value: " << tuple_value << endl;
+					cout << "***********************************" << endl;
+
+					switch (q->columns[w].op) {
+	                   case Query::Column::Equal: 		result=(tuple_value == query_value); break;
+	                   case Query::Column::NotEqual: 	result=(tuple_value != query_value); break;
+	                   case Query::Column::Less: 		result=(tuple_value < query_value); break;
+	                   case Query::Column::LessOrEqual: result=(tuple_value <= query_value); break;
+	                   case Query::Column::Greater: 	result=(tuple_value > query_value); break;
+	                   case Query::Column::GreaterOrEqual: result=(tuple_value >= query_value); break;
+	                }
+					cout << "Result: " << result << endl;
+					if (!result){ match = false; break; }
+				}
+				if (match && q->columnCount != 0) {
+	               // We found a conflict. Not necessary to evaluate the other queries for this validation
+				   cout << "FOUND CONFLICT MOTHERFUCKER" << endl;
+	               conflict=true;
+	               break;
+	            }
+			}
+		}
+
 		// Go to the next query
         reader += sizeof(Query)+(sizeof(Query::Column)*q->columnCount);
+
+		// delete array for the next query
+		delete subqueries_to_check;
 	}
 	// Store validation's conflict result
 	validationResults.push_back(conflict);
@@ -308,7 +332,7 @@ static void processValidationQueries(ValidationQueries *v){
 //================================================================================================
 static void processFlush(Flush *fl){
     cout << "Flush " << fl->validationId << endl;
-	for (unsigned i = 0; i < fl->validationId; i++)
+	for (unsigned i = 0; i <= fl->validationId; i++)
 		cout << "Val result: " << validationResults.get(i) << endl;
 }
 //================================================================================================

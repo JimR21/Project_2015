@@ -35,7 +35,10 @@ public:
 
     int insert(unsigned int key, unsigned int tid, unsigned int offset);
 
-    DArray<DArray<unsigned>>* get(unsigned key);
+	DArray<DArray<unsigned>>* getHashRecord(unsigned key, uint64_t start_tid, uint64_t end_tid);
+
+	DArray<DArray<unsigned>>* getHashRecords(unsigned key);
+
 
     int getBucketIndex(int hash, int depth);
 
