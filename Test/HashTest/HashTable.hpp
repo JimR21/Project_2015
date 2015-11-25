@@ -11,7 +11,7 @@ class HashTable
 {
     friend class Bucket;
 private:
-    // TODO: deikths se arxh journal
+    int maxLocalCounter;    // Posa buckets exoun localDepth = globalDepth
 
     unsigned size;
 
@@ -41,7 +41,9 @@ public:
 
     unsigned getsize();
 
-    unsigned getLastJournalInsert(unsigned key);
+    int getLastJournalInsert(unsigned key);
+
+    void deleteKey(unsigned key);
 
 };
 
