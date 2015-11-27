@@ -118,7 +118,7 @@ DArray<DArray<unsigned>>*  HashTable::getHashRecord(unsigned key, uint64_t start
 		return array;
 	}
 	else
-        cout << "Key not found" << endl;
+        // cout << "Key not found" << endl;
 	return NULL;
 }
 //=======================================================================================================
@@ -138,7 +138,7 @@ DArray<DArray<unsigned>>*  HashTable::getHashRecords(unsigned key)
 		return array;
 	}
     else
-        cout << "Key not found" << endl;
+        // cout << "Key not found" << endl;
 	return NULL;
 }
 //=======================================================================================================
@@ -176,7 +176,7 @@ int HashTable::getLastJournalInsert(unsigned key)  // NEW
         return bdata->getrangeArrayLast();
     }
     else
-        cout << "Key not found" << endl;
+        // cout << "Key not found" << endl;
     return -1;
 }
 //=======================================================================================================

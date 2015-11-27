@@ -79,8 +79,6 @@ void Journal::destroyJournal(){
 	cout << "Deleting Journal" << endl;
 	for (int i = 0; i < Records->size(); i++)	// destroy all of its JournalRecords
 		delete Records->get(i);
-
-	delete Records;
 }
 //================================================================================================
 int Journal::getRecordsSize(){

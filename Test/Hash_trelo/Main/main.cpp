@@ -165,8 +165,16 @@ static void processTransaction(Transaction *t){
 				continue;
 			}
 			else {
+
+				// checking case of multiple deletes
+				if (Journals[o->relationId]->getRecord(index)->getType() == DELETE){
+					cout << "Sunexomeno delete case" << endl;
+					break;}
+				else
+					cout << "Delete after insertion" << endl;
+
 				cout << endl;
-				record = new JournalRecord(t->transactionId);	// JournalRecord to be inserted
+				record = new JournalRecord(t->transactionId, DELETE);	// JournalRecord to be inserted
 
 				JournalRecord * jr = Journals[o->relationId]->getRecord(index);
 				for(unsigned int j = 0; j < schema[o->relationId]; j++)
@@ -193,7 +201,7 @@ static void processTransaction(Transaction *t){
 
 		for(unsigned int j = 0; j< o->rowCount * schema[o->relationId]; j++) {	// iterate over values array
 			if(j % schema[o->relationId] == 0) {		// start of group
-				record = new JournalRecord(t->transactionId);
+				record = new JournalRecord(t->transactionId, INSERT);
 				printf("(");
         	}
 			printf("%lu ", o->values[j]);
@@ -245,6 +253,12 @@ static void processValidationQueries(ValidationQueries *v){
 
 		subqueries_to_check = new DArray<Query::Column>();
 		const Query* q = (Query*)reader;
+
+		// adeio validation
+		if (v->queryCount == 1 && q->columnCount == 0){
+			conflict = true;
+			break;
+		}
 
 		int idx = (Journals[q->relationId]->getRecordsSize())-1;	// check an einai entos range
 		JournalRecord *jt = Journals[q->relationId]->getRecord(idx);
@@ -341,7 +355,7 @@ static void processFlush(Flush *fl){
     cout << "Flush " << fl->validationId << endl;
 	cout << "=====================================================================" << endl;
 
-	for (unsigned i = val_offset; i <= validationResults.size() && i<=fl->validationId; i++){
+	for (unsigned i = val_offset; i <= (unsigned)validationResults.size() && i<=fl->validationId; i++){
 		cout << "Val result: " << validationResults.get(i) << endl;
 	}
 	val_offset += fl->validationId + 1;
