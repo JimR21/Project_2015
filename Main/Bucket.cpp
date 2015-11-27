@@ -5,7 +5,7 @@ using namespace std;
 
 Bucket::Bucket()
 {
-    localDepth = STARTING_GLOBAL_DEAPTH;     // Equal to globalDepth at start
+    localDepth = 7;     // Equal to globalDepth at start
     key = 0;
     empty = true;
 }
@@ -25,17 +25,14 @@ Bucket::Bucket(unsigned ikey, BucketData* bdata, unsigned ilocalDepth) : key(ike
 
 Bucket::~Bucket()
 {
-    for(int i = 0; i < data.size(); i++)
-    {
-        if(data.get(i) != NULL)
-            delete data.get(i);
-    }
+
 }
 
 void Bucket::insert(unsigned ikey, BucketData* idata)
 {
     key = ikey;
 	data.push_back(idata);
+    // data = idata;
     empty = false;
 }
 

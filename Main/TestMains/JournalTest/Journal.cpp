@@ -1,4 +1,4 @@
-#include "Journal.hpp"
+#include "Journal.h"
 
 using namespace std;
 
@@ -19,7 +19,7 @@ DArray<DArray<uint64_t>*> * Journal::getJournalRecords(uint64_t start_tid, uint6
 
 	DArray<DArray<uint64_t>*> *recs = new DArray<DArray<uint64_t>*>();
 
-	int idx = -1; 
+	int idx = -1;
 													// ipothetw oti den tha dwsei range ektos oriwn
 	while((idx = searchRecord(start_tid)) == -1)	// psakse se pio index tou Journal tha ksekinisw na psaxnw
 		start_tid += 1;								// an den yparxei to tid pou mou dwse san start psakse to epomeno
@@ -79,8 +79,6 @@ void Journal::destroyJournal(){
 	cout << "Deleting Journal" << endl;
 	for (int i = 0; i < Records->size(); i++)	// destroy all of its JournalRecords
 		delete Records->get(i);
-
-	delete Records;
 }
 //================================================================================================
 int Journal::getRecordsSize(){

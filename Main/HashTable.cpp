@@ -5,20 +5,19 @@
 
 using namespace std;
 
+//=======================================================================================================
 HashTable::HashTable()
 {
     globalDepth = STARTING_GLOBAL_DEAPTH;    // 2^7 = 128
     size = HASHTABLE_SIZE;
     maxLocalCounter = HASHTABLE_SIZE;
 
+	// cout << "Hash Table created!" << endl;
+
     for(unsigned i = 0; i < HASHTABLE_SIZE; i++)
-    {
         bucketArray.push_back(new Bucket());
-    }
 }
-
-//================================================================================
-
+//=======================================================================================================
 HashTable::~HashTable()
 {
     // Delete bucketArray
@@ -34,22 +33,17 @@ HashTable::~HashTable()
     }
 }
 
-//================================================================================
-
+//=======================================================================================================
 int HashTable::hashFunction(unsigned int key)
 {
     return (key * 2654435761 % 4294967296);    // Knuth: hash(i)=i*2654435761 mod 2^32
 }
-
-//================================================================================
-
+//=======================================================================================================
 int HashTable::getBucketIndex(int hash, int depth)
 {
 	return hash & ( (1 << depth) - 1);
 }
-
-//================================================================================
-
+//=======================================================================================================
 void HashTable::doubleTableSize()
 {
     globalDepth++;
@@ -60,9 +54,7 @@ void HashTable::doubleTableSize()
     }
     size = new_size;
 }
-
-//================================================================================
-
+//=======================================================================================================
 void HashTable::halveTableSize()    // TODO: Maybe a special function at DArray.hpp?
 {
     globalDepth--;
@@ -70,9 +62,7 @@ void HashTable::halveTableSize()    // TODO: Maybe a special function at DArray.
     for(unsigned i = 0; i < size; i++)
         bucketArray.popLast();
 }
-
-//================================================================================
-
+//=======================================================================================================
 int HashTable::insert(unsigned int key, unsigned tid, unsigned offset)
 {
     unsigned hashed_key;
@@ -165,21 +155,43 @@ int HashTable::insert(unsigned int key, unsigned tid, unsigned offset)
     }
     return 1;
 }
-
-//================================================================================
-
-DArray<DArray<unsigned>>*  HashTable::get(unsigned key)
-{
-    unsigned hashed_key;
+//=======================================================================================================
+DArray<DArray<unsigned>>*  HashTable::getHashRecord(unsigned key, uint64_t start_tid, uint64_t end_tid){
+	unsigned hashed_key;
     hashed_key = hashFunction(key);
-	int index = getBucketIndex(hashed_key, globalDepth); // koitaw ta globalDepth deksia bits gia na dw se poio index tha paw
+	int index = getBucketIndex(hashed_key, globalDepth); // koitaw ta globaldepth deksia bits gia na dw se poio index tha paw
     Bucket* tempBucket = bucketArray.get(index);
-
-	hashed_key = hashFunction(key);
 
 	DArray<DArray<unsigned>>* array = new DArray<DArray<unsigned>>();
 
-    // TESTING IF
+	if((tempBucket->empty == false) && (tempBucket->key == key)){
+		for (int i = 0; i < tempBucket->data.size(); i++){
+
+			uint64_t tid = tempBucket->data.get(i)->getTid();	// pare to tid tou current bucketData
+
+			if (tid >= start_tid && tid <= end_tid)	// an einai mesa sto range valto ston pinaka
+				array->push_back(tempBucket->data.get(i)->rangeArray);
+			else {
+				cout << "Out of range" << endl;
+				break;
+			}
+		}
+		return array;
+	}
+	else
+        cout << "getHashRecord: Key not found" << endl;
+	return NULL;
+}
+//=======================================================================================================
+DArray<DArray<unsigned>>*  HashTable::getHashRecords(unsigned key)
+{
+    unsigned hashed_key;
+    hashed_key = hashFunction(key);
+	int index = getBucketIndex(hashed_key, globalDepth); // koitaw ta globaldepth deksia bits gia na dw se poio index tha paw
+    Bucket* tempBucket = bucketArray.get(index);
+
+	DArray<DArray<unsigned>>* array = new DArray<DArray<unsigned>>();
+
     if((tempBucket->empty == false) && (tempBucket->key == key)){
 		for (int i = 0; i < tempBucket->data.size(); i++){
 			array->push_back(tempBucket->data.get(i)->rangeArray);
@@ -187,19 +199,30 @@ DArray<DArray<unsigned>>*  HashTable::get(unsigned key)
 		return array;
 	}
     else
-        cout << "get: Key not found" << endl;
+        cout << "getHashRecords: Key not found" << endl;
 	return NULL;
 }
+//=======================================================================================================
+bool HashTable::existCheck(unsigned key, uint64_t start_tid, uint64_t end_tid){
 
-//================================================================================
+	unsigned hashed_key = hashFunction(key);
+	unsigned idx = getBucketIndex(hashed_key, globalDepth);
+    Bucket* tempBucket = bucketArray.get(idx);
 
-unsigned HashTable::getsize()
-{
-    return size;
+	if((tempBucket->empty == false) && (tempBucket->key == key)){
+		for (int i = 0; i < tempBucket->data.size(); i++){
+
+			uint64_t tid = tempBucket->data.get(i)->getTid();	// pare to tid tou current bucketData
+			if (tid >= start_tid && tid <= end_tid)	// an to vrika estw kai mia fora mesa sto tid range gurna to
+				return true;
+		}
+	}
+	return false;
 }
-
-//================================================================================
-
+//=======================================================================================================
+unsigned HashTable::getsize()
+{	return size; }
+//=======================================================================================================
 int HashTable::getLastJournalInsert(unsigned key)  // NEW
 {
     unsigned hashed_key;
@@ -214,12 +237,10 @@ int HashTable::getLastJournalInsert(unsigned key)  // NEW
         return bdata->getrangeArrayLast();
     }
     else
-        cout << "getLastJournalInsert: Key " << key << " not found" << endl;
+        cout << "Key not found" << endl;
     return -1;
 }
-
-//================================================================================
-
+//=======================================================================================================
 void HashTable::deleteKey(unsigned key)
 {
     if(key == 492)
@@ -265,5 +286,3 @@ void HashTable::deleteKey(unsigned key)
     else
         cout << "Delete: Key " << key << " not found" << endl;
 }
-
-//================================================================================

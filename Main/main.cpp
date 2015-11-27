@@ -3,8 +3,9 @@
 #include <stdint.h>
 #include <unistd.h>
 #include <inttypes.h>
-#include "Journal.h"
-#include <vector>
+#include "Journal.hpp"
+#include "Bucket.hpp"
+#include "HashTable.hpp"
 
 using namespace std;
 
@@ -96,7 +97,11 @@ struct Forget {
 
 static uint32_t* schema = NULL;  // keeps the # of columns for every relation
 Journal** Journals = NULL;       // keeps the Journal for every relation
+HashTable** hash_tables;		 // Extendible hashing for every relation
+DArray<bool> validationResults;	 // den xreiazetai new einai sto scope tis main
+DArray<Query::Column>* subqueries_to_check;
 
+int val_offset = 0;
 //=====================================================
 //=================== FUNCTIONS =======================
 //================================================================================================
@@ -111,6 +116,7 @@ static void processDefineSchema(DefineSchema *s){
 
   	schema = (uint32_t*)malloc(sizeof(uint32_t) * s->relationCount);	// allocate space for the relations
   	Journals = (Journal**)malloc(sizeof(Journal*) * s->relationCount); 	// allocate space for pointers to Journals
+	hash_tables = (HashTable**)malloc(sizeof(HashTable*) * s->relationCount);
 
 	for(i = 0; i < s->relationCount; i++){
     	cout << " " << s->columnCounts[i] << " ";	// print columns for every relation
@@ -119,62 +125,84 @@ static void processDefineSchema(DefineSchema *s){
 
   	cout << endl;
 
-  	cout << "=========================================================" << endl;
   	for(i = 0; i < s->relationCount; i++) {   	// For every relation
   		Journal* journal = new Journal(i);    	// Create empty Journal
 		Journals[i] = journal;					// add Journal to Journals array
+		hash_tables[i] = new HashTable();		// Create empty Hash for every rel
   	}
-  	cout << "=========================================================" << endl;
+
+
 }
 //================================================================================================
 static void processTransaction(Transaction *t){
 
-    unsigned int i;
+    unsigned i;
+	int index;
     const char* reader = t->operations;
     JournalRecord* record;
 
-    cout << "Transaction " << t->transactionId << " (" << t->deleteCount << ", " << t->insertCount << ")" << " |";
+
+    cout << "Transaction " << t->transactionId << " (" << t->deleteCount << ", " << t->insertCount << ")" << " |" << endl;
+	cout << "=====================================================================" << endl;
+
 
 	//=================================
 	// Delete operations
 	//=================================
     for(i = 0; i < t->deleteCount; i++) {
     	const TransactionOperationDelete* o = (TransactionOperationDelete*)reader;
-        cout << "opdel rid " << o->relationId << " #rows " << o->rowCount << " ";
+		cout << endl;
+		cout << "--------------------------------------------" << endl;
+        cout << "opdel rid " << o->relationId << " #rows " << o->rowCount << " " << endl;
+		cout << "--------------------------------------------" << endl;
 
-        JournalRecord *rec = NULL;
-        rec = Journals[o->relationId]->searchRecord(o->keys[0]);    // search the Journal for record(c0) == key
+		for (unsigned k = 0; k < o->rowCount; k++){
+			cout << "Searching for primary key: " << o->keys[k] << endl;
 
-        if (rec == NULL)    // key not found, continue
-            continue;
+			index = hash_tables[o->relationId]->getLastJournalInsert(o->keys[k]);
 
-        record = new JournalRecord(t->transactionId);	// JournalRecord to be inserted
+			if (index == -1){	// den to vrika
+				continue;
+			}
+			else {
 
-        for(unsigned int j = 0; j < schema[o->relationId]; j++)
-            record->addValue(rec->getValue(j));  // copy the rest columns from the one found
+				// checking case of multiple deletes
+				if (Journals[o->relationId]->getRecord(index)->getType() == DELETE){
+					cout << "Sunexomeno delete case" << endl;
+					break;}
+				else
+					cout << "Delete after insertion" << endl;
 
-        Journals[o->relationId]->insertJournalRecord(record);	// insert delete record to Journal
+				cout << endl;
+				record = new JournalRecord(t->transactionId, DELETE);	// JournalRecord to be inserted
 
-		// print offsets
-		// cout << "ST: " << Journals[o->relationId]->getStartOffset() << " " << "END: " << Journals[o->relationId]->getEndOffset() <<  endl;
+				JournalRecord * jr = Journals[o->relationId]->getRecord(index);
+				for(unsigned int j = 0; j < schema[o->relationId]; j++)
+		            record->addValue(jr->getValue(j));  // copy the rest columns from the one found
+
+				Journals[o->relationId]->insertJournalRecord(record);	// insert delete record to Journal
+			}
+		}
 
         // Go to the next delete operation
         reader += sizeof(TransactionOperationDelete) + (sizeof(uint64_t) * o->rowCount);
     }
-    printf(" \t| ");
-
+    // printf(" \t| ");
 	//=================================
 	// Insert Operations
 	//=================================
     for(i = 0; i < t->insertCount; i++) {
         const TransactionOperationInsert* o = (TransactionOperationInsert*)reader;
 
-        printf("opins rid %u #rows %u | ", o->relationId, o->rowCount);
-    	printf("(");
+		cout << endl;
+		cout << "--------------------------------------------" << endl;
+        printf("opins rid %u #rows %u | \n", o->relationId, o->rowCount);
+		cout << "--------------------------------------------" << endl;
 
 		for(unsigned int j = 0; j< o->rowCount * schema[o->relationId]; j++) {	// iterate over values array
 			if(j % schema[o->relationId] == 0) {		// start of group
-				record = new JournalRecord(t->transactionId);
+				record = new JournalRecord(t->transactionId, INSERT);
+				printf("(");
         	}
 			printf("%lu ", o->values[j]);
         	record->addValue(o->values[j]);  // add value to record
@@ -182,70 +210,215 @@ static void processTransaction(Transaction *t){
 			if((j + 1) % schema[o->relationId] == 0) {	// end of group
 				printf(")");
 
+				//===================================
+				// Insert record to relation's journal
+				//===================================
             	Journals[o->relationId]->insertJournalRecord(record);   // add record to relation's Journal
 
-				if(j + 1 < o->rowCount * schema[o->relationId] ) printf("(");
+				int size = Journals[o->relationId]->getRecordsSize();
+				// cout << "=========================================================" << endl;
+				// cout << "Journal size: " << size << endl;
+				// cout << "Offset: " << size - 1 << endl;
+				// cout << "Tid: " << t->transactionId << endl;
+				// cout << "c0: " << record->getValue(0) << endl;
+				// cout << "=========================================================" << endl;
+				//===================================
+				// Update relation's hash
+				//===================================
+				hash_tables[o->relationId]->insert(record->getValue(0), t->transactionId, size - 1);
 
-				// print offsets
-            	// cout << "ST: " << Journals[o->relationId]->getStartOffset() << " " << "END: " << Journals[o->relationId]->getEndOffset() <<  endl;
+				// if(j + 1 < o->rowCount * schema[o->relationId] ) printf("(");
 			}
 		}
 		// Go to the next insert operation
 		reader+=sizeof(TransactionOperationInsert)+(sizeof(uint64_t)*o->rowCount*schema[o->relationId]);
     }
+
     printf("\n");
+
 }
 //================================================================================================
 static void processValidationQueries(ValidationQueries *v){
-    cout << "ValidationQueries " << v->validationId << " [" << v->from << ", " << v->to << "] " << v->queryCount << endl;
+
+	cout << "ValidationQueries " << v->validationId << " [" << v->from << ", " << v->to << "] " << v->queryCount << endl;
+	cout << "=====================================================================" << endl;
+
+	// DArray<DArray<unsigned>>* array;	// array me ta rangearrays gia to case c0=<x>
+	bool exist = false;
+	bool conflict = false;
+	const char* reader = v->queries;
+
+	// Iterate over the validation's queries
+	for (unsigned i = 0; i != v->queryCount; i++){
+
+		subqueries_to_check = new DArray<Query::Column>();
+		const Query* q = (Query*)reader;
+
+		// adeio validation
+		if (v->queryCount == 1 && q->columnCount == 0){
+			conflict = true;
+			break;
+		}
+
+		int idx = (Journals[q->relationId]->getRecordsSize())-1;	// check an einai entos range
+		JournalRecord *jt = Journals[q->relationId]->getRecord(idx);
+		uint64_t max_tid = jt->getTransactionId();
+
+
+		if (v->from > max_tid)	// mou dwse tid start pou einai megalutero tou max o malakas
+			break;				// no need to check the next queries for this validation
+
+		cout << "Query on relation: " << q->relationId << endl;
+		cout << "column counts: " << q->columnCount << endl;
+
+		bool hit = true;
+
+		// iterate over subqueries
+		for (unsigned w = 0; w < q->columnCount; w++){
+			cout << "Subquery~> c" << q->columns[w].column << " , operator = " << q->columns[w].op << " , val: " << q->columns[w].value << endl;
+
+			// ean to operation einai '=' kai anaferetai sto primary key (c0)
+			if (q->columns[w].op == Query::Column::Equal && q->columns[w].column == 0){
+				cout << "Found c0 = " << q->columns[w].value << " case" << endl;
+				// array = hash_tables[q->relationId]->getHashRecord(q->columns[w].value, v->from, v->to);
+				exist = hash_tables[q->relationId]->existCheck(q->columns[w].value, v->from, v->to);
+
+				if (exist == false){
+					cout << "Den yparxei auto to key sto hash. lol" << endl;
+					hit = false;	// den yparxei auto to key ara kanw to hit false wste na min koitaksw ta alla
+					break;	// den koitame ta alla columns tou AND
+				}
+
+			}
+			else{ // valto se auta pou prepei na koitaksw meta
+				cout << "Query oxi sto primary key ara to koitaw meta" << endl;
+				subqueries_to_check->push_back(q->columns[w]);
+			}
+		}
+		if (hit){ // an den dimiourgei to c0 false sto AND tote tha prepei na dw ta ypoloipa subqueries
+
+			// pare ta JournalRecords pou tha prepei na koitaksw gia to sugkekrimeno tid range
+			DArray<DArray<uint64_t>*> * RecordsToCheck = Journals[q->relationId]->getJournalRecords(v->from, v->to);
+
+			// checkare kathe record
+			for (int j = 0; j < RecordsToCheck->size(); j++){
+				DArray<uint64_t> * jr = RecordsToCheck->get(j);
+				for (int k = 0; k < jr->size(); k++)
+					cout << jr->get(k) << " ";
+				cout << endl;
+
+				bool match = true;
+				// iterate over subqueries left to check
+				for (int w = 0; w < subqueries_to_check->size(); w++){
+					bool result = false;
+					uint64_t query_value = subqueries_to_check->get(w).value;
+					uint64_t tuple_value = jr->get(subqueries_to_check->get(w).column);
+
+					cout << "***********************************" << endl;
+					cout << "Checking subquery: " << w << " for record: " << j << endl;
+					cout << "Query constant value: " << query_value << endl;
+					cout << "Record column [" << subqueries_to_check->get(w).column << "] value: " << tuple_value << endl;
+					cout << "***********************************" << endl;
+
+					switch (q->columns[w].op) {
+	                   case Query::Column::Equal: 		result=(tuple_value == query_value); break;
+	                   case Query::Column::NotEqual: 	result=(tuple_value != query_value); break;
+	                   case Query::Column::Less: 		result=(tuple_value < query_value); break;
+	                   case Query::Column::LessOrEqual: result=(tuple_value <= query_value); break;
+	                   case Query::Column::Greater: 	result=(tuple_value > query_value); break;
+	                   case Query::Column::GreaterOrEqual: result=(tuple_value >= query_value); break;
+	                }
+					cout << "Result: " << result << endl;
+					if (!result){ match = false; break; }
+				}
+				if (match && q->columnCount != 0) {
+	               // We found a conflict. Not necessary to evaluate the other queries for this validation
+				   cout << "FOUND CONFLICT MOTHERFUCKER" << endl;
+	               conflict=true;
+	               break;
+	            }
+			}
+		}
+
+		// Go to the next query
+        reader += sizeof(Query)+(sizeof(Query::Column)*q->columnCount);
+
+		// delete array for the next query
+		delete subqueries_to_check;
+	}
+	// Store validation's conflict result
+	validationResults.push_back(conflict);
 }
 //================================================================================================
 static void processFlush(Flush *fl){
+
     cout << "Flush " << fl->validationId << endl;
+	cout << "=====================================================================" << endl;
+
+	for (unsigned i = val_offset; i <= (unsigned)validationResults.size() && i<=fl->validationId; i++){
+		cout << "Val result: " << validationResults.get(i) << endl;
+	}
+	val_offset += fl->validationId + 1;
+	//
+	// cout << "New offset: " << val_offset << endl;
+	// exit(0);
 }
 //================================================================================================
 static void processForget(Forget *fo){
-    cout << "Forget " << fo->transactionId << endl;
+	cout << "Forget " << fo->transactionId << endl;
 }
 //=====================================================
 //================== MAIN PROGRAM =====================
 //=====================================================
 int main(int argc, char **argv) {
 
-  MessageHead head;
-  void *body = NULL;
-  uint32_t len;
+	MessageHead head;
+	void *body = NULL;
+	uint32_t len;
 
     while(1){
-      // Retrieve the message head
-      if (read(0, &head, sizeof(head)) <= 0) { return -1; } // crude error handling, should never happen
-      printf("HEAD LEN %u \t| HEAD TYPE %u \t| DESC ", head.messageLen, head.type);
+		// Retrieve the message head
+		if (read(0, &head, sizeof(head)) <= 0) { return -1; } // crude error handling, should never happen
+		cout << "=====================================================================" << endl;
+      	printf("HEAD LEN %u \t| HEAD TYPE %u \t| DESC ", head.messageLen, head.type);
 
-      // Retrieve the message body
-      if (body != NULL) free(body);
-      if (head.messageLen > 0 ){
-          body = malloc(head.messageLen*sizeof(char));
-          if (read(0, body, head.messageLen) <= 0) { printf("err");return -1; } // crude error handling, should never happen
-          len-=(sizeof(head) + head.messageLen);
-      }
+		// Retrieve the message body
+		if (body != NULL) free(body);
+		if (head.messageLen > 0 ){
+			body = malloc(head.messageLen*sizeof(char));
+			if (read(0, body, head.messageLen) <= 0) { printf("err");return -1; } // crude error handling, should never happen
+			len-=(sizeof(head) + head.messageLen);
+		}
 
-      // And interpret it
-      switch (head.type) {
-         case MessageHead::Done: printf("DONE\n");
-                    printf("Rel0\n");
-                    Journals[0]->printJournal();
-                    printf("Rel1\n");
-                    Journals[1]->printJournal();
-                    return 0;
-         case MessageHead::DefineSchema: processDefineSchema((DefineSchema *)body); break;
-         case MessageHead::Transaction: processTransaction((Transaction *)body); break;
-         case MessageHead::ValidationQueries: processValidationQueries((ValidationQueries *)body); break;
-         case MessageHead::Flush: processFlush((Flush *)body); break;
-         case MessageHead::Forget: processForget((Forget *)body); break;
-         default: return -1; // crude error handling, should never happen
-      }
-    }
-    Journals[0]->printJournal();
-    std::cout << "end" << std::endl;
+		// And interpret it
+		switch (head.type) {
+			case MessageHead::Done: printf("DONE\n");
+				cout << "=====================================================================" << endl;
+				printf("Rel0\n");
+				Journals[0]->printJournal();
+				printf("Rel1\n");
+				Journals[1]->printJournal();
+				//========= TEST AN DOULEVEI H GETJOURNALRECORDS =============
+				// DArray<DArray<uint64_t>*> * arr;
+				// arr = Journals[1]->getJournalRecords(0,3);
+				// for (int w = 0; w < arr->size(); w++){
+				// 	for (int k = 0; k < (arr->get(w))->size(); k++)
+				// 		cout << (arr->get(w))->get(k) << " ";
+				//
+				// 	cout <<endl;
+				// }
+				// cout << Journals[0]->Records->size();
+				//========= TEST AN DOULEVEI H DESTROYJOURNAL =============
+				// Journals[1]->destroyJournal();
+				return 0;
+			case MessageHead::DefineSchema: processDefineSchema((DefineSchema *)body); break;
+			case MessageHead::Transaction: processTransaction((Transaction *)body); break;
+			case MessageHead::ValidationQueries: processValidationQueries((ValidationQueries *)body); break;
+			case MessageHead::Flush: processFlush((Flush *)body); break;
+			case MessageHead::Forget: processForget((Forget *)body); break;
+         	default: return -1; // crude error handling, should never happen
+      	}
+	}
+
     return 0;
 }

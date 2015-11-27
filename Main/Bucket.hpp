@@ -8,21 +8,24 @@ class HashTable;
 class Bucket
 {
     friend class HashTable;
-    
+private:
+
+
 protected:
     unsigned int key;
     unsigned int localDepth;
     bool empty;
     DArray<BucketData*> data;
 
+    Bucket();
+
     Bucket(unsigned ilocalDepth);
 
     Bucket(unsigned ikey, BucketData* bdata, unsigned ilocalDepth);
 
-public:
-    Bucket();
-
     ~Bucket();
+
+public:
 
     void insert(unsigned int key,  BucketData*  data);
 

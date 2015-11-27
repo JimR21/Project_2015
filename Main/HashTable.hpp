@@ -28,27 +28,30 @@ private:
 protected:
     unsigned int globalDepth;
 
+
 public:
 
     HashTable();
 
     ~HashTable();
 
-    int insert(unsigned int key, unsigned int tid, unsigned int offset);
+    int insert(unsigned key, unsigned int tid, unsigned int offset);
 
-    // Returns all the offsets for Journal
-    DArray<DArray<unsigned>>* get(unsigned key);
+	DArray<DArray<unsigned>>* getHashRecord(unsigned key, uint64_t start_tid, uint64_t end_tid);
+
+	DArray<DArray<unsigned>>* getHashRecords(unsigned key);
+
+	bool existCheck(unsigned key,uint64_t, uint64_t);
 
     // Mask
     int getBucketIndex(int hash, int depth);
 
+    // Returns offset for Journal
+	int getLastJournalInsert(unsigned key);
+
     unsigned getsize();
 
-    // Returns offset for Journal
-    int getLastJournalInsert(unsigned key);
-
     void deleteKey(unsigned key);
-
 };
 
 

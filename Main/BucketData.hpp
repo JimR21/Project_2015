@@ -6,14 +6,13 @@ class BucketData
 {
     friend class Bucket;
 	friend class HashTable;
-
- protected:
+protected:
     unsigned tid;
     DArray<unsigned> rangeArray;
 
  public:
-    BucketData(unsigned t, unsigned offset);
-    unsigned getTid();
-    DArray<unsigned> getrangeArray();
-    unsigned getrangeArrayLast();
+	 BucketData(unsigned t, unsigned offset);
+     unsigned getTid();
+     DArray<unsigned> getrangeArray();
+     unsigned getrangeArrayLast();
 };
