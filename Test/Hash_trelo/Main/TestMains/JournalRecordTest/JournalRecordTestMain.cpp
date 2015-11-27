@@ -18,7 +18,7 @@
 
 #define OPTION1 1
 #define OPTION2 2
-#define OPTION3 -10
+#define OPTION3 3
 
 using namespace std;
 
@@ -38,7 +38,7 @@ int main(){
 		cout << "Options: " << endl << endl;
 		cout << "Option[1]: Create JournalRecords - USE THIS ONCE" << endl;
 		cout << "Option[2]: Print JournalRecords" << endl;
-		cout << "Option[3]: -10 to delete all JournalRecords and EXIT" << endl;
+		cout << "Option[3]: Delete all JournalRecords and EXIT" << endl;
 		cout << "==========================================================" << endl;
 		cin >> option;
 
