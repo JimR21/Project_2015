@@ -175,10 +175,7 @@ int main(int argc, char const *argv[])
             cout << "Key: ";
             cin >> key;
             of = table->getLastJournalInsert(key);
-            if(of > 0)
-                cout << "Offset: " << of << endl;
-            else
-                cout << "Key not found!" << endl;
+            cout << "Offset: " << of << endl;
         }
         else if(option == OPTION6)  // TODO: Check the seg fault
         {
@@ -187,9 +184,7 @@ int main(int argc, char const *argv[])
             else
             {
                 int key, start_tid, end_tid;
-                DArray<DArray<unsigned>> array;
-                DArray<unsigned> jr;
-
+                DArray<int>* array = NULL;
 
                 cout << "Key: ";
                 cin >> key;
@@ -203,16 +198,12 @@ int main(int argc, char const *argv[])
                     cout << endl;
                     cout << "Offsets:" << endl;
 
-                    if(table->getHashRecord(key, start_tid, end_tid) != NULL)
+                    if(true)
                     {
-                        array = *table->getHashRecord(key, start_tid, end_tid);
-                        for(int i = 0; i < array.size(); i++)
+                        array = table->getHashRecord(key, start_tid, end_tid);
+                        for(int i = 0; i < array->size(); i++)
                         {
-                            jr = array.get(i);
-                            for(int j = 0; j < jr.size(); j++)
-                            {
-                                cout << jr.get(j) << endl;
-                            }
+                            cout << array->get(i) <<endl;
                         }
                         cout << endl;
                     }
@@ -223,16 +214,12 @@ int main(int argc, char const *argv[])
                 {
                     cout << "Offsets: " << endl;
 
-                    if(table->getHashRecord(key, start_tid, end_tid) != NULL)
+                    if(true)
                     {
-                        array = *table->getHashRecord(key, start_tid, end_tid);
-                        for(int i = 0; i < array.size(); i++)
+                        array = table->getHashRecords(key);
+                        for(int i = 0; i < array->size(); i++)
                         {
-                            jr = array.get(i);
-                            for(int j = 0; j < jr.size(); j++)
-                            {
-                                cout << jr.get(j) << endl;
-                            }
+                            cout << array->get(i) <<endl;
                         }
                         cout << endl;
                     }

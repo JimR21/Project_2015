@@ -5,18 +5,22 @@ using namespace std;
 BucketData::BucketData(unsigned t, unsigned offset)
 {
 	tid = t;
-	rangeArray.push_back(offset);
+	offsets[0] = offset;
+	second_of = false;
+	next = NULL;
 }
 
-DArray<unsigned> BucketData::getrangeArray(){
-	return rangeArray;
+unsigned * BucketData::getOffsets(){
+	return offsets;
 }
 
 unsigned BucketData::getTid(){
 	return tid;
 }
 
-unsigned BucketData::getrangeArrayLast()
+unsigned BucketData::getOffsetLast()
 {
-    return rangeArray.get(rangeArray.size()-1);
+    if(second_of == true)
+		return offsets[1];
+	return offsets[0];
 };

@@ -8,11 +8,13 @@ class BucketData
 	friend class HashTable;
 protected:
     unsigned tid;
-    DArray<unsigned> rangeArray;
+    unsigned offsets[2];
+    bool second_of;     // True if there is a second offset
+    BucketData* next;
 
  public:
 	 BucketData(unsigned t, unsigned offset);
      unsigned getTid();
-     DArray<unsigned> getrangeArray();
-     unsigned getrangeArrayLast();
+     unsigned * getOffsets();
+     unsigned getOffsetLast();
 };

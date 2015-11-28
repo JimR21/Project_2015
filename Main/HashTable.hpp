@@ -35,11 +35,11 @@ public:
 
     ~HashTable();
 
-    int insert(unsigned key, unsigned int tid, unsigned int offset);
+    void insert(unsigned key, unsigned int tid, unsigned int offset);
 
-	DArray<DArray<unsigned>>* getHashRecord(unsigned key, uint64_t start_tid, uint64_t end_tid);
+	DArray<int>* getHashRecord(unsigned key, uint64_t start_tid, uint64_t end_tid);
 
-	DArray<DArray<unsigned>>* getHashRecords(unsigned key);
+	DArray<int>* getHashRecords(unsigned key);
 
 	bool existCheck(unsigned key,uint64_t, uint64_t);
 
@@ -51,7 +51,7 @@ public:
 
     unsigned getsize();
 
-    void deleteKey(unsigned key);
+    int deleteKey(unsigned key);
 };
 
 

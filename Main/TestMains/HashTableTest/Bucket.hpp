@@ -15,19 +15,24 @@ protected:
     unsigned int key;
     unsigned int localDepth;
     bool empty;
-    DArray<BucketData*> data;
+    BucketData* first;
+    BucketData* last;
 
     Bucket();
 
     Bucket(unsigned ilocalDepth);
 
-    Bucket(unsigned ikey, BucketData* bdata, unsigned ilocalDepth);
+    Bucket(unsigned ikey, unsigned tid, unsigned offset, unsigned ilocalDepth);
 
     ~Bucket();
 
+    void addBucketData(unsigned tid, unsigned offset);
+
+
+
 public:
 
-    void insert(unsigned int key,  BucketData*  data);
+    void insert(unsigned key, unsigned tid, unsigned offset);
 
     BucketData* getdataLast();
 };
