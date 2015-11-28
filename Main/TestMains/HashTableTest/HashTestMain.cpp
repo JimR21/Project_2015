@@ -86,12 +86,19 @@ int main(int argc, char const *argv[])
                 }
                 cout << "✔" << endl;
 
+                auto start = get_time::now(); //use auto keyword to minimize typing strokes :)
+
                 cout << "Inserting keys with tid = 0 and incremented offset... ";
                 for(int i = 0; i < keyNumber; i++)
                     table->insert(keys.get(i), 0, i);
-                cout << "✔" << endl;
 
+                auto end = get_time::now();
+
+                cout << "✔" << endl;
                 cout << "HashTable size: " << table->getsize() << endl;
+
+                auto diff = end - start;
+                cout << "Elapsed time is :  " << chrono::duration_cast<ns>(diff).count() << " ms " << endl;
             }
             else
             {
@@ -138,10 +145,18 @@ int main(int argc, char const *argv[])
                 if(flag)
                     keys.push_back(key);
 
+                auto start = get_time::now(); //use auto keyword to minimize typing strokes :)
+
                 table->insert(key, tid, offset);
+
+                auto end = get_time::now();
+
                 cout << "Key: " << key << " with tid: " << tid << " and offset: " << offset << " inserted!" << endl;
                 cout << endl;
                 cout << "HashTable size: " << table->getsize() << endl;
+
+                auto diff = end - start;
+                cout << "Elapsed time is :  " << chrono::duration_cast<ns>(diff).count() << " ms " << endl;
             }
         }
         else if(option == OPTION4)
@@ -153,6 +168,7 @@ int main(int argc, char const *argv[])
                 cout << "Key to delete: ";
                 int dkey;
                 cin >> dkey;
+
                 if(table->deleteKey(dkey))
                 {
                     cout << "Key: " << dkey << " deleted!" << endl;
@@ -174,8 +190,15 @@ int main(int argc, char const *argv[])
             int key, of;
             cout << "Key: ";
             cin >> key;
+
+            auto start = get_time::now(); //use auto keyword to minimize typing strokes :)
             of = table->getLastJournalInsert(key);
+            auto end = get_time::now();
+
             cout << "Offset: " << of << endl;
+
+            auto diff = end - start;
+            cout << "Elapsed time is :  " << chrono::duration_cast<ns>(diff).count() << " ms " << endl;
         }
         else if(option == OPTION6)  // TODO: Check the seg fault
         {
@@ -200,12 +223,18 @@ int main(int argc, char const *argv[])
 
                     if(true)
                     {
+                        auto start = get_time::now(); //use auto keyword to minimize typing strokes :)
                         array = table->getHashRecord(key, start_tid, end_tid);
+                        auto end = get_time::now();
+
                         for(int i = 0; i < array->size(); i++)
                         {
                             cout << array->get(i) <<endl;
                         }
                         cout << endl;
+
+                        auto diff = end - start;
+                        cout << "Elapsed time is :  " << chrono::duration_cast<ns>(diff).count() << " ms " << endl;
                     }
                     else
                     cout << "Key not found!" << endl;
@@ -216,12 +245,18 @@ int main(int argc, char const *argv[])
 
                     if(true)
                     {
+                        auto start = get_time::now(); //use auto keyword to minimize typing strokes :)
                         array = table->getHashRecords(key);
+                        auto end = get_time::now();
+
                         for(int i = 0; i < array->size(); i++)
                         {
                             cout << array->get(i) <<endl;
                         }
                         cout << endl;
+
+                        auto diff = end - start;
+                        cout << "Elapsed time is :  " << chrono::duration_cast<ns>(diff).count() << " ms " << endl;
                     }
                     else
                     cout << "Key not found!" << endl;
@@ -236,12 +271,17 @@ int main(int argc, char const *argv[])
             {
                 cout << "Deleting keys... ";
 
+                auto start = get_time::now(); //use auto keyword to minimize typing strokes :)
+
                 for(int i = 0; i < keys.size(); i++)
                 {
                     table->deleteKey(keys.get(i));
                 }
-
+                auto end = get_time::now();
                 cout << "✔" << endl;
+
+                auto diff = end - start;
+                cout << "Elapsed time is :  " << chrono::duration_cast<ns>(diff).count() << " ms " << endl;
             }
         }
         else if(option == OPTION8)
@@ -250,13 +290,5 @@ int main(int argc, char const *argv[])
                 delete table;
             return 0;
         }
-
-        auto start = get_time::now(); //use auto keyword to minimize typing strokes :)
-
-
-        auto end = get_time::now();
-        auto diff = end - start;
-        cout << "Elapsed time is :  " << chrono::duration_cast<ns>(diff).count() << " ms " << endl;
-
     }
 }
