@@ -63,7 +63,7 @@ void HashTable::halveTableSize()    // TODO: Maybe a special function at DArray.
         bucketArray.popLast();
 }
 //=======================================================================================================
-int HashTable::insert(unsigned int key, unsigned tid, unsigned offset)
+void HashTable::insert(unsigned int key, unsigned tid, unsigned offset)
 {
     unsigned hashed_key;
     hashed_key = hashFunction(key);
@@ -153,7 +153,6 @@ int HashTable::insert(unsigned int key, unsigned tid, unsigned offset)
             }
         }
     }
-    return 1;
 }
 //=======================================================================================================
 DArray<DArray<unsigned>>*  HashTable::getHashRecord(unsigned key, uint64_t start_tid, uint64_t end_tid){
@@ -241,12 +240,8 @@ int HashTable::getLastJournalInsert(unsigned key)  // NEW
     return -1;
 }
 //=======================================================================================================
-void HashTable::deleteKey(unsigned key)
+int HashTable::deleteKey(unsigned key)
 {
-    if(key == 492)
-    {
-        cout << "Stop" << endl;
-    }
     unsigned hashed_key;
     hashed_key = hashFunction(key);
     unsigned idx = getBucketIndex(hashed_key, globalDepth);
@@ -282,7 +277,9 @@ void HashTable::deleteKey(unsigned key)
             if(maxLocalCounter == 0)
                 halveTableSize();
         }
+        return 1;
     }
     else
         cout << "Delete: Key " << key << " not found" << endl;
+    return 0;
 }
