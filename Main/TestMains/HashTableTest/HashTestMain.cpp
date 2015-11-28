@@ -121,7 +121,7 @@ int main(int argc, char const *argv[])
                 cout << "No HashTable found! Create a new one." << endl;
             else
             {
-                int key, tid, offset;
+                int key, tid, offset, flag = 1;
 
                 cout << "Key: ";
                 cin >> key;
@@ -130,7 +130,13 @@ int main(int argc, char const *argv[])
                 cout << "Offset: ";
                 cin >> offset;
 
-                keys.push_back(key);
+                for(int i = 0; i < keys.size(); i++)
+                {
+                    if(keys.get(i) == key)
+                        flag = 0;
+                }
+                if(flag)
+                    keys.push_back(key);
 
                 table->insert(key, tid, offset);
                 cout << "Key: " << key << " with tid: " << tid << " and offset: " << offset << " inserted!" << endl;
