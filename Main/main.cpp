@@ -309,7 +309,8 @@ static void processValidationQueries(ValidationQueries *v){
 			DArray<DArray<uint64_t>*> * RecordsToCheck = Journals[q->relationId]->getJournalRecords(v->from, v->to);
 
 			// checkare kathe record
-			for (int j = 0; j < RecordsToCheck->size(); j++){
+            int stc_size = RecordsToCheck->size();
+			for (int j = 0; j < stc_size; j++){
 				DArray<uint64_t> * jr = RecordsToCheck->get(j);
 				// for (int k = 0; k < jr->size(); k++)
 				// 	cout << jr->get(k) << " ";
@@ -317,7 +318,8 @@ static void processValidationQueries(ValidationQueries *v){
 
 				bool match = true;
 				// iterate over subqueries left to check
-				for (int w = 0; w < subqueries_to_check->size(); w++){
+                int stc_size = subqueries_to_check->size();
+				for (int w = 0; w < stc_size; w++){
 					bool result = false;
 					uint64_t query_value = subqueries_to_check->get(w).value;
 					uint64_t tuple_value = jr->get(subqueries_to_check->get(w).column);
@@ -360,13 +362,19 @@ static void processValidationQueries(ValidationQueries *v){
 //================================================================================================
 static void processFlush(Flush *fl){
 
-    // cout << "Flush " << fl->validationId << endl;
+     myfile << "Flush " << fl->validationId << endl;
 	// cout << "=====================================================================" << endl;
 
-	for (unsigned i = val_offset; i <= (unsigned)validationResults.size() && i<=fl->validationId; i++){
+    unsigned valRes_size = (unsigned)validationResults.size();
+    unsigned i;
+
+	for (i = val_offset; i <= valRes_size && i<=fl->validationId; i++){
 		myfile << "Validation " << i << " : " << validationResults.get(i) << endl;
 	}
-	val_offset += fl->validationId + 1;
+    if(i > fl->validationId)
+	   val_offset = fl->validationId + 1;
+    else
+        val_offset = valRes_size + 1;
 	//
 	// cout << "New offset: " << val_offset << endl;
 	// exit(0);
