@@ -167,7 +167,7 @@ DArray<int>* HashTable::getHashRecord(unsigned key, uint64_t start_tid, uint64_t
         return array;
 	}
 	else
-        cout << "getHashRecord: Key not found" << endl;
+        // cout << "getHashRecord: Key not found" << endl;
 	return array;
 }
 //=======================================================================================================
@@ -192,7 +192,7 @@ DArray<int>* HashTable::getHashRecords(unsigned key)
         return array;
 	}
     else
-        cout << "getHashRecords: Key not found" << endl;
+        // cout << "getHashRecords: Key not found" << endl;
 	return array;
 }
 //=======================================================================================================
@@ -231,7 +231,7 @@ int HashTable::getLastJournalInsert(unsigned key)  // NEW
         return bdata->getOffsetLast();
     }
     else
-        cout << "Key not found" << endl;
+        // cout << "Key not found" << endl;
     return -1;
 }
 //=======================================================================================================
@@ -275,6 +275,6 @@ int HashTable::deleteKey(unsigned key)
         return 1;
     }
     else
-        cout << "Delete: Key " << key << " not found" << endl;
+        // cout << "Delete: Key " << key << " not found" << endl;
     return 0;
 }

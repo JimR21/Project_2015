@@ -52,12 +52,14 @@ void Bucket::addBucketData(unsigned tid, unsigned offset)
                 flag = false;
                 break;
             }
+            if(temp->next == NULL)
+                break;
             temp = temp->next;
-        }while(temp != NULL);
+        }while(1);
         if(flag)
         {
-            temp = new BucketData(tid, offset);
-            last = temp;
+            temp->next = new BucketData(tid, offset);
+            last = temp->next;
         }
     }
 }
