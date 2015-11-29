@@ -16,7 +16,7 @@
 
 using namespace std;
 using ns = chrono::milliseconds;
-using get_time = chrono::steady_clock ;
+using get_time = chrono::steady_clock;
 
 int main(int argc, char const *argv[])
 {
@@ -86,7 +86,7 @@ int main(int argc, char const *argv[])
                 }
                 cout << "✔" << endl;
 
-                auto start = get_time::now(); //use auto keyword to minimize typing strokes :)
+                auto start = get_time::now();
 
                 cout << "Inserting keys with tid = 0 and incremented offset... ";
                 for(int i = 0; i < keyNumber; i++)
@@ -145,7 +145,7 @@ int main(int argc, char const *argv[])
                 if(flag)
                     keys.push_back(key);
 
-                auto start = get_time::now(); //use auto keyword to minimize typing strokes :)
+                auto start = get_time::now();
 
                 table->insert(key, tid, offset);
 
@@ -191,7 +191,7 @@ int main(int argc, char const *argv[])
             cout << "Key: ";
             cin >> key;
 
-            auto start = get_time::now(); //use auto keyword to minimize typing strokes :)
+            auto start = get_time::now();
             of = table->getLastJournalInsert(key);
             auto end = get_time::now();
 
@@ -223,7 +223,7 @@ int main(int argc, char const *argv[])
 
                     if(true)
                     {
-                        auto start = get_time::now(); //use auto keyword to minimize typing strokes :)
+                        auto start = get_time::now();
                         array = table->getHashRecord(key, start_tid, end_tid);
                         auto end = get_time::now();
 
@@ -245,7 +245,7 @@ int main(int argc, char const *argv[])
 
                     if(true)
                     {
-                        auto start = get_time::now(); //use auto keyword to minimize typing strokes :)
+                        auto start = get_time::now();
                         array = table->getHashRecords(key);
                         auto end = get_time::now();
 
@@ -271,7 +271,7 @@ int main(int argc, char const *argv[])
             {
                 cout << "Deleting keys... ";
 
-                auto start = get_time::now(); //use auto keyword to minimize typing strokes :)
+                auto start = get_time::now();
 
                 for(int i = 0; i < keys.size(); i++)
                 {

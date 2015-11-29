@@ -22,6 +22,8 @@ Bucket::Bucket(unsigned ilocalDepth) : localDepth(ilocalDepth)
 
 Bucket::Bucket(unsigned ikey, unsigned tid, unsigned offset, unsigned ilocalDepth) : key(ikey), localDepth(ilocalDepth)
 {
+    first = NULL;
+    last = NULL;
     empty = false;
     addBucketData(tid, offset);
 }
@@ -42,7 +44,7 @@ void Bucket::addBucketData(unsigned tid, unsigned offset)
     {
         bool flag = true;   // An true tha prostethei neo Bucket data
         BucketData* temp = first;
-        while(temp->next != NULL)
+        do
         {
             if(temp->tid == tid)
             {
@@ -51,11 +53,11 @@ void Bucket::addBucketData(unsigned tid, unsigned offset)
                 break;
             }
             temp = temp->next;
-        }
+        }while(temp != NULL);
         if(flag)
         {
-            temp->next = new BucketData(tid, offset);
-            last = temp->next;
+            temp = new BucketData(tid, offset);
+            last = temp;
         }
     }
 }

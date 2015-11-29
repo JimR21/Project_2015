@@ -3,11 +3,14 @@
 #include <stdint.h>
 #include <unistd.h>
 #include <inttypes.h>
+#include <chrono>
 #include "Journal.hpp"
 #include "Bucket.hpp"
 #include "HashTable.hpp"
 
 using namespace std;
+using ns = chrono::nanoseconds;
+using get_time = chrono::steady_clock;
 
 //================================================================================================
 struct MessageHead {
@@ -376,6 +379,10 @@ int main(int argc, char **argv) {
 	void *body = NULL;
 	uint32_t len;
 
+
+    auto start = get_time::now();
+    auto end = get_time::now();
+    auto diff = end - start;
     while(1){
 		// Retrieve the message head
 		if (read(0, &head, sizeof(head)) <= 0) { return -1; } // crude error handling, should never happen
@@ -410,6 +417,11 @@ int main(int argc, char **argv) {
 				// cout << Journals[0]->Records->size();
 				//========= TEST AN DOULEVEI H DESTROYJOURNAL =============
 				// Journals[1]->destroyJournal();
+
+                end = get_time::now();
+                diff = end - start;
+                cout << "Elapsed time is :  " << chrono::duration_cast<ns>(diff).count() << " ms " << endl;
+
 				return 0;
 			case MessageHead::DefineSchema: processDefineSchema((DefineSchema *)body); break;
 			case MessageHead::Transaction: processTransaction((Transaction *)body); break;
@@ -419,6 +431,5 @@ int main(int argc, char **argv) {
          	default: return -1; // crude error handling, should never happen
       	}
 	}
-
     return 0;
 }

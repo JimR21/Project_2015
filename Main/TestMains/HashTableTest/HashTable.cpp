@@ -163,7 +163,7 @@ DArray<int>* HashTable::getHashRecord(unsigned key, uint64_t start_tid, uint64_t
                     array->push_back(tempData->offsets[1]);
             }
             tempData = tempData->next;
-        }while(tempData->next != NULL);
+        }while(tempData != NULL);
         return array;
 	}
 	else
@@ -209,7 +209,7 @@ bool HashTable::existCheck(unsigned key, uint64_t start_tid, uint64_t end_tid){
             if(tempData->tid >= start_tid && tempData->tid <= end_tid)
                 return true;
                 tempData = tempData->next;
-        }while(tempData->next != NULL);
+        }while(tempData != NULL);
 	}
 	return false;
 }
