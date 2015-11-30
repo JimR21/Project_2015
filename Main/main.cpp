@@ -339,7 +339,7 @@ static void processValidationQueries(ValidationQueries *v){
 					// cout << "Record column [" << subqueries_to_check->get(w).column << "] value: " << tuple_value << endl;
 					// cout << "***********************************" << endl;
 
-					switch (q->columns[w].op) {
+					switch (subqueries_to_check->get(w).column) {
 	                   case Query::Column::Equal: 		result=(tuple_value == query_value); break;
 	                   case Query::Column::NotEqual: 	result=(tuple_value != query_value); break;
 	                   case Query::Column::Less: 		result=(tuple_value < query_value); break;
