@@ -10,7 +10,7 @@
 #include <fstream>
 
 using namespace std;
-using ns = chrono::milliseconds;
+using ns = chrono::seconds;
 using get_time = chrono::steady_clock;
 
 ofstream myfile ("out.bin", ios::out);
@@ -270,14 +270,23 @@ static void processValidationQueries(ValidationQueries *v){
 		JournalRecord *jt = Journals[q->relationId]->getRecord(idx);
 		uint64_t max_tid = jt->getTransactionId();
 
-
-		if (v->from > max_tid)	// mou dwse tid start pou einai megalutero tou max
-			break;				// no need to check the next queries for this validation
-
+        // if(v->validationId == 25)
+        // {
+        //     Journals[q->relationId]->printJournal();
+        // }
+        //
 		// cout << "Query on relation: " << q->relationId << endl;
 		// cout << "column counts: " << q->columnCount << endl;
 
-        // Journals[q->relationId]->printJournal();
+
+		if (v->from > max_tid)	// mou dwse tid start pou einai megalutero tou max
+        {
+            // Go to the next query
+            reader += sizeof(Query)+(sizeof(Query::Column)*q->columnCount);
+			continue;				// no need to check the next queries for this validation
+        }
+
+        //Journals[q->relationId]->printJournal();
 
 		bool hit = true;
 
@@ -356,13 +365,18 @@ static void processValidationQueries(ValidationQueries *v){
 		// delete array for the next query
 		delete subqueries_to_check;
 	}
+    //
+    // if(v->validationId == 25)
+    // {
+    //     cout << "ok" << endl;
+    // }
 	// Store validation's conflict result
 	validationResults.push_back(conflict);
 }
 //================================================================================================
 static void processFlush(Flush *fl){
 
-     myfile << "Flush " << fl->validationId << endl;
+    // myfile << "Flush " << fl->validationId << endl;
 	// cout << "=====================================================================" << endl;
 
     unsigned valRes_size = (unsigned)validationResults.size();
@@ -415,7 +429,7 @@ int main(int argc, char **argv) {
 			case MessageHead::Done: //printf("DONE\n");
 				// cout << "=====================================================================" << endl;
 				// printf("Rel0\n");
-				// Journals[0]->printJournal();
+				// Journals[23]->printJournal();
 				// printf("Rel1\n");
 				// Journals[1]->printJournal();
 				//========= TEST AN DOULEVEI H GETJOURNALRECORDS =============
