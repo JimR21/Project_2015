@@ -382,10 +382,10 @@ static void processFlush(Flush *fl){
     unsigned valRes_size = (unsigned)validationResults.size();
     unsigned i;
 
-	for (i = val_offset; i <= valRes_size && i<=fl->validationId; i++){
+	for (i = val_offset; i < valRes_size && i<=fl->validationId; i++){
 		myfile << "Validation " << i << " : " << validationResults.get(i) << endl;
 	}
-    if(i > fl->validationId)
+    if(i >= fl->validationId)
 	   val_offset = fl->validationId + 1;
     else
         val_offset = valRes_size + 1;
