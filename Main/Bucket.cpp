@@ -49,6 +49,7 @@ void Bucket::addBucketData(unsigned tid, unsigned offset)
             if(temp->tid == tid)
             {
                 temp->offsets[1] = offset;
+                temp->second_of = true;
                 flag = false;
                 break;
             }

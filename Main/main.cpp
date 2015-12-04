@@ -150,7 +150,7 @@ static void processTransaction(Transaction *t){
     const char* reader = t->operations;
     JournalRecord* record;
 
-    if(t->transactionId == 479)
+    if(t->transactionId == 753)
     {
         cout << "tid" << endl;
     }
@@ -262,7 +262,7 @@ static void processValidationQueries(ValidationQueries *v){
 	// cout << "ValidationQueries " << v->validationId << " [" << v->from << ", " << v->to << "] " << v->queryCount << endl;
 	// cout << "=====================================================================" << endl;
 
-    if(v->validationId == 2782)
+    if(v->validationId == 4792)
     {
         cout << "ok" << endl;
     }
@@ -280,10 +280,10 @@ static void processValidationQueries(ValidationQueries *v){
         conflict = true;
 		const Query* q = (Query*)reader;
 
-        if(v->validationId == 2782 && q->relationId == 5)
-        {
-            Journals[5]->printJournal();
-        }
+        // if(v->validationId == 2782 && q->relationId == 5)
+        // {
+        //     Journals[5]->printJournal();
+        // }
 
 		// adeio validation
 		if (v->queryCount == 1 && q->columnCount == 0){
