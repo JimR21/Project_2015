@@ -141,13 +141,16 @@ void HashTable::insert(unsigned int key, unsigned tid, unsigned offset)
     }
 }
 //=======================================================================================================
-DArray<int>* HashTable::getHashRecord(unsigned key, uint64_t start_tid, uint64_t end_tid){
+
+// TODO: DArray an einai kenos delete??
+
+DArray<uint64_t>* HashTable::getHashRecord(unsigned key, uint64_t start_tid, uint64_t end_tid){
 	unsigned hashed_key;
     hashed_key = hashFunction(key);
 	int index = getBucketIndex(hashed_key, globalDepth); // koitaw ta globaldepth deksia bits gia na dw se poio index tha paw
     Bucket* tempBucket = bucketArray.get(index);
 
-    DArray<int>* array = new DArray<int>();
+    DArray<uint64_t>* array = new DArray<uint64_t>();
 
 	if((tempBucket->empty == false) && (tempBucket->key == key))
     {
@@ -164,21 +167,31 @@ DArray<int>* HashTable::getHashRecord(unsigned key, uint64_t start_tid, uint64_t
             }
             tempData = tempData->next;
         }while(tempData != NULL);
+        if(array->size() == 0)
+        {
+            delete array;
+            return NULL;
+        }
         return array;
 	}
 	else
         // cout << "getHashRecord: Key not found" << endl;
+    if(array->size() == 0)
+    {
+        delete array;
+        return NULL;
+    }
 	return array;
 }
 //=======================================================================================================
-DArray<int>* HashTable::getHashRecords(unsigned key)
+DArray<uint64_t>* HashTable::getHashRecords(unsigned key)
 {
     unsigned hashed_key;
     hashed_key = hashFunction(key);
 	int index = getBucketIndex(hashed_key, globalDepth); // koitaw ta globaldepth deksia bits gia na dw se poio index tha paw
     Bucket* tempBucket = bucketArray.get(index);
 
-	DArray<int>* array = new DArray<int>();
+	DArray<uint64_t>* array = new DArray<uint64_t>();
 
     if((tempBucket->empty == false) && (tempBucket->key == key)){
         BucketData* tempData = tempBucket->first;
@@ -189,10 +202,20 @@ DArray<int>* HashTable::getHashRecords(unsigned key)
                 array->push_back(tempData->offsets[1]);
             tempData = tempData->next;
         }while(tempData != NULL);
+        if(array->size() == 0)
+        {
+            delete array;
+            return NULL;
+        }
         return array;
 	}
     else
         // cout << "getHashRecords: Key not found" << endl;
+    if(array->size() == 0)
+    {
+        delete array;
+        return NULL;
+    }
 	return array;
 }
 //=======================================================================================================

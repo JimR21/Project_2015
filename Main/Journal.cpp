@@ -15,9 +15,9 @@ void Journal::insertJournalRecord(JournalRecord* record){
 }
 //================================================================================================
 
-DArray<DArray<uint64_t>*> * Journal::getJournalRecords(uint64_t start_tid, uint64_t end_tid){
+DArray<JournalRecord*> * Journal::getJournalRecords(uint64_t start_tid, uint64_t end_tid){
 
-	DArray<DArray<uint64_t>*> *recs = new DArray<DArray<uint64_t>*>();
+	DArray<JournalRecord*> *recs = new DArray<JournalRecord*>();
 
 	int idx = -1;
 													// ipothetw oti den tha dwsei range ektos oriwn
@@ -31,8 +31,7 @@ DArray<DArray<uint64_t>*> * Journal::getJournalRecords(uint64_t start_tid, uint6
 		uint64_t tid = (Records->get(i))->getTransactionId();	// tid of the specific JournalRecord
 
 		if (tid <= end_tid)	{	// oso den exw kseperasei to end_tid
-			DArray<uint64_t> *arr = (Records->get(i))->getAllValues();
-			recs->push_back(arr);
+			recs->push_back(Records->get(i));
 		}
 		else
 			break;
@@ -87,6 +86,6 @@ int Journal::getRecordsSize(){
 	return Records->size();
 }
 //================================================================================================
-JournalRecord* Journal::getRecord(int key){
-	return Records->get(key);
+JournalRecord* Journal::getRecord(int offset){
+	return Records->get(offset);
 }
