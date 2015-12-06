@@ -235,11 +235,6 @@ static void processValidationQueries(ValidationQueries *v){
     {
         conflict = true;
 		const Query* q = (Query*)reader;
-		// adeio validation
-		if (v->queryCount == 1 && q->columnCount == 0){
-			conflict = true;
-			break;
-	       }
 
         // check an einai entos range
 		uint64_t max_tid = Journals[q->relationId]->getLastTID();
@@ -252,6 +247,12 @@ static void processValidationQueries(ValidationQueries *v){
             reader += sizeof(Query)+(sizeof(Query::Column)*q->columnCount);
 			continue;				// no need to check the next queries for this validation
         }
+
+        if (q->columnCount == 0)    // an einai keno kai mesa sta oria tote conflict
+        {
+			conflict = true;
+			break;
+	    }
 
         //Journals[q->relationId]->printJournal();
 
