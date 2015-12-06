@@ -241,9 +241,8 @@ static void processValidationQueries(ValidationQueries *v){
 			break;
 	       }
 
-		int idx = (Journals[q->relationId]->getRecordsSize())-1;	// check an einai entos range
-		JournalRecord *jt = Journals[q->relationId]->getRecord(idx);
-		uint64_t max_tid = jt->getTransactionId();
+        // check an einai entos range
+		uint64_t max_tid = Journals[q->relationId]->getLastTID();
 
 
 		if (v->from > max_tid )	// mou dwse tid start pou einai megalutero tou max || keno query

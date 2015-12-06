@@ -55,7 +55,7 @@ void HashTable::doubleTableSize()
     size = new_size;
 }
 //=======================================================================================================
-void HashTable::halveTableSize()    // TODO: Maybe a special function at DArray.hpp?
+void HashTable::halveTableSize()   
 {
     globalDepth--;
     size /= 2;
@@ -141,8 +141,6 @@ void HashTable::insert(unsigned int key, unsigned tid, unsigned offset)
     }
 }
 //=======================================================================================================
-
-// TODO: DArray an einai kenos delete??
 
 DArray<uint64_t>* HashTable::getHashRecord(unsigned key, uint64_t start_tid, uint64_t end_tid){
 	unsigned hashed_key;

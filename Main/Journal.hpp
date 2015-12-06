@@ -8,6 +8,7 @@ class Journal {
 private:
     uint32_t relation_id;
     DArray<JournalRecord*> *Records;
+    uint64_t lastTID;
 
 public:
     Journal(uint32_t);
@@ -18,4 +19,5 @@ public:
 	void destroyJournal();
 	int getRecordsSize();
 	JournalRecord *getRecord(int key);
+    uint64_t getLastTID();
 };

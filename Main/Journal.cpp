@@ -12,6 +12,7 @@ Journal::Journal(uint32_t rel_id){
 
 void Journal::insertJournalRecord(JournalRecord* record){
     Records->push_back(record);
+    lastTID = record->getTransactionId();
 }
 //================================================================================================
 
@@ -88,4 +89,9 @@ int Journal::getRecordsSize(){
 //================================================================================================
 JournalRecord* Journal::getRecord(int offset){
 	return Records->get(offset);
+}
+//================================================================================================
+uint64_t Journal::getLastTID()
+{
+    return lastTID;
 }
