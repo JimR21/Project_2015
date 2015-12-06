@@ -150,16 +150,6 @@ static void processTransaction(Transaction *t){
     const char* reader = t->operations;
     JournalRecord* record;
 
-    if(t->transactionId == 753)
-    {
-        cout << "tid" << endl;
-    }
-
-
-    // cout << "Transaction " << t->transactionId << " (" << t->deleteCount << ", " << t->insertCount << ")" << " |" << endl;
-	// cout << "=====================================================================" << endl;
-
-
 	//=================================
 	// Delete operations
 	//=================================
@@ -182,12 +172,11 @@ static void processTransaction(Transaction *t){
 
 				// checking case of multiple deletes
 				if (Journals[o->relationId]->getRecord(index)->getType() == DELETE){
-					// cout << "Sunexomeno delete case" << endl;
+					// Sunexomeno delete case
 					continue;}
-				else
-					// cout << "Delete after insertion" << endl;
 
-				// cout << endl;
+				// Else Delete after insertion
+
 				record = new JournalRecord(t->transactionId, DELETE);	// JournalRecord to be inserted
 
 				JournalRecord * jr = Journals[o->relationId]->getRecord(index);
@@ -195,6 +184,7 @@ static void processTransaction(Transaction *t){
 		            record->addValue(jr->getValue(j));  // copy the rest columns from the one found
 
 				Journals[o->relationId]->insertJournalRecord(record);	// insert delete record to Journal
+
                 //===================================
 				// Update relation's hash
 				//===================================
@@ -206,72 +196,38 @@ static void processTransaction(Transaction *t){
         // Go to the next delete operation
         reader += sizeof(TransactionOperationDelete) + (sizeof(uint64_t) * o->rowCount);
     }
-    // printf(" \t| ");
 	//=================================
 	// Insert Operations
 	//=================================
     for(i = 0; i < t->insertCount; i++) {
         const TransactionOperationInsert* o = (TransactionOperationInsert*)reader;
 
-		// cout << endl;
-		// cout << "--------------------------------------------" << endl;
-        // printf("opins rid %u #rows %u | \n", o->relationId, o->rowCount);
-		// cout << "--------------------------------------------" << endl;
-
 		for(unsigned int j = 0; j< o->rowCount * schema[o->relationId]; j++) {	// iterate over values array
 			if(j % schema[o->relationId] == 0) {		// start of group
 				record = new JournalRecord(t->transactionId, INSERT);
-				// printf("(");
         	}
-			// printf("%lu ", o->values[j]);
         	record->addValue(o->values[j]);  // add value to record
 
 			if((j + 1) % schema[o->relationId] == 0) {	// end of group
-				// printf(")");
-
 				//===================================
 				// Insert record to relation's journal
 				//===================================
             	Journals[o->relationId]->insertJournalRecord(record);   // add record to relation's Journal
 
-				int size = Journals[o->relationId]->getRecordsSize();
-				// cout << "=========================================================" << endl;
-				// cout << "Journal size: " << size << endl;
-				// cout << "Offset: " << size - 1 << endl;
-				// cout << "Tid: " << t->transactionId << endl;
-				// cout << "c0: " << record->getValue(0) << endl;
-				// cout << "=========================================================" << endl;
 				//===================================
 				// Update relation's hash
 				//===================================
+                int size = Journals[o->relationId]->getRecordsSize();
 				hash_tables[o->relationId]->insert(record->getValue(0), t->transactionId, size - 1);
-
-				// if(j + 1 < o->rowCount * schema[o->relationId] ) printf("(");
 			}
 		}
 		// Go to the next insert operation
 		reader+=sizeof(TransactionOperationInsert)+(sizeof(uint64_t)*o->rowCount*schema[o->relationId]);
     }
-
-    // printf("\n");
-
 }
 //================================================================================================
 static void processValidationQueries(ValidationQueries *v){
-
-	// cout << "ValidationQueries " << v->validationId << " [" << v->from << ", " << v->to << "] " << v->queryCount << endl;
-	// cout << "=====================================================================" << endl;
-
-    if(v->validationId == 19631)
-    {
-        cout << "ok" << endl;
-    }
-
-
-	// DArray<DArray<unsigned>>* array;	// array me ta rangearrays gia to case c0=<x>
 	bool conflict = true;
-    //bool no_conflict = false;   // Sigouro oti den uparxei conflict gia ta subqueries
-
 	const char* reader = v->queries;
 
 	// Iterate over the validation's queries
@@ -279,12 +235,6 @@ static void processValidationQueries(ValidationQueries *v){
     {
         conflict = true;
 		const Query* q = (Query*)reader;
-
-        // if(v->validationId == 2782 && q->relationId == 5)
-        // {
-        //     Journals[5]->printJournal();
-        // }
-
 		// adeio validation
 		if (v->queryCount == 1 && q->columnCount == 0){
 			conflict = true;
@@ -296,10 +246,10 @@ static void processValidationQueries(ValidationQueries *v){
 		uint64_t max_tid = jt->getTransactionId();
 
 
-		if (v->from > max_tid || q->columnCount == 0)	// mou dwse tid start pou einai megalutero tou max || keno query
+		if (v->from > max_tid )	// mou dwse tid start pou einai megalutero tou max || keno query
         {
             // Go to the next query
-            conflict = false;   // Se periptwsh poy den uparxei allo qu
+            conflict = false;   // Se periptwsh poy den uparxei allo query
             reader += sizeof(Query)+(sizeof(Query::Column)*q->columnCount);
 			continue;				// no need to check the next queries for this validation
         }
@@ -310,14 +260,15 @@ static void processValidationQueries(ValidationQueries *v){
         DArray<Query::Column>* priority2 = new DArray<Query::Column>();        // subqueries me =
         DArray<Query::Column>* priority3 = new DArray<Query::Column>();        // ola ta upoloipa
 
-        DArray<Query::Column> tempCol[maxColumnCounts];
+
+        //==========================================================
+        // 1os elegxos: An einai valid ta predicates twn subqueries
+        // Arxikopoihsh twn priority tables
+        //==========================================================
+
 		// iterate over subqueries
 		for (unsigned w = 0; w < q->columnCount; w++)
         {
-			// cout << "Subquery~> c" << q->columns[w].column << " , operator = " << q->columns[w].op << " , val: " << q->columns[w].value << endl;
-
-            tempCol[q->columns[w].column].push_back(q->columns[w]);
-
 			// ean to operation einai '=' kai anaferetai sto primary key (c0)
 			if (q->columns[w].op == Query::Column::Equal && q->columns[w].column == 0)
             {
@@ -325,10 +276,10 @@ static void processValidationQueries(ValidationQueries *v){
                     priority1->push_back(q->columns[w]);
                 else
                 {
-                    if(priority1->get(0).value != q->columns[w].value)
+                    if(priority1->get(0).value != q->columns[w].value)  // An uparxei hdh subquery me diaforetikh timh sto c0 =
                     {
                         // Go to the next query
-                        conflict = false;   // Se periptwsh poy den uparxei allo qu
+                        conflict = false;   // Se periptwsh poy den uparxei allo query
                         reader += sizeof(Query)+(sizeof(Query::Column)*q->columnCount);
             			break;				// no need to check the next queries for this validation
                     }
@@ -340,18 +291,16 @@ static void processValidationQueries(ValidationQueries *v){
                 priority3->push_back(q->columns[w]);
 		}
 
-        if(conflict == false)
+        if(conflict == false)   // Sthn periptvsh poy vgei false apo ton 1o elegxo
             continue;
 
-        // Elegxos an ena column emfanizetai panw apo 1 fora sto idio query
-        // for (unsigned w = 0; w < q->columnCount; w++)
-        // {
-        //
-        // }
+        DArray<uint64_t>* offsets_to_check = NULL;      // DArray me ta offset pou exoyme na elegksoume
+        DArray<JournalRecord*>* records_to_check = NULL;    // DArray me ta journal records poy exoume na elegksoume
+        DArray<JournalRecord*>* records_to_check2 = new DArray<JournalRecord*>();   // Voithitikos DArray me records
 
-        DArray<uint64_t>* offsets_to_check = NULL;
-        DArray<JournalRecord*>* records_to_check = NULL;
-        DArray<JournalRecord*>* records_to_check2 = new DArray<JournalRecord*>();
+        //================================================================
+        // 2os elegxos: Filtrarisma twn records me vash ta priority tables
+        //================================================================
 
         for(int w = 0; w < priority1->size(); w++)
         {
@@ -387,21 +336,11 @@ static void processValidationQueries(ValidationQueries *v){
                 }
                 else
                 {
-                    if(w < priority2->size() - 1)
-                    {
-                        delete records_to_check;
-                        records_to_check = records_to_check2;
-                        records_to_check2 = new DArray<JournalRecord*>();
-                    }
+                    delete records_to_check;
+                    records_to_check = records_to_check2;
+                    records_to_check2 = new DArray<JournalRecord*>();
                 }
             }
-
-        if(priority2->size() > 0)
-        {
-            delete records_to_check;
-            records_to_check = records_to_check2;
-            records_to_check2 = new DArray<JournalRecord*>();
-        }
 
         if(conflict == true)
             for(int w = 0; w < priority3->size(); w++)
@@ -425,7 +364,7 @@ static void processValidationQueries(ValidationQueries *v){
                         case Query::Column::LessOrEqual: result=(tuple_value <= query_value); break;
                         case Query::Column::Greater: 	result=(tuple_value > query_value); break;
                         case Query::Column::GreaterOrEqual: result=(tuple_value >= query_value); break;
-                        case Query::Column::Equal: 		result=(tuple_value == query_value); break;
+                        default: result = false ; break;
             	    }
 
                     if(result == true)
@@ -444,10 +383,6 @@ static void processValidationQueries(ValidationQueries *v){
                 }
             }
 
-        delete records_to_check;
-        records_to_check = records_to_check2;
-        records_to_check2 = NULL;
-
         if(offsets_to_check != NULL)
             delete offsets_to_check;
         if(records_to_check != NULL)
@@ -465,9 +400,7 @@ static void processValidationQueries(ValidationQueries *v){
             reader += sizeof(Query)+(sizeof(Query::Column)*q->columnCount);
         }
         else
-        {
             break;
-        }
     }
 
 
