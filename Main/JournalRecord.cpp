@@ -39,7 +39,6 @@ void JournalRecord::printRecord(){
 }
 //============================================================
 JournalRecord::~JournalRecord(){
-	cout << "Destroying JournalRecord" << endl;
 	delete values;
 }
 //============================================================

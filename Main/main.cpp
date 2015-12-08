@@ -3,6 +3,7 @@
 #include <stdint.h>
 #include <unistd.h>
 #include <inttypes.h>
+#include <string>
 #include <chrono>
 #include "Journal.hpp"
 #include "Bucket.hpp"
@@ -10,8 +11,14 @@
 #include <fstream>
 
 using namespace std;
-using ns = chrono::seconds;
+using ns = chrono::milliseconds;
 using get_time = chrono::steady_clock;
+
+//Testing
+unsigned transactionCounter = 0;
+
+std::chrono::time_point<std::chrono::high_resolution_clock> default_time, globalstart, globalend, def_start, def_end, tran_start, tran_end, val_start, val_end, flush_start, flush_end, destroy_start, destroy_end;
+std::chrono::duration<double> default_diff, globaldiff, def_diff, tran_diff, val_diff, flush_diff, destroy_diff;
 
 ofstream myfile ("out.bin", ios::out);
 
@@ -107,17 +114,23 @@ HashTable** hash_tables;		 // Extendible hashing for every relation
 DArray<bool> validationResults;	 // den xreiazetai new einai sto scope tis main
 DArray<Query::Column>* subqueries_to_check;
 
-
+int relationCount = 0;
 int val_offset = 0;
 uint32_t maxColumnCounts = 0;
+
 //=====================================================
 //=================== FUNCTIONS =======================
-//================================================================================================
+//=====================================================
+inline const char * const BoolToString(bool b)
+{
+  return b ? "1" : "0";
+}
+//==============================================================================================
 static void processDefineSchema(DefineSchema *s){
 
-	unsigned int i;
+    def_start = std::chrono::high_resolution_clock::now();
 
-	// cout << "DefineSchema " << s->relationCount << " |";
+	unsigned int i;
 
   	if (schema == NULL)
 		free(schema);
@@ -126,13 +139,12 @@ static void processDefineSchema(DefineSchema *s){
   	Journals = (Journal**)malloc(sizeof(Journal*) * s->relationCount); 	// allocate space for pointers to Journals
 	hash_tables = (HashTable**)malloc(sizeof(HashTable*) * s->relationCount);
 
+    relationCount = s->relationCount;
+
 	for(i = 0; i < s->relationCount; i++){
-    	// cout << " " << s->columnCounts[i] << " ";	// print columns for every relation
 		schema[i] = s->columnCounts[i];				// add # of columns for every relation to schema
         if(schema[i] > maxColumnCounts) maxColumnCounts = schema[i];
 	}
-
- //  	cout << endl;
 
   	for(i = 0; i < s->relationCount; i++) {   	// For every relation
   		Journal* journal = new Journal(i);    	// Create empty Journal
@@ -140,25 +152,27 @@ static void processDefineSchema(DefineSchema *s){
 		hash_tables[i] = new HashTable();		// Create empty Hash for every rel
   	}
 
+    def_end = std::chrono::high_resolution_clock::now();
+    def_diff = def_end - def_start;
 
 }
 //================================================================================================
 static void processTransaction(Transaction *t){
+
+    tran_start = std::chrono::high_resolution_clock::now();
 
     unsigned i;
 	int index;
     const char* reader = t->operations;
     JournalRecord* record;
 
+    transactionCounter = t->transactionId;
+
 	//=================================
 	// Delete operations
 	//=================================
     for(i = 0; i < t->deleteCount; i++) {
     	const TransactionOperationDelete* o = (TransactionOperationDelete*)reader;
-		// cout << endl;
-		// cout << "--------------------------------------------" << endl;
-        // cout << "opdel rid " << o->relationId << " #rows " << o->rowCount << " " << endl;
-		// cout << "--------------------------------------------" << endl;
 
 		for (unsigned k = 0; k < o->rowCount; k++){
 			// cout << "Searching for primary key: " << o->keys[k] << endl;
@@ -224,9 +238,19 @@ static void processTransaction(Transaction *t){
 		// Go to the next insert operation
 		reader+=sizeof(TransactionOperationInsert)+(sizeof(uint64_t)*o->rowCount*schema[o->relationId]);
     }
+
+    tran_end = std::chrono::high_resolution_clock::now();
+
+    if(tran_diff != default_diff)
+        tran_diff = tran_diff + tran_end - tran_start;
+    else
+        tran_diff = tran_end - tran_start;
 }
 //================================================================================================
 static void processValidationQueries(ValidationQueries *v){
+
+    val_start = std::chrono::high_resolution_clock::now();
+
 	bool conflict = true;
 	const char* reader = v->queries;
 
@@ -254,7 +278,6 @@ static void processValidationQueries(ValidationQueries *v){
 			break;
 	    }
 
-        //Journals[q->relationId]->printJournal();
 
         DArray<Query::Column>* priority1 = new DArray<Query::Column>();        // subqueries me c0 =
         DArray<Query::Column>* priority2 = new DArray<Query::Column>();        // subqueries me =
@@ -406,43 +429,62 @@ static void processValidationQueries(ValidationQueries *v){
 
 	// Store validation's conflict result
 	validationResults.push_back(conflict);
+
+    val_end = std::chrono::high_resolution_clock::now();
+    if(val_diff != default_diff)
+        val_diff = val_diff + val_end - val_start;
+    else
+        val_diff = val_end - val_start;
 }
 //================================================================================================
 static void processFlush(Flush *fl){
 
-    // myfile << "Flush " << fl->validationId << endl;
-	// cout << "=====================================================================" << endl;
+    flush_start = std::chrono::high_resolution_clock::now();
 
     unsigned valRes_size = (unsigned)validationResults.size();
     unsigned i;
 
+    string buf;
+
 	for (i = val_offset; i < valRes_size && i<=fl->validationId; i++){
-		myfile << "Validation " << i << " : " << validationResults.get(i) << endl;
+		//myfile << "Validation " << i << " : " << validationResults.get(i) << endl;
+        buf.append(BoolToString(validationResults.get(i)));
 	}
+
+    cout << buf << endl;
+
     if(i >= fl->validationId)
 	   val_offset = fl->validationId;
     else
         val_offset = valRes_size;
-	//
-	// cout << "New offset: " << val_offset << endl;
-	// exit(0);
+
+    cout << "Validation : " << val_offset << endl;
+    cout << "TransactionCounter : " << transactionCounter << endl;
+
+    flush_end = std::chrono::high_resolution_clock::now();
+    if(flush_diff != default_diff)
+        flush_diff = flush_diff + flush_end - flush_start;
+    else
+        flush_diff = flush_end - flush_start;
 }
 //================================================================================================
-static void processForget(Forget *fo){
-	// cout << "Forget " << fo->transactionId << endl;
-}
+static void processForget(Forget *fo){}
 //================================================================================================
 static void processDestroySchema()
 {
-    int i = 0;
-    while(schema[i] != 0) {   	// For every relation
+    destroy_start = std::chrono::high_resolution_clock::now();
+
+    for(int i = 0; i < relationCount; i++)
+    {   	// For every relation
 		delete Journals[i];
 		delete hash_tables[i];
-        i++;
   	}
     free(schema);
     free(Journals);
     free(hash_tables);
+
+    destroy_end = std::chrono::high_resolution_clock::now();
+    destroy_diff = destroy_end - destroy_start;
 }
 
 //=====================================================
@@ -450,19 +492,16 @@ static void processDestroySchema()
 //=====================================================
 int main(int argc, char **argv) {
 
+    globalstart = std::chrono::high_resolution_clock::now();
+
 	MessageHead head;
 	void *body = NULL;
 	uint32_t len;
 
 
-    auto start = get_time::now();
-    auto end = get_time::now();
-    auto diff = end - start;
     while(1){
 		// Retrieve the message head
 		if (read(0, &head, sizeof(head)) <= 0) { return -1; } // crude error handling, should never happen
-		// cout << "=====================================================================" << endl;
-     //  	printf("HEAD LEN %u \t| HEAD TYPE %u \t| DESC ", head.messageLen, head.type);
 
 		// Retrieve the message body
 		if (body != NULL) free(body);
@@ -474,30 +513,18 @@ int main(int argc, char **argv) {
 
 		// And interpret it
 		switch (head.type) {
-			case MessageHead::Done: //printf("DONE\n");
-				// cout << "=====================================================================" << endl;
-				// printf("Rel0\n");
-				// Journals[23]->printJournal();
-				// printf("Rel1\n");
-				// Journals[1]->printJournal();
-				//========= TEST AN DOULEVEI H GETJOURNALRECORDS =============
-				// DArray<DArray<uint64_t>*> * arr;
-				// arr = Journals[1]->getJournalRecords(0,3);
-				// for (int w = 0; w < arr->size(); w++){
-				// 	for (int k = 0; k < (arr->get(w))->size(); k++)
-				// 		cout << (arr->get(w))->get(k) << " ";
-				//
-				// 	cout <<endl;
-				// }
-				// cout << Journals[0]->Records->size();
-				//========= TEST AN DOULEVEI H DESTROYJOURNAL =============
-				// Journals[1]->destroyJournal();
-
+			case MessageHead::Done:
                 processDestroySchema();
 
-                end = get_time::now();
-                diff = end - start;
-                cout << "Elapsed time is :  " << chrono::duration_cast<ns>(diff).count() << " ms " << endl;
+                globalend = std::chrono::high_resolution_clock::now();
+                globaldiff = globalend - globalstart;
+
+                cout << "Define schema elapsed time is :  " << def_diff.count() << " ms " << endl;
+                cout << "Transactions elapsed time is :  " << tran_diff.count() << " ms " << endl;
+                cout << "Validations elapsed time is :  " << val_diff.count() << " ms " << endl;
+                cout << "Flush elapsed time is :  " << flush_diff.count() << " ms " << endl;
+                cout << "Destroy elapsed time is :  " << destroy_diff.count() << " ms " << endl;
+                cout << "Overal elapsed time is :  " << globaldiff.count() << " ms " << endl;
 
 				return 0;
 			case MessageHead::DefineSchema: processDefineSchema((DefineSchema *)body); break;

@@ -9,7 +9,13 @@ Journal::Journal(uint32_t rel_id){
     // cout << "Created New Journal for Relation: " << relation_id << endl;
 }
 //================================================================================================
+Journal::~Journal(){
+	for (int i = 0; i < Records->size(); i++)	// destroy all of its JournalRecords
+		delete Records->get(i);
 
+	delete Records;
+}
+//================================================================================================
 void Journal::insertJournalRecord(JournalRecord* record){
     Records->push_back(record);
     lastTID = record->getTransactionId();
@@ -73,14 +79,6 @@ void Journal::printJournal() {
         cout << (Records->get(i))->getTransactionId() << " ";
         (Records->get(i))->printRecord();
     }
-}
-//================================================================================================
-void Journal::destroyJournal(){
-	cout << "Deleting Journal" << endl;
-	for (int i = 0; i < Records->size(); i++)	// destroy all of its JournalRecords
-		delete Records->get(i);
-
-	delete Records;
 }
 //================================================================================================
 int Journal::getRecordsSize(){
