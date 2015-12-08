@@ -47,15 +47,16 @@ int HashTable::getBucketIndex(int hash, int depth)
 void HashTable::doubleTableSize()
 {
     globalDepth++;
-    unsigned new_size = size*2;
-    for(unsigned i = size; i < new_size; i++)
-    {
-        bucketArray.push_back(bucketArray.get(i-size));
-    }
-    size = new_size;
+    //unsigned new_size = size*2;
+    bucketArray.specialDouble();
+    // for(unsigned i = size; i < new_size; i++)
+    // {
+    //     bucketArray.push_back(bucketArray.get(i-size));
+    // }
+    size *= 2;
 }
 //=======================================================================================================
-void HashTable::halveTableSize()   
+void HashTable::halveTableSize()
 {
     globalDepth--;
     size /= 2;

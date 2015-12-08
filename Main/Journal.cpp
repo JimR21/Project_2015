@@ -32,8 +32,8 @@ DArray<JournalRecord*> * Journal::getJournalRecords(uint64_t start_tid, uint64_t
 		start_tid += 1;								// an den yparxei to tid pou mou dwse san start psakse to epomeno
 
 	// cout << "To range ksekinaei sto index: " << idx << endl;
-
-	for (int i = idx; i < Records->size(); i++){	// psakse siriaka apo ekei pou sou gurise i binary search
+    int rsize = Records->size();
+	for (int i = idx; i < rsize; i++){	// psakse siriaka apo ekei pou sou gurise i binary search
 													// mexri to end_tid
 		uint64_t tid = (Records->get(i))->getTransactionId();	// tid of the specific JournalRecord
 

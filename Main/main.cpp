@@ -16,6 +16,7 @@ using get_time = chrono::steady_clock;
 
 //Testing
 unsigned transactionCounter = 0;
+int termFlag = 0;
 
 std::chrono::time_point<std::chrono::high_resolution_clock> default_time, globalstart, globalend, def_start, def_end, tran_start, tran_end, val_start, val_end, flush_start, flush_end, destroy_start, destroy_end;
 std::chrono::duration<double> default_diff, globaldiff, def_diff, tran_diff, val_diff, flush_diff, destroy_diff;
@@ -315,7 +316,12 @@ static void processValidationQueries(ValidationQueries *v){
 		}
 
         if(conflict == false)   // Sthn periptvsh poy vgei false apo ton 1o elegxo
+        {
+            delete priority1;
+            delete priority2;
+            delete priority3;
             continue;
+        }
 
         DArray<uint64_t>* offsets_to_check = NULL;      // DArray me ta offset pou exoyme na elegksoume
         DArray<JournalRecord*>* records_to_check = NULL;    // DArray me ta journal records poy exoume na elegksoume
@@ -324,8 +330,8 @@ static void processValidationQueries(ValidationQueries *v){
         //================================================================
         // 2os elegxos: Filtrarisma twn records me vash ta priority tables
         //================================================================
-
-        for(int w = 0; w < priority1->size(); w++)
+        int prsize1 = priority1->size();
+        for(int w = 0; w < prsize1; w++)
         {
             offsets_to_check = hash_tables[q->relationId]->getHashRecord(priority1->get(w).value, v->from, v->to);
             if(offsets_to_check != NULL)
@@ -342,12 +348,15 @@ static void processValidationQueries(ValidationQueries *v){
         }
 
         if(conflict == true)
-            for(int w = 0; w < priority2->size(); w++)
+        {
+            int prsize2 = priority2->size();
+            for(int w = 0; w < prsize2; w++)
             {
                 if(records_to_check == NULL)
                     records_to_check = Journals[q->relationId]->getJournalRecords(v->from, v->to);
 
-                for(int i = 0; i < records_to_check->size(); i++)
+                int rtcsize = records_to_check->size();
+                for(int i = 0; i < rtcsize; i++)
                 {
                     if(priority2->get(w).value == records_to_check->get(i)->getValue(priority2->get(w).column))
                         records_to_check2->push_back(records_to_check->get(i));
@@ -364,17 +373,20 @@ static void processValidationQueries(ValidationQueries *v){
                     records_to_check2 = new DArray<JournalRecord*>();
                 }
             }
+        }
 
         if(conflict == true)
-            for(int w = 0; w < priority3->size(); w++)
+        {
+            int prsize3 = priority3->size();
+            for(int w = 0; w < prsize3; w++)
             {
                 if(records_to_check == NULL)
                 {
                     delete records_to_check;
                     records_to_check = Journals[q->relationId]->getJournalRecords(v->from, v->to);
                 }
-
-                for(int i = 0; i < records_to_check->size(); i++)
+                int rtcsize = records_to_check->size();
+                for(int i = 0; i < rtcsize; i++)
                 {
                     uint64_t query_value = priority3->get(w).value;
                     uint64_t tuple_value = records_to_check->get(i)->getValue(priority3->get(w).column);
@@ -405,14 +417,12 @@ static void processValidationQueries(ValidationQueries *v){
                     records_to_check2 = new DArray<JournalRecord*>();
                 }
             }
+        }
 
-        if(offsets_to_check != NULL)
-            delete offsets_to_check;
-        if(records_to_check != NULL)
-            delete records_to_check;
-        if(records_to_check2 != NULL)
-            delete records_to_check2;
 
+        delete offsets_to_check;
+        delete records_to_check;
+        delete records_to_check2;
         delete priority1;
         delete priority2;
         delete priority3;
@@ -466,6 +476,11 @@ static void processFlush(Flush *fl){
         flush_diff = flush_diff + flush_end - flush_start;
     else
         flush_diff = flush_end - flush_start;
+
+    // if(val_offset == 18090)
+    // {
+    //     termFlag = 1;
+    // }
 }
 //================================================================================================
 static void processForget(Forget *fo){}
@@ -510,6 +525,9 @@ int main(int argc, char **argv) {
 			if (read(0, body, head.messageLen) <= 0) { printf("err");return -1; } // crude error handling, should never happen
 			len-=(sizeof(head) + head.messageLen);
 		}
+
+        // if(termFlag == 1)
+        //     head.type = MessageHead::Done;
 
 		// And interpret it
 		switch (head.type) {
