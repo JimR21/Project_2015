@@ -52,7 +52,15 @@ public:
     unsigned getsize();
 
     int deleteKey(unsigned key);
+
+	unsigned getTidVal(unsigned key);
+
+//===========================================================
+void tInsert(unsigned key, unsigned int offset);
+//===========================================================
+
 };
+
 
 
 #endif

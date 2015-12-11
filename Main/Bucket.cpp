@@ -10,6 +10,7 @@ Bucket::Bucket()
     empty = true;
     first = NULL;
     last = NULL;
+	tfirst = NULL;
 }
 
 Bucket::Bucket(unsigned ilocalDepth) : localDepth(ilocalDepth)
@@ -18,6 +19,7 @@ Bucket::Bucket(unsigned ilocalDepth) : localDepth(ilocalDepth)
     empty = true;
     first = NULL;
     last = NULL;
+	tfirst = NULL;
 }
 
 Bucket::Bucket(unsigned ikey, unsigned tid, unsigned offset, unsigned ilocalDepth) : key(ikey), localDepth(ilocalDepth)
@@ -25,6 +27,7 @@ Bucket::Bucket(unsigned ikey, unsigned tid, unsigned offset, unsigned ilocalDept
     first = NULL;
     last = NULL;
     empty = false;
+	tfirst = NULL;
     addBucketData(tid, offset);
 }
 
@@ -84,7 +87,17 @@ void Bucket::insert(unsigned ikey, unsigned tid, unsigned offset)
     addBucketData(tid, offset);
 }
 
+void Bucket::tidInsert(unsigned ikey, unsigned offset){
+	key = ikey;
+	empty = false;
+	tfirst = new BucketDataT(offset);
+}
+
 BucketData* Bucket::getdataLast()   // NEW
 {
     return last;
+}
+
+BucketDataT* Bucket::getData(){
+	return tfirst;
 }

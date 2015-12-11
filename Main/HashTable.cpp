@@ -300,3 +300,97 @@ int HashTable::deleteKey(unsigned key)
         // cout << "Delete: Key " << key << " not found" << endl;
     return 0;
 }
+
+//=======================================================================================================
+void HashTable::tInsert(unsigned key, unsigned int offset){
+	unsigned hashed_key;
+    hashed_key = hashFunction(key);
+    int index = getBucketIndex(hashed_key, globalDepth); // koitaw ta globalDepth deksia bits gia na dw se poio index tha paw
+    Bucket* tempBucket = bucketArray.get(index);
+
+	cout << "INDEX: " << index << endl;
+
+    if(tempBucket->empty == true)
+    {
+		cout << "Edw" << endl;
+        tempBucket->tidInsert(key, offset);
+    }
+    else
+    {
+        unsigned bhashed_key = hashFunction(tempBucket->key);  // Bucket hashed key
+        while(getBucketIndex(bhashed_key, globalDepth) == getBucketIndex(hashed_key, globalDepth))
+        {
+            doubleTableSize();
+            maxLocalCounter = 0;        // Otan diplasiazetai o index sigoura de tha yparxei kanena bucket me localDepth = globalDepth
+        }
+        int index2 = getBucketIndex(bhashed_key, globalDepth);
+        index = getBucketIndex(hashed_key, globalDepth);
+
+        if(tempBucket->localDepth == globalDepth -1)                        // Simple split otan uparxoun 2 pointers sto bucket
+        {
+            bucketArray.set(index, new Bucket(key, key, offset, globalDepth));
+            bucketArray.get(index2)->localDepth++;
+            maxLocalCounter+=2;
+        }
+        else           // Split otan uparxoyn perissoteroi pointers sto bucket
+        {
+            unsigned local = bucketArray.get(index2)->localDepth;
+            while(getBucketIndex(bhashed_key, local) == getBucketIndex(hashed_key, local))  // Oso to localDepth den einai arketo gia na diaxwristoun ta 2 kleidia, auksanetai kai diaxwrizontai ta buckets
+            {
+                if(getBucketIndex(bhashed_key, local+1) != getBucketIndex(hashed_key, local+1)) // An sto localDepth+1 diaxwrizetai vges apo loop
+                    break;
+                local++;
+                bucketArray.get(index2)->localDepth++;
+                Bucket* newBucket = new Bucket(local);                                        // Neo empty bucket
+
+                unsigned oldindex = getBucketIndex(hashed_key, local);
+                unsigned newindex;                                              // Ypologismos tou bucket index poy tha diaforopoieitai sto bit pou orizei to neo local
+                unsigned i = pow(2, local-1);
+                if((oldindex & i) == 0)
+                    newindex = oldindex + i;
+                else
+                    newindex = oldindex - i;
+                unsigned dist = pow(2, local);
+
+                for(unsigned i = newindex; i < size; i+=dist)   // Metafora deiktwn tou index sto newBucket
+                {
+                    bucketArray.set(i, newBucket);
+                }
+            }
+
+            local++;
+            Bucket* tempBucketnew = new Bucket(key, key, offset, local);
+            bucketArray.set(index, tempBucketnew);
+            bucketArray.get(index2)->localDepth++;
+            unsigned toindex = getBucketIndex(hashed_key, local);        // Ypologismos tou bucket index me to neo local depth
+            unsigned dist = pow(2, local);                               // H apostash poy tha exei to bucket index me ton epomeno deikth poy tha deiksei sto new bucket
+            for(unsigned i = toindex; i < size; i+=dist)                 // Metafora deiktwn tou indexTable sto tempBucketnew
+            {
+                bucketArray.set(i, tempBucketnew);
+            }
+            if(local == globalDepth)   // An to local iso me global tote ta 2 bucket exoun localDepth = globalDepth kai to maxLocalCounter auksanetai kata 2
+                maxLocalCounter+=2;
+        }
+    }
+}
+
+unsigned HashTable::getTidVal(unsigned key){
+	unsigned hashed_key = hashFunction(key);
+	unsigned idx = getBucketIndex(hashed_key, globalDepth);
+    Bucket* tempBucket = bucketArray.get(idx);
+
+	unsigned offs = 0;
+
+	if((tempBucket->empty == false) && (tempBucket->key == key)){
+		BucketDataT* t = tempBucket->getData();
+		if (t == NULL){
+			cout << "Error" << endl;
+		}
+		else
+			offs = t->offset;
+	}
+	else
+		cout << "adeio" << endl;
+
+	return offs;
+}

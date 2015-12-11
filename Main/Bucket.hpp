@@ -2,6 +2,7 @@
 #define BUCKET_HPP
 
 #include "BucketData.hpp"
+#include "BucketDataT.hpp"
 
 class HashTable;
 
@@ -17,6 +18,7 @@ protected:
     bool empty;
     BucketData* first;
     BucketData* last;
+	BucketDataT* tfirst;
 
     Bucket();
 
@@ -26,15 +28,18 @@ protected:
 
     ~Bucket();
 
-    void addBucketData(unsigned tid, unsigned offset);
-
+	void addBucketData(unsigned tid, unsigned offset);
 
 
 public:
 
-    void insert(unsigned key, unsigned tid, unsigned offset);
+	void insert(unsigned key, unsigned tid, unsigned offset);
+
+    void tidInsert(unsigned key, unsigned offset);
 
     BucketData* getdataLast();
+
+	BucketDataT* getData();
 };
 
 #endif
