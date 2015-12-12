@@ -104,6 +104,7 @@ int main(int argc, char const *argv[])
             {
                 cout << "Empty HashTable created!" << endl;
                 keys.changeSize(0);
+                keyNumber = 0;
             }
 
             deleted = false;
@@ -143,7 +144,10 @@ int main(int argc, char const *argv[])
                         flag = 0;
                 }
                 if(flag)
+                {
                     keys.push_back(key);
+                    keyNumber ++;
+                }
 
                 auto start = get_time::now();
 
@@ -195,7 +199,10 @@ int main(int argc, char const *argv[])
             of = table->getLastJournalInsert(key);
             auto end = get_time::now();
 
-            cout << "Offset: " << of << endl;
+            if(of == -1)
+                cout << "Key not found!" << endl;
+            else
+                cout << "Offset: " << of << endl;
 
             auto diff = end - start;
             cout << "Elapsed time is :  " << chrono::duration_cast<ns>(diff).count() << " ms " << endl;
@@ -207,7 +214,7 @@ int main(int argc, char const *argv[])
             else
             {
                 int key, start_tid, end_tid;
-                DArray<int>* array = NULL;
+                DArray<uint64_t>* array = NULL;
 
                 cout << "Key: ";
                 cin >> key;

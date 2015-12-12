@@ -10,7 +10,7 @@ HashTable::HashTable()
 {
     globalDepth = STARTING_GLOBAL_DEAPTH;    // 2^7 = 128
     size = HASHTABLE_SIZE;
-    maxLocalCounter = HASHTABLE_SIZE;
+    maxLocalCounter.push_back(HASHTABLE_SIZE);
 
 	// cout << "Hash Table created!" << endl;
 
@@ -54,6 +54,8 @@ void HashTable::doubleTableSize()
     //     bucketArray.push_back(bucketArray.get(i-size));
     // }
     size *= 2;
+    maxLocalCounter.push_back(0);        // Otan diplasiazetai o index sigoura de tha yparxei kanena bucket me localDepth = globalDepth
+
 }
 //=======================================================================================================
 void HashTable::halveTableSize()
@@ -62,6 +64,7 @@ void HashTable::halveTableSize()
     size /= 2;
     for(unsigned i = 0; i < size; i++)
         bucketArray.popLast();
+    maxLocalCounter.popLast();
 }
 //=======================================================================================================
 void HashTable::insert(unsigned int key, unsigned tid, unsigned offset)
@@ -88,7 +91,6 @@ void HashTable::insert(unsigned int key, unsigned tid, unsigned offset)
             while(getBucketIndex(bhashed_key, globalDepth) == getBucketIndex(hashed_key, globalDepth))
             {
                 doubleTableSize();
-                maxLocalCounter = 0;        // Otan diplasiazetai o index sigoura de tha yparxei kanena bucket me localDepth = globalDepth
             }
             int index2 = getBucketIndex(bhashed_key, globalDepth);
             index = getBucketIndex(hashed_key, globalDepth);
@@ -97,7 +99,7 @@ void HashTable::insert(unsigned int key, unsigned tid, unsigned offset)
             {
                 bucketArray.set(index, new Bucket(key, tid, offset, globalDepth));
                 bucketArray.get(index2)->localDepth++;
-                maxLocalCounter+=2;
+                maxLocalCounter.set(maxLocalCounter.size()-1, maxLocalCounter.get(maxLocalCounter.size()-1)+2);
             }
             else           // Split otan uparxoyn perissoteroi pointers sto bucket
             {
@@ -136,7 +138,7 @@ void HashTable::insert(unsigned int key, unsigned tid, unsigned offset)
                     bucketArray.set(i, tempBucketnew);
                 }
                 if(local == globalDepth)   // An to local iso me global tote ta 2 bucket exoun localDepth = globalDepth kai to maxLocalCounter auksanetai kata 2
-                    maxLocalCounter+=2;
+                    maxLocalCounter.set(maxLocalCounter.size()-1, maxLocalCounter.get(maxLocalCounter.size()-1)+2);
             }
         }
     }
@@ -290,8 +292,8 @@ int HashTable::deleteKey(unsigned key)
             bucketArray.set(idx, mergeBucket);
             delete tempBucket;
 
-            maxLocalCounter-=2;
-            if(maxLocalCounter == 0)
+            maxLocalCounter.set(maxLocalCounter.size()-1, maxLocalCounter.get(maxLocalCounter.size()-1)-2);
+            if(maxLocalCounter.get(maxLocalCounter.size()-1) == 0)
                 halveTableSize();
         }
         return 1;

@@ -1,8 +1,9 @@
 #ifndef DARRAY_HPP
-#define  DARRAY_HPP
+#define DARRAY_HPP
 
 #include <iostream>
 #include <stdint.h>
+#include <cstring>
 
 template <class T>
 class DArray {
@@ -15,6 +16,7 @@ class DArray {
 public:
 
     DArray();
+    ~DArray();
     int size() ;
     void changeSize(int i);
     void push_back(T const& x);
@@ -22,7 +24,7 @@ public:
     T get(int i) const;
     int popAt(int i);  // Removes data at position i. Returns 1 on success, -1 if i > n
     int popLast();     // Removes last. 1 on succes, -1 if empty
-    ~DArray();
+    void specialDouble();
     T& operator[](int i);
     const T& operator[](int i) const;
 
@@ -31,24 +33,6 @@ public:
 
 //=========================================================
 
-template <class T>
-void DArray<T>::increase_capacity(int sz) {     // x2
-	if (sz <= capacity)
-	      return;
-    T* new_arr;
-    {
-      new_arr = new T[sz];   // allocate a new array on the free store
-    }
-    for(int i = 0; i < capacity; ++i) { // copy old vector into new one
-      new_arr[i] = arr[i];
-    }
-    capacity = sz;                      // set the new capacity
-
-    delete[] arr;                       // delete the old vector
-    arr = new_arr;
-}
-
-//=========================================================
 // create an empty vector
 template <class T>
 DArray<T>::DArray() : capacity(32768), n(0) {
@@ -58,9 +42,32 @@ DArray<T>::DArray() : capacity(32768), n(0) {
 //=========================================================
 
 template <class T>
+DArray<T>::~DArray() {       // destructor
+    delete[] arr;
+}
+
+
+//=========================================================
+
+template <class T>
 int DArray<T>::size(){
     return n;
 }
+
+//=========================================================
+
+template <class T>
+void DArray<T>::increase_capacity(int sz) {     // x2
+    if (sz <= capacity)
+               return;
+     T* new_arr = new T[sz];     // allocate a new array on the free store
+         memcpy(new_arr, arr, n * sizeof(T) );
+
+     capacity = sz;                      // set the new capacity
+     delete[] arr;                       // delete the old vector
+     arr = new_arr;
+}
+
 
 //=========================================================
 
@@ -131,10 +138,14 @@ int DArray<T>::popLast() {
 //=========================================================
 
 template <class T>
-DArray<T>::~DArray() {       // destructor
-    delete[] arr;
-}
+void DArray<T>::specialDouble()
+{
+    int new_size = n*2;
+    if(new_size > capacity)
+        increase_capacity(2 * capacity);
 
-//=========================================================
+    std::memcpy(&arr[n], &arr[0], sizeof(T)*n);
+    n = new_size;
+}
 
 #endif

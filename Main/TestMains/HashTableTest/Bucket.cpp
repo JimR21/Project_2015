@@ -30,7 +30,19 @@ Bucket::Bucket(unsigned ikey, unsigned tid, unsigned offset, unsigned ilocalDept
 
 Bucket::~Bucket()
 {
-
+    BucketData* temp = first;
+    BucketData* tempnext;
+    do
+    {
+        if(temp != NULL)
+        {
+            tempnext = temp->next;
+            delete temp;
+            temp = tempnext;
+        }
+        if(temp == NULL)
+            break;
+    }while(1);
 }
 
 void Bucket::addBucketData(unsigned tid, unsigned offset)
@@ -49,6 +61,7 @@ void Bucket::addBucketData(unsigned tid, unsigned offset)
             if(temp->tid == tid)
             {
                 temp->offsets[1] = offset;
+                temp->second_of = true;
                 flag = false;
                 break;
             }

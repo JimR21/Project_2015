@@ -12,7 +12,7 @@ class HashTable
 {
     friend class Bucket;
 private:
-    int maxLocalCounter;    // Posa buckets exoun localDepth = globalDepth
+    DArray<int> maxLocalCounter;    // Posa buckets exoun localDepth = globalDepth
 
     unsigned size;
 
