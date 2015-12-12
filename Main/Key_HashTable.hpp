@@ -9,9 +9,7 @@ class Bucket;
 
 class Key_HashTable : public Gen_HashTable
 {
-    friend class Bucket;
 public:
-
     void insert(unsigned key, unsigned int tid, unsigned int offset);
 
 	DArray<uint64_t>* getHashRecord(unsigned key, uint64_t start_tid, uint64_t end_tid);

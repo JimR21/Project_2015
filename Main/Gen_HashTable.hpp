@@ -1,6 +1,5 @@
 #ifndef GEN_HASHTABLE_HPP
 #define GEN_HASHTABLE_HPP
-#include <bitset>
 #include "DArray.hpp"
 
 #define HASHTABLE_SIZE 128

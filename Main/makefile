@@ -1,5 +1,5 @@
 CC=g++
-CFLAGS=-c -Wall -g -std=c++0x -O3
+CFLAGS=-c -Wall -g -std=c++0x -O2
 LDFLAGS=
 SOURCES=main.cpp Journal.cpp JournalRecord.cpp Bucket.cpp Gen_HashTable.cpp Key_HashTable.cpp BucketData.cpp
 OBJECTS=$(SOURCES:.cpp=.o)
