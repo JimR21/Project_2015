@@ -1,5 +1,5 @@
 #include "Bucket.hpp"
-#include "HashTable.hpp"
+#include "Gen_HashTable.hpp"
 
 using namespace std;
 

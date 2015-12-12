@@ -1,11 +1,12 @@
 #include "DArray.hpp"
 
 class Bucket;
-class HashTable;
+class Key_HashTable;
+
 class BucketData
 {
     friend class Bucket;
-	friend class HashTable;
+	friend class Key_HashTable;
 protected:
     unsigned tid;
     unsigned offsets[2];

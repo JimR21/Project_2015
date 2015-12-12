@@ -7,7 +7,8 @@ class HashTable;
 
 class Bucket
 {
-    friend class HashTable;
+    friend class Gen_HashTable;
+    friend class Key_HashTable;
 private:
 
 

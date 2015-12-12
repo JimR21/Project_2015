@@ -7,7 +7,7 @@
 #include <chrono>
 #include "Journal.hpp"
 #include "Bucket.hpp"
-#include "HashTable.hpp"
+#include "Key_HashTable.hpp"
 #include <fstream>
 
 using namespace std;
@@ -111,7 +111,7 @@ struct Forget {
 
 static uint32_t* schema = NULL;  // keeps the # of columns for every relation
 Journal** Journals = NULL;       // keeps the Journal for every relation
-HashTable** hash_tables;		 // Extendible hashing for every relation
+Key_HashTable** hash_tables;		 // Extendible hashing for every relation
 DArray<bool> validationResults;	 // den xreiazetai new einai sto scope tis main
 DArray<Query::Column>* subqueries_to_check;
 
@@ -138,7 +138,7 @@ static void processDefineSchema(DefineSchema *s){
 
   	schema = (uint32_t*)malloc(sizeof(uint32_t) * s->relationCount);	// allocate space for the relations
   	Journals = (Journal**)malloc(sizeof(Journal*) * s->relationCount); 	// allocate space for pointers to Journals
-	hash_tables = (HashTable**)malloc(sizeof(HashTable*) * s->relationCount);
+	hash_tables = (Key_HashTable**)malloc(sizeof(Key_HashTable*) * s->relationCount);
 
     relationCount = s->relationCount;
 
@@ -150,7 +150,7 @@ static void processDefineSchema(DefineSchema *s){
   	for(i = 0; i < s->relationCount; i++) {   	// For every relation
   		Journal* journal = new Journal(i);    	// Create empty Journal
 		Journals[i] = journal;					// add Journal to Journals array
-		hash_tables[i] = new HashTable();		// Create empty Hash for every rel
+		hash_tables[i] = new Key_HashTable();		// Create empty Hash for every rel
   	}
 
     def_end = std::chrono::high_resolution_clock::now();
