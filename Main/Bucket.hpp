@@ -16,8 +16,14 @@ protected:
     unsigned int key;
     unsigned int localDepth;
     bool empty;
+
+    // BucketData is used in key(c0) Hashtable
     BucketData* first;
     BucketData* last;
+
+    // tid_offset is used in tid HashTable
+    unsigned tid_offset;
+
 
     Bucket();
 

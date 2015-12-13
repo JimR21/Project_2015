@@ -2,11 +2,6 @@
 #define KEY_HASHTABLE_HPP
 #include "Gen_HashTable.hpp"
 
-#define HASHTABLE_SIZE 128
-#define STARTING_GLOBAL_DEAPTH 7
-
-class Bucket;
-
 class Key_HashTable : public Gen_HashTable
 {
 public:
