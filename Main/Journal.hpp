@@ -2,8 +2,7 @@
 #include <stdint.h>
 #include "JournalRecord.hpp"
 #include "Tid_HashTable.hpp"
-
-#define TID_HASHTABLE 1 // 1 enable, 0 disable Tid_HashTable
+#include "options.hpp"
 
 class Journal {
 private:

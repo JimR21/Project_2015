@@ -10,6 +10,7 @@ class Bucket
     friend class Gen_HashTable;
     friend class Key_HashTable;
     friend class Tid_HashTable;
+    friend class Val_HashTable;
 private:
 
 

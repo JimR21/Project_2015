@@ -1,3 +1,6 @@
+#ifndef BUCKETDATA_HPP
+#define BUCKETDATA_HPP
+
 #include "DArray.hpp"
 
 class Bucket;
@@ -19,3 +22,6 @@ protected:
      unsigned * getOffsets();
      unsigned getOffsetLast();
 };
+
+
+#endif
