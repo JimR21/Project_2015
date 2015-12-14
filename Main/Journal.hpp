@@ -3,13 +3,17 @@
 #include "JournalRecord.hpp"
 #include "Tid_HashTable.hpp"
 
+#define TID_HASHTABLE 1 // 1 enable, 0 disable Tid_HashTable
+
 class Journal {
 private:
     uint32_t relation_id;
     DArray<JournalRecord*> *Records;
     uint64_t lastTID;
 
+#if TID_HASHTABLE == 1
     Tid_HashTable tid_hashtable;
+#endif
 
 public:
     Journal(uint32_t);
@@ -22,5 +26,7 @@ public:
 	JournalRecord *getRecord(int key);
     uint64_t getLastTID();
 
+#if TID_HASHTABLE == 1
     int tidSearchRecord(unsigned tid);
+#endif
 };

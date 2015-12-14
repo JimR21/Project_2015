@@ -19,7 +19,10 @@ Journal::~Journal(){
 void Journal::insertJournalRecord(JournalRecord* record){
     Records->push_back(record);
     lastTID = record->getTransactionId();
+
+#if TID_HASHTABLE == 1
     tid_hashtable.insert(lastTID, Records->size()-1);
+#endif
 }
 //================================================================================================
 
@@ -28,9 +31,14 @@ DArray<JournalRecord*> * Journal::getJournalRecords(uint64_t start_tid, uint64_t
 	DArray<JournalRecord*> *recs = new DArray<JournalRecord*>();
 
 	int idx = -1;
-													// ipothetw oti den tha dwsei range ektos oriwn
+
+#if TID_HASHTABLE == 1
 	while((idx = tidSearchRecord(start_tid)) == -1)	// psakse se pio index tou Journal tha ksekinisw na psaxnw
 		start_tid += 1;								// an den yparxei to tid pou mou dwse san start psakse to epomeno
+#else
+    while((idx = searchRecord(start_tid)) == -1)	// psakse se pio index tou Journal tha ksekinisw na psaxnw
+        start_tid += 1;								// an den yparxei to tid pou mou dwse san start psakse to epomeno
+#endif
 
 	// cout << "To range ksekinaei sto index: " << idx << endl;
     int rsize = Records->size();
@@ -95,7 +103,9 @@ uint64_t Journal::getLastTID()
     return lastTID;
 }
 //================================================================================================
+#if TID_HASHTABLE == 1
 int Journal::tidSearchRecord(unsigned tid)
 {
     return tid_hashtable.getOffset(tid);
 }
+#endif
