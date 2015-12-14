@@ -28,6 +28,13 @@ Bucket::Bucket(unsigned ikey, unsigned tid, unsigned offset, unsigned ilocalDept
     addBucketData(tid, offset);
 }
 
+Bucket::Bucket(unsigned ikey, int offset, unsigned ilocalDepth) : key(ikey), localDepth(ilocalDepth), tid_offset(offset)
+{
+    first = NULL;
+    last = NULL;
+    empty = false;
+}
+
 Bucket::~Bucket()
 {
     BucketData* temp = first;
@@ -82,6 +89,13 @@ void Bucket::insert(unsigned ikey, unsigned tid, unsigned offset)
     key = ikey;
     empty = false;
     addBucketData(tid, offset);
+}
+
+void Bucket::insert(unsigned ikey, unsigned offset)
+{
+    key = ikey;
+    empty = false;
+    tid_offset = offset;
 }
 
 BucketData* Bucket::getdataLast()   // NEW

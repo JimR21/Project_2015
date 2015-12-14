@@ -5,9 +5,9 @@
 class Tid_HashTable : public Gen_HashTable
 {
 public:
-    void insert(unsigned key, unsigned int offset);
+    void insert(unsigned key, int offset);
 
-    unsigned getoffset(unsigned key);
+    int getOffset(unsigned key);
 };
 
 

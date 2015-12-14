@@ -9,6 +9,7 @@ class Bucket
 {
     friend class Gen_HashTable;
     friend class Key_HashTable;
+    friend class Tid_HashTable;
 private:
 
 
@@ -22,14 +23,16 @@ protected:
     BucketData* last;
 
     // tid_offset is used in tid HashTable
-    unsigned tid_offset;
+    int tid_offset;
 
 
     Bucket();
 
     Bucket(unsigned ilocalDepth);
 
-    Bucket(unsigned ikey, unsigned tid, unsigned offset, unsigned ilocalDepth);
+    Bucket(unsigned ikey, unsigned tid, unsigned offset, unsigned ilocalDepth);     // Key HashTable
+
+    Bucket(unsigned ikey, int offset, unsigned ilocalDepth);     // Tid HashTable
 
     ~Bucket();
 
@@ -39,7 +42,9 @@ protected:
 
 public:
 
-    void insert(unsigned key, unsigned tid, unsigned offset);
+    void insert(unsigned key, unsigned tid, unsigned offset);   // Key HashTable insert
+
+    void insert(unsigned key, unsigned offset);     // Tid HasthTable insert
 
     BucketData* getdataLast();
 };

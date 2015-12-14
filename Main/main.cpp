@@ -8,6 +8,7 @@
 #include "Journal.hpp"
 #include "Bucket.hpp"
 #include "Key_HashTable.hpp"
+#include "Tid_HashTable.hpp"
 #include <fstream>
 
 using namespace std;
@@ -169,6 +170,8 @@ static void processTransaction(Transaction *t){
 
     transactionCounter = t->transactionId;
 
+    //bool tidflag = true;
+
 	//=================================
 	// Delete operations
 	//=================================
@@ -200,10 +203,21 @@ static void processTransaction(Transaction *t){
 
 				Journals[o->relationId]->insertJournalRecord(record);	// insert delete record to Journal
 
-                //===================================
-				// Update relation's hash
-				//===================================
                 int size = Journals[o->relationId]->getRecordsSize();
+
+                // //===================================
+				// // Update relation's tid hash
+				// //===================================
+                // if(tidflag)
+                // {
+                //     tid_hashtables[o->relationId]->insert(t->transactionId, size - 1);
+                //     tidflag = false;
+                // }
+
+
+                //===================================
+				// Update relation's key hash
+				//===================================
 				hash_tables[o->relationId]->insert(record->getValue(0), t->transactionId, size - 1);
 			}
 		}
@@ -229,10 +243,20 @@ static void processTransaction(Transaction *t){
 				//===================================
             	Journals[o->relationId]->insertJournalRecord(record);   // add record to relation's Journal
 
+                int size = Journals[o->relationId]->getRecordsSize();
+
+                // //===================================
+				// // Update relation's tid hash
+				// //===================================
+                // if(tidflag)
+                // {
+                //     tid_hashtables[o->relationId]->insert(t->transactionId, size - 1);
+                //     tidflag = false;
+                // }
+
 				//===================================
 				// Update relation's hash
 				//===================================
-                int size = Journals[o->relationId]->getRecordsSize();
 				hash_tables[o->relationId]->insert(record->getValue(0), t->transactionId, size - 1);
 			}
 		}
