@@ -1,5 +1,5 @@
 CC=g++
-CFLAGS=-c -Wall -g -std=c++0x -Ofast
+CFLAGS=-c -g -Wall -std=c++0x -Ofast
 LDFLAGS=
 SOURCES=main.cpp Journal.cpp JournalRecord.cpp Gen_HashTable.cpp Key_HashTable.cpp Tid_HashTable.cpp Bucket.cpp BucketData.cpp
 OBJECTS=$(SOURCES:.cpp=.o)
@@ -16,3 +16,6 @@ $(EXECUTABLE): $(OBJECTS) $(SOURCES) $(DEPS)
 
 clean:
 	rm *.o *.gch
+
+stats:
+	g++ -std=c++0x statsmain.cpp Journal.cpp JournalRecord.cpp Gen_HashTable.cpp Key_HashTable.cpp Tid_HashTable.cpp Bucket.cpp BucketData.cpp -o statsmain.out
