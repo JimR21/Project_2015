@@ -3,8 +3,9 @@
 using namespace std;
 
 //================================================================================================
-Journal::Journal(uint32_t rel_id){
-    relation_id = rel_id;
+Journal::Journal(uint32_t icolumns){
+    //relation_id = rel_id;
+    columns = icolumns;
 	Records = new DArray<JournalRecord*>();
     // cout << "Created New Journal for Relation: " << relation_id << endl;
 }
@@ -83,12 +84,12 @@ int Journal::searchRecord(uint64_t key){
 	return -1;
 }
 //================================================================================================
-void Journal::printJournal() {
-	for(int i = 0; i < Records->size(); i++){
-        cout << (Records->get(i))->getTransactionId() << " ";
-        (Records->get(i))->printRecord();
-    }
-}
+// void Journal::printJournal() {
+// 	for(int i = 0; i < Records->size(); i++){
+//         cout << (Records->get(i))->getTransactionId() << " ";
+//         (Records->get(i))->printRecord();
+//     }
+// }
 //================================================================================================
 int Journal::getRecordsSize(){
 	return Records->size();

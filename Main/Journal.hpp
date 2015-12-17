@@ -1,12 +1,13 @@
 #include <iostream>
 #include <stdint.h>
 #include "JournalRecord.hpp"
+#include "Key_HashTable.hpp"
 #include "Tid_HashTable.hpp"
 #include "options.hpp"
 
 class Journal {
 private:
-    uint32_t relation_id;
+    //uint32_t relation_id;
     DArray<JournalRecord*> *Records;
     uint64_t lastTID;
 
@@ -15,6 +16,9 @@ private:
 #endif
 
 public:
+    Key_HashTable key_htable;
+    uint32_t columns;
+
     Journal(uint32_t);
     ~Journal();
     void insertJournalRecord(JournalRecord*);

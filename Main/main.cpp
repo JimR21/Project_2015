@@ -26,7 +26,7 @@ std::chrono::duration<double> default_diff, globaldiff, def_diff, tran_diff, val
 ofstream myfile ("out.bin", ios::out);
 static uint32_t* schema = NULL;  // keeps the # of columns for every relation
 Journal** Journals = NULL;       // keeps the Journal for every relation
-Key_HashTable** hash_tables;		 // Extendible hashing for every relation
+//Key_HashTable** hash_tables;		 // Extendible hashing for every relation
 DArray<bool> validationResults;	 // den xreiazetai new einai sto scope tis main
 DArray<Query::Column>* subqueries_to_check;
 
@@ -52,8 +52,9 @@ static void processDefineSchema(DefineSchema *s){
 		free(schema);
 
   	schema = (uint32_t*)malloc(sizeof(uint32_t) * s->relationCount);	// allocate space for the relations
-  	Journals = (Journal**)malloc(sizeof(Journal*) * s->relationCount); 	// allocate space for pointers to Journals
-	hash_tables = (Key_HashTable**)malloc(sizeof(Key_HashTable*) * s->relationCount);
+  	//Journals = new Journal[s->relationCount]; 	// allocate space for pointers to Journals
+    Journals = (Journal**)malloc(sizeof(Journal*) * s->relationCount); 	// allocate space for pointers to Journals
+	//hash_tables = (Key_HashTable**)malloc(sizeof(Key_HashTable*) * s->relationCount);
 
     relationCount = s->relationCount;
 
@@ -62,11 +63,10 @@ static void processDefineSchema(DefineSchema *s){
         if(schema[i] > maxColumnCounts) maxColumnCounts = schema[i];
 	}
 
-  	for(i = 0; i < s->relationCount; i++) {   	// For every relation
-  		Journal* journal = new Journal(i);    	// Create empty Journal
-		Journals[i] = journal;					// add Journal to Journals array
-		hash_tables[i] = new Key_HashTable();		// Create empty Hash for every rel
-  	}
+    for(i = 0; i < s->relationCount; i++) {   	// For every relation
+  		Journals[i] = new Journal(s->columnCounts[i]);    	// Create empty Journal
+		//hash_tables[i] = new Key_HashTable();		// Create empty Hash for every rel
+    }
 
     def_end = std::chrono::high_resolution_clock::now();
     def_diff = def_end - def_start;
@@ -95,7 +95,7 @@ static void processTransaction(Transaction *t){
 		for (unsigned k = 0; k < o->rowCount; k++){
 			// cout << "Searching for primary key: " << o->keys[k] << endl;
 
-			index = hash_tables[o->relationId]->getLastJournalInsert(o->keys[k]);
+			index = Journals[o->relationId]->key_htable.getLastJournalInsert(o->keys[k]);
 
 			if (index == -1){	// den to vrika
 				continue;
@@ -109,11 +109,14 @@ static void processTransaction(Transaction *t){
 
 				// Else Delete after insertion
 
-				record = new JournalRecord(t->transactionId, DELETE);	// JournalRecord to be inserted
+				// record = new JournalRecord(t->transactionId, DELETE, );	// JournalRecord to be inserted
+                //
+				// JournalRecord * jr = Journals[o->relationId]->getRecord(index);
+				// for(unsigned int j = 0; j < schema[o->relationId]; j++)
+		        //     record->addValue(jr->getValue(j));  // copy the rest columns from the one found
 
-				JournalRecord * jr = Journals[o->relationId]->getRecord(index);
-				for(unsigned int j = 0; j < schema[o->relationId]; j++)
-		            record->addValue(jr->getValue(j));  // copy the rest columns from the one found
+                JournalRecord * jr = Journals[o->relationId]->getRecord(index);
+                record = new JournalRecord(*jr, t->transactionId, Journals[o->relationId]->columns);
 
 				Journals[o->relationId]->insertJournalRecord(record);	// insert delete record to Journal
 
@@ -132,7 +135,7 @@ static void processTransaction(Transaction *t){
                 //===================================
 				// Update relation's key hash
 				//===================================
-				hash_tables[o->relationId]->insert(record->getValue(0), t->transactionId, size - 1);
+				Journals[o->relationId]->key_htable.insert(record->getValue(0), t->transactionId, size - 1);
 			}
 		}
 
@@ -142,14 +145,16 @@ static void processTransaction(Transaction *t){
 	//=================================
 	// Insert Operations
 	//=================================
+    uint32_t k = 0;
     for(i = 0; i < t->insertCount; i++) {
         const TransactionOperationInsert* o = (TransactionOperationInsert*)reader;
 
 		for(unsigned int j = 0; j< o->rowCount * schema[o->relationId]; j++) {	// iterate over values array
 			if(j % schema[o->relationId] == 0) {		// start of group
-				record = new JournalRecord(t->transactionId, INSERT);
+				record = new JournalRecord(t->transactionId, INSERT, Journals[o->relationId]->columns);
+                k = 0;
         	}
-        	record->addValue(o->values[j]);  // add value to record
+        	record->addValue(o->values[j], k);  // add value to record
 
 			if((j + 1) % schema[o->relationId] == 0) {	// end of group
 				//===================================
@@ -171,8 +176,9 @@ static void processTransaction(Transaction *t){
 				//===================================
 				// Update relation's hash
 				//===================================
-				hash_tables[o->relationId]->insert(record->getValue(0), t->transactionId, size - 1);
+				Journals[o->relationId]->key_htable.insert(record->getValue(0), t->transactionId, size - 1);
 			}
+            k++;
 		}
 		// Go to the next insert operation
 		reader+=sizeof(TransactionOperationInsert)+(sizeof(uint64_t)*o->rowCount*schema[o->relationId]);
@@ -198,6 +204,11 @@ static void processValidationQueries(ValidationQueries *v){
     {
         conflict = true;
 		const Query* q = (Query*)reader;
+
+        if(v->validationId == 153)
+        {
+            cout << "ok" << endl;
+        }
 
         // check an einai entos range
 		uint64_t max_tid = Journals[q->relationId]->getLastTID();
@@ -271,7 +282,7 @@ static void processValidationQueries(ValidationQueries *v){
         int prsize1 = priority1->size();
         for(int w = 0; w < prsize1; w++)
         {
-            offsets_to_check = hash_tables[q->relationId]->getHashRecord(priority1->get(w).value, v->from, v->to);
+            offsets_to_check = Journals[q->relationId]->key_htable.getHashRecord(priority1->get(w).value, v->from, v->to);
             if(offsets_to_check != NULL)
             {
                 records_to_check = new DArray<JournalRecord*>();
@@ -395,7 +406,7 @@ static void processFlush(Flush *fl){
     string buf;
 
 	for (i = val_offset; i < valRes_size && i<=fl->validationId; i++){
-		//myfile << "Validation " << i << " : " << validationResults.get(i) << endl;
+		myfile << "Validation " << i << " : " << validationResults.get(i) << endl;
         buf.append(BoolToString(validationResults.get(i)));
 	}
 
@@ -430,11 +441,11 @@ static void processDestroySchema()
     for(int i = 0; i < relationCount; i++)
     {   	// For every relation
 		delete Journals[i];
-		delete hash_tables[i];
+		//delete hash_tables[i];
   	}
     free(schema);
+    //delete[] Journals;
     free(Journals);
-    free(hash_tables);
 
     destroy_end = std::chrono::high_resolution_clock::now();
     destroy_diff = destroy_end - destroy_start;
