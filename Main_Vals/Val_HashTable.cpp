@@ -6,7 +6,7 @@ using namespace std;
 
 Val_HashTable::Val_HashTable()
 {
-	cout << "Val HashTable created" << endl;
+	// cout << "Val HashTable created" << endl;
 }
 
 int Val_HashTable::hashFunction(const string& key)
@@ -19,6 +19,7 @@ int Val_HashTable::hashFunction(const string& key)
 	}
 	return hash;
 }
+
 
 void Val_HashTable::insert(std::string key)
 {
@@ -44,7 +45,6 @@ void Val_HashTable::insert(std::string key)
 			unsigned bhashed_key = hashFunction(tempBucket->vkey);  // Bucket hashed key
             while(getBucketIndex(bhashed_key, globalDepth) == getBucketIndex(hashed_key, globalDepth))
             {
-				// cout << "hehe";
                 doubleTableSize();
             }
             int index2 = getBucketIndex(bhashed_key, globalDepth);

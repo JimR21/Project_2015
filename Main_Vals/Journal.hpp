@@ -1,13 +1,14 @@
 #include <iostream>
 #include <stdint.h>
 #include "JournalRecord.hpp"
+#include "Key_HashTable.hpp"
 #include "Tid_HashTable.hpp"
 #include "Val_HashTable.hpp"
 #include "options.hpp"
 
 class Journal {
 private:
-    uint32_t relation_id;
+    //uint32_t relation_id;
     DArray<JournalRecord*> *Records;
     uint64_t lastTID;
 
@@ -16,6 +17,10 @@ private:
 #endif
 
 public:
+    Key_HashTable key_htable;
+	Val_HashTable val_htable;
+    uint32_t columns;
+
     Journal(uint32_t);
     ~Journal();
     void insertJournalRecord(JournalRecord*);
@@ -26,14 +31,7 @@ public:
 	JournalRecord *getRecord(int key);
     uint64_t getLastTID();
 
-// Tid's hash table
 #if TID_HASHTABLE == 1
     int tidSearchRecord(unsigned tid);
 #endif
-
-// Valdiations hash table
-#if VAL_HASHTABLE == 1
-	Val_HashTable val_hashtable;
-#endif
-
 };
