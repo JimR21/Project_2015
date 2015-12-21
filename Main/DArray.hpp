@@ -15,7 +15,8 @@ class DArray {
 
 public:
 
-    DArray();
+	DArray();
+    DArray(unsigned capacity);
     ~DArray();
     int size() ;
     void changeSize(int i);
@@ -35,10 +36,17 @@ public:
 
 // create an empty vector
 template <class T>
+// DArray<T>::DArray() : capacity(32768), n(0) {
 DArray<T>::DArray() : capacity(32768), n(0) {
 	arr = new T[capacity];
 }
-
+//=========================================================
+// create an empty vector
+template <class T>
+// DArray<T>::DArray() : capacity(32768), n(0) {
+DArray<T>::DArray(unsigned icapacity) : capacity(icapacity), n(0) {
+	arr = new T[capacity];
+}
 //=========================================================
 
 template <class T>

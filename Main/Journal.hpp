@@ -3,6 +3,7 @@
 #include "JournalRecord.hpp"
 #include "Key_HashTable.hpp"
 #include "Tid_HashTable.hpp"
+#include "Val_HashTable.hpp"
 #include "options.hpp"
 
 class Journal {
@@ -17,6 +18,7 @@ private:
 
 public:
     Key_HashTable key_htable;
+	Val_HashTable val_htable;
     uint32_t columns;
 
     Journal(uint32_t);

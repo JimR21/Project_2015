@@ -1,0 +1,636 @@
+desc: (none)
+cmd: ./test.out
+time_unit: i
+#-----------
+snapshot=0
+#-----------
+time=0
+mem_heap_B=0
+mem_heap_extra_B=0
+mem_stacks_B=0
+heap_tree=empty
+#-----------
+snapshot=1
+#-----------
+time=93148096
+mem_heap_B=70658488
+mem_heap_extra_B=2811872
+mem_stacks_B=0
+heap_tree=empty
+#-----------
+snapshot=2
+#-----------
+time=199219981
+mem_heap_B=172909359
+mem_heap_extra_B=3714305
+mem_stacks_B=0
+heap_tree=detailed
+n8: 172909359 (heap allocation functions) malloc/new/new[], --alloc-fns, etc.
+ n1: 114819072 0x40514D: Val_HashTable::doubleTableSize() (DArray.hpp:71)
+  n1: 114819072 0x4052A6: Val_HashTable::insert(std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> >) (Val_HashTable.cpp:56)
+   n0: 114819072 0x401F99: main (main.cpp:252)
+ n2: 14942208 0x4041D2: Gen_HashTable::Gen_HashTable() (DArray.hpp:41)
+  n1: 7864320 0x404FB4: Val_HashTable::Val_HashTable() (Val_HashTable.cpp:8)
+   n1: 7864320 0x403BC3: Journal::Journal(unsigned int) (Journal.cpp:6)
+    n0: 7864320 0x401A03: main (main.cpp:71)
+  n1: 7077888 0x403BBB: Journal::Journal(unsigned int) (Key_HashTable.hpp:5)
+   n0: 7077888 0x401A03: main (main.cpp:71)
+ n1: 11534336 0x404724: Key_HashTable::insert(unsigned int, unsigned int, unsigned int) (DArray.hpp:71)
+  n0: 11534336 0x4026F6: main (main.cpp:183)
+ n0: 8120031 in 53 places, all below massif's threshold (1.00%)
+ n2: 7864320 0x4041B7: Gen_HashTable::Gen_HashTable() (DArray.hpp:41)
+  n1: 3932160 0x403BBB: Journal::Journal(unsigned int) (Key_HashTable.hpp:5)
+   n0: 3932160 0x401A03: main (main.cpp:71)
+  n1: 3932160 0x404FB4: Val_HashTable::Val_HashTable() (Val_HashTable.cpp:8)
+   n1: 3932160 0x403BC3: Journal::Journal(unsigned int) (Journal.cpp:6)
+    n0: 3932160 0x401A03: main (main.cpp:71)
+ n1: 7864320 0x403BEE: Journal::Journal(unsigned int) (DArray.hpp:41)
+  n0: 7864320 0x401A03: main (main.cpp:71)
+ n1: 3932160 0x404FCC: Val_HashTable::Val_HashTable() (DArray.hpp:41)
+  n1: 3932160 0x403BC3: Journal::Journal(unsigned int) (Journal.cpp:6)
+   n0: 3932160 0x401A03: main (main.cpp:71)
+ n1: 3832912 0x4040E3: JournalRecord::JournalRecord(unsigned long, bool, unsigned int) (JournalRecord.cpp:15)
+  n0: 3832912 0x401F2F: main (main.cpp:158)
+#-----------
+snapshot=3
+#-----------
+time=269056187
+mem_heap_B=248238279
+mem_heap_extra_B=4331449
+mem_stacks_B=0
+heap_tree=detailed
+n8: 248238279 (heap allocation functions) malloc/new/new[], --alloc-fns, etc.
+ n1: 188743680 0x40514D: Val_HashTable::doubleTableSize() (DArray.hpp:71)
+  n1: 188743680 0x4052A6: Val_HashTable::insert(std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> >) (Val_HashTable.cpp:56)
+   n0: 188743680 0x401F99: main (main.cpp:252)
+ n2: 14942208 0x4041D2: Gen_HashTable::Gen_HashTable() (DArray.hpp:41)
+  n1: 7864320 0x404FB4: Val_HashTable::Val_HashTable() (Val_HashTable.cpp:8)
+   n1: 7864320 0x403BC3: Journal::Journal(unsigned int) (Journal.cpp:6)
+    n0: 7864320 0x401A03: main (main.cpp:71)
+  n1: 7077888 0x403BBB: Journal::Journal(unsigned int) (Key_HashTable.hpp:5)
+   n0: 7077888 0x401A03: main (main.cpp:71)
+ n1: 11534336 0x404724: Key_HashTable::insert(unsigned int, unsigned int, unsigned int) (DArray.hpp:71)
+  n0: 11534336 0x4026F6: main (main.cpp:183)
+ n0: 9098551 in 53 places, all below massif's threshold (1.00%)
+ n2: 7864320 0x4041B7: Gen_HashTable::Gen_HashTable() (DArray.hpp:41)
+  n1: 3932160 0x403BBB: Journal::Journal(unsigned int) (Key_HashTable.hpp:5)
+   n0: 3932160 0x401A03: main (main.cpp:71)
+  n1: 3932160 0x404FB4: Val_HashTable::Val_HashTable() (Val_HashTable.cpp:8)
+   n1: 3932160 0x403BC3: Journal::Journal(unsigned int) (Journal.cpp:6)
+    n0: 3932160 0x401A03: main (main.cpp:71)
+ n1: 7864320 0x403BEE: Journal::Journal(unsigned int) (DArray.hpp:41)
+  n0: 7864320 0x401A03: main (main.cpp:71)
+ n1: 4258704 0x4040E3: JournalRecord::JournalRecord(unsigned long, bool, unsigned int) (JournalRecord.cpp:15)
+  n0: 4258704 0x401F2F: main (main.cpp:158)
+ n1: 3932160 0x404FCC: Val_HashTable::Val_HashTable() (DArray.hpp:41)
+  n1: 3932160 0x403BC3: Journal::Journal(unsigned int) (Journal.cpp:6)
+   n0: 3932160 0x401A03: main (main.cpp:71)
+#-----------
+snapshot=4
+#-----------
+time=357827110
+mem_heap_B=382730197
+mem_heap_extra_B=4485539
+mem_stacks_B=0
+heap_tree=empty
+#-----------
+snapshot=5
+#-----------
+time=419358658
+mem_heap_B=383378613
+mem_heap_extra_B=4698931
+mem_stacks_B=0
+heap_tree=detailed
+n7: 383378613 (heap allocation functions) malloc/new/new[], --alloc-fns, etc.
+ n1: 323485696 0x40514D: Val_HashTable::doubleTableSize() (DArray.hpp:71)
+  n1: 323485696 0x4052A6: Val_HashTable::insert(std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> >) (Val_HashTable.cpp:56)
+   n0: 323485696 0x401F99: main (main.cpp:252)
+ n2: 14942208 0x4041D2: Gen_HashTable::Gen_HashTable() (DArray.hpp:41)
+  n1: 7864320 0x404FB4: Val_HashTable::Val_HashTable() (Val_HashTable.cpp:8)
+   n1: 7864320 0x403BC3: Journal::Journal(unsigned int) (Journal.cpp:6)
+    n0: 7864320 0x401A03: main (main.cpp:71)
+  n1: 7077888 0x403BBB: Journal::Journal(unsigned int) (Key_HashTable.hpp:5)
+   n0: 7077888 0x401A03: main (main.cpp:71)
+ n0: 13394349 in 54 places, all below massif's threshold (1.00%)
+ n1: 11534336 0x404724: Key_HashTable::insert(unsigned int, unsigned int, unsigned int) (DArray.hpp:71)
+  n0: 11534336 0x4026F6: main (main.cpp:183)
+ n1: 7864320 0x403BEE: Journal::Journal(unsigned int) (DArray.hpp:41)
+  n0: 7864320 0x401A03: main (main.cpp:71)
+ n2: 7864320 0x4041B7: Gen_HashTable::Gen_HashTable() (DArray.hpp:41)
+  n1: 3932160 0x403BBB: Journal::Journal(unsigned int) (Key_HashTable.hpp:5)
+   n0: 3932160 0x401A03: main (main.cpp:71)
+  n1: 3932160 0x404FB4: Val_HashTable::Val_HashTable() (Val_HashTable.cpp:8)
+   n1: 3932160 0x403BC3: Journal::Journal(unsigned int) (Journal.cpp:6)
+    n0: 3932160 0x401A03: main (main.cpp:71)
+ n1: 4293384 0x4040E3: JournalRecord::JournalRecord(unsigned long, bool, unsigned int) (JournalRecord.cpp:15)
+  n0: 4293384 0x401F2F: main (main.cpp:158)
+#-----------
+snapshot=6
+#-----------
+time=520511358
+mem_heap_B=446930106
+mem_heap_extra_B=5054294
+mem_stacks_B=0
+heap_tree=empty
+#-----------
+snapshot=7
+#-----------
+time=601996776
+mem_heap_B=481773155
+mem_heap_extra_B=5624773
+mem_stacks_B=0
+heap_tree=empty
+#-----------
+snapshot=8
+#-----------
+time=658869880
+mem_heap_B=511239307
+mem_heap_extra_B=6168637
+mem_stacks_B=0
+heap_tree=empty
+#-----------
+snapshot=9
+#-----------
+time=716986779
+mem_heap_B=512198691
+mem_heap_extra_B=6405541
+mem_stacks_B=0
+heap_tree=empty
+#-----------
+snapshot=10
+#-----------
+time=827526091
+mem_heap_B=740026766
+mem_heap_extra_B=6560802
+mem_stacks_B=0
+heap_tree=empty
+#-----------
+snapshot=11
+#-----------
+time=898171665
+mem_heap_B=936084864
+mem_heap_extra_B=7183936
+mem_stacks_B=0
+heap_tree=empty
+#-----------
+snapshot=12
+#-----------
+time=958428090
+mem_heap_B=870428870
+mem_heap_extra_B=7708338
+mem_stacks_B=0
+heap_tree=empty
+#-----------
+snapshot=13
+#-----------
+time=1030943309
+mem_heap_B=931815407
+mem_heap_extra_B=8272529
+mem_stacks_B=0
+heap_tree=empty
+#-----------
+snapshot=14
+#-----------
+time=1124215694
+mem_heap_B=932660342
+mem_heap_extra_B=8659106
+mem_stacks_B=0
+heap_tree=empty
+#-----------
+snapshot=15
+#-----------
+time=1178443560
+mem_heap_B=1108985252
+mem_heap_extra_B=8752980
+mem_stacks_B=0
+heap_tree=detailed
+n4: 1108985252 (heap allocation functions) malloc/new/new[], --alloc-fns, etc.
+ n1: 1031798784 0x40514D: Val_HashTable::doubleTableSize() (DArray.hpp:71)
+  n1: 1031798784 0x4052A6: Val_HashTable::insert(std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> >) (Val_HashTable.cpp:56)
+   n0: 1031798784 0x401F99: main (main.cpp:252)
+ n0: 42321316 in 57 places, all below massif's threshold (1.00%)
+ n1: 19922944 0x404724: Key_HashTable::insert(unsigned int, unsigned int, unsigned int) (DArray.hpp:71)
+  n0: 19922944 0x4026F6: main (main.cpp:183)
+ n1: 14942208 0x4041D2: Gen_HashTable::Gen_HashTable() (DArray.hpp:41)
+  n0: 14942208 in 2 places, all below massif's threshold (1.00%)
+#-----------
+snapshot=16
+#-----------
+time=1242705331
+mem_heap_B=1044237065
+mem_heap_extra_B=8894247
+mem_stacks_B=0
+heap_tree=empty
+#-----------
+snapshot=17
+#-----------
+time=1331747121
+mem_heap_B=1278894604
+mem_heap_extra_B=8915556
+mem_stacks_B=0
+heap_tree=empty
+#-----------
+snapshot=18
+#-----------
+time=1440530805
+mem_heap_B=1308619535
+mem_heap_extra_B=9587145
+mem_stacks_B=0
+heap_tree=empty
+#-----------
+snapshot=19
+#-----------
+time=1487172200
+mem_heap_B=1311329615
+mem_heap_extra_B=9785001
+mem_stacks_B=0
+heap_tree=empty
+#-----------
+snapshot=20
+#-----------
+time=1554675425
+mem_heap_B=1481182688
+mem_heap_extra_B=9928224
+mem_stacks_B=0
+heap_tree=detailed
+n4: 1481182688 (heap allocation functions) malloc/new/new[], --alloc-fns, etc.
+ n1: 1401946112 0x40514D: Val_HashTable::doubleTableSize() (DArray.hpp:71)
+  n1: 1401946112 0x4052A6: Val_HashTable::insert(std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> >) (Val_HashTable.cpp:56)
+   n0: 1401946112 0x401F99: main (main.cpp:252)
+ n0: 44371424 in 57 places, all below massif's threshold (1.00%)
+ n1: 19922944 0x404724: Key_HashTable::insert(unsigned int, unsigned int, unsigned int) (DArray.hpp:71)
+  n0: 19922944 0x4026F6: main (main.cpp:183)
+ n1: 14942208 0x4041D2: Gen_HashTable::Gen_HashTable() (DArray.hpp:41)
+  n0: 14942208 in 2 places, all below massif's threshold (1.00%)
+#-----------
+snapshot=21
+#-----------
+time=1627929225
+mem_heap_B=1548620511
+mem_heap_extra_B=9960761
+mem_stacks_B=0
+heap_tree=empty
+#-----------
+snapshot=22
+#-----------
+time=1730557978
+mem_heap_B=1721777150
+mem_heap_extra_B=10189154
+mem_stacks_B=0
+heap_tree=detailed
+n3: 1721777150 (heap allocation functions) malloc/new/new[], --alloc-fns, etc.
+ n1: 1642070016 0x40514D: Val_HashTable::doubleTableSize() (DArray.hpp:71)
+  n1: 1642070016 0x4052A6: Val_HashTable::insert(std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> >) (Val_HashTable.cpp:56)
+   n0: 1642070016 0x401F99: main (main.cpp:252)
+ n0: 59784190 in 58 places, all below massif's threshold (1.00%)
+ n1: 19922944 0x404724: Key_HashTable::insert(unsigned int, unsigned int, unsigned int) (DArray.hpp:71)
+  n0: 19922944 0x4026F6: main (main.cpp:183)
+#-----------
+snapshot=23
+#-----------
+time=1834367424
+mem_heap_B=2325756926
+mem_heap_extra_B=10189154
+mem_stacks_B=0
+heap_tree=detailed
+n2: 2325756926 (heap allocation functions) malloc/new/new[], --alloc-fns, etc.
+ n1: 2246049792 0x40514D: Val_HashTable::doubleTableSize() (DArray.hpp:71)
+  n1: 2246049792 0x4052A6: Val_HashTable::insert(std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> >) (Val_HashTable.cpp:56)
+   n0: 2246049792 0x401F99: main (main.cpp:252)
+ n0: 79707134 in 59 places, all below massif's threshold (1.00%)
+#-----------
+snapshot=24
+#-----------
+time=1911599020
+mem_heap_B=2057480218
+mem_heap_extra_B=10269958
+mem_stacks_B=0
+heap_tree=empty
+#-----------
+snapshot=25
+#-----------
+time=1973704867
+mem_heap_B=2060377442
+mem_heap_extra_B=10535542
+mem_stacks_B=0
+heap_tree=empty
+#-----------
+snapshot=26
+#-----------
+time=2039179244
+mem_heap_B=2100887758
+mem_heap_extra_B=10913074
+mem_stacks_B=0
+heap_tree=empty
+#-----------
+snapshot=27
+#-----------
+time=2101429657
+mem_heap_B=2101481937
+mem_heap_extra_B=11091199
+mem_stacks_B=0
+heap_tree=empty
+#-----------
+snapshot=28
+#-----------
+time=2163598277
+mem_heap_B=2102960248
+mem_heap_extra_B=11696952
+mem_stacks_B=0
+heap_tree=empty
+#-----------
+snapshot=29
+#-----------
+time=2262817944
+mem_heap_B=2153853424
+mem_heap_extra_B=11976704
+mem_stacks_B=0
+heap_tree=empty
+#-----------
+snapshot=30
+#-----------
+time=2364949968
+mem_heap_B=3496079240
+mem_heap_extra_B=12006680
+mem_stacks_B=0
+heap_tree=empty
+#-----------
+snapshot=31
+#-----------
+time=2457224734
+mem_heap_B=3496079240
+mem_heap_extra_B=12006680
+mem_stacks_B=0
+heap_tree=detailed
+n2: 3496079240 (heap allocation functions) malloc/new/new[], --alloc-fns, etc.
+ n1: 3412066304 0x40514D: Val_HashTable::doubleTableSize() (DArray.hpp:71)
+  n1: 3412066304 0x4052A6: Val_HashTable::insert(std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> >) (Val_HashTable.cpp:56)
+   n0: 3412066304 0x401F99: main (main.cpp:252)
+ n0: 84012936 in 60 places, all below massif's threshold (1.00%)
+#-----------
+snapshot=32
+#-----------
+time=2549499555
+mem_heap_B=5106691976
+mem_heap_extra_B=12006680
+mem_stacks_B=0
+heap_tree=empty
+#-----------
+snapshot=33
+#-----------
+time=2734049009
+mem_heap_B=5106691976
+mem_heap_extra_B=12006680
+mem_stacks_B=0
+heap_tree=detailed
+n2: 5106691976 (heap allocation functions) malloc/new/new[], --alloc-fns, etc.
+ n1: 5022679040 0x40514D: Val_HashTable::doubleTableSize() (DArray.hpp:71)
+  n1: 5022679040 0x4052A6: Val_HashTable::insert(std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> >) (Val_HashTable.cpp:56)
+   n0: 5022679040 0x401F99: main (main.cpp:252)
+ n0: 84012936 in 60 places, all below massif's threshold (1.00%)
+#-----------
+snapshot=34
+#-----------
+time=2918598589
+mem_heap_B=4032950200
+mem_heap_extra_B=12002648
+mem_stacks_B=0
+heap_tree=empty
+#-----------
+snapshot=35
+#-----------
+time=2969389149
+mem_heap_B=4083401339
+mem_heap_extra_B=12067109
+mem_stacks_B=0
+heap_tree=empty
+#-----------
+snapshot=36
+#-----------
+time=3044362888
+mem_heap_B=4821598843
+mem_heap_extra_B=12071149
+mem_stacks_B=0
+heap_tree=empty
+#-----------
+snapshot=37
+#-----------
+time=3136637858
+mem_heap_B=4553163435
+mem_heap_extra_B=12067117
+mem_stacks_B=0
+heap_tree=empty
+#-----------
+snapshot=38
+#-----------
+time=3209702478
+mem_heap_B=4561594432
+mem_heap_extra_B=12229928
+mem_stacks_B=0
+heap_tree=detailed
+n2: 4561594432 (heap allocation functions) malloc/new/new[], --alloc-fns, etc.
+ n1: 4477419520 0x40514D: Val_HashTable::doubleTableSize() (DArray.hpp:71)
+  n1: 4477419520 0x4052A6: Val_HashTable::insert(std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> >) (Val_HashTable.cpp:56)
+   n0: 4477419520 0x401F99: main (main.cpp:252)
+ n0: 84174912 in 60 places, all below massif's threshold (1.00%)
+#-----------
+snapshot=39
+#-----------
+time=3258401889
+mem_heap_B=4561783776
+mem_heap_extra_B=12331160
+mem_stacks_B=0
+heap_tree=empty
+#-----------
+snapshot=40
+#-----------
+time=3355935393
+mem_heap_B=4562326765
+mem_heap_extra_B=12615011
+mem_stacks_B=0
+heap_tree=empty
+#-----------
+snapshot=41
+#-----------
+time=3455638159
+mem_heap_B=4614109519
+mem_heap_extra_B=13015281
+mem_stacks_B=0
+heap_tree=detailed
+n2: 4614109519 (heap allocation functions) malloc/new/new[], --alloc-fns, etc.
+ n1: 4528275456 0x40514D: Val_HashTable::doubleTableSize() (DArray.hpp:71)
+  n1: 4528275456 0x4052A6: Val_HashTable::insert(std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> >) (Val_HashTable.cpp:56)
+   n0: 4528275456 0x401F99: main (main.cpp:252)
+ n0: 85834063 in 60 places, all below massif's threshold (1.00%)
+#-----------
+snapshot=42
+#-----------
+time=3558836769
+mem_heap_B=4679197350
+mem_heap_extra_B=13195386
+mem_stacks_B=0
+heap_tree=empty
+#-----------
+snapshot=43
+#-----------
+time=3656958244
+mem_heap_B=4695962200
+mem_heap_extra_B=13326576
+mem_stacks_B=0
+heap_tree=empty
+#-----------
+snapshot=44
+#-----------
+time=3731491919
+mem_heap_B=4930890630
+mem_heap_extra_B=13351890
+mem_stacks_B=0
+heap_tree=detailed
+n2: 4930890630 (heap allocation functions) malloc/new/new[], --alloc-fns, etc.
+ n1: 4844421120 0x40514D: Val_HashTable::doubleTableSize() (DArray.hpp:71)
+  n1: 4844421120 0x4052A6: Val_HashTable::insert(std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> >) (Val_HashTable.cpp:56)
+   n0: 4844421120 0x401F99: main (main.cpp:252)
+ n0: 86469510 in 60 places, all below massif's threshold (1.00%)
+#-----------
+snapshot=45
+#-----------
+time=3780889561
+mem_heap_B=4930959682
+mem_heap_extra_B=13388238
+mem_stacks_B=0
+heap_tree=empty
+#-----------
+snapshot=46
+#-----------
+time=3878854387
+mem_heap_B=4931297991
+mem_heap_extra_B=13567849
+mem_stacks_B=0
+heap_tree=empty
+#-----------
+snapshot=47
+#-----------
+time=3928220661
+mem_heap_B=5266849140
+mem_heap_extra_B=13575572
+mem_stacks_B=0
+heap_tree=detailed
+n2: 5266849140 (heap allocation functions) malloc/new/new[], --alloc-fns, etc.
+ n1: 5179965440 0x40514D: Val_HashTable::doubleTableSize() (DArray.hpp:71)
+  n1: 5179965440 0x4052A6: Val_HashTable::insert(std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> >) (Val_HashTable.cpp:56)
+   n0: 5179965440 0x401F99: main (main.cpp:252)
+ n0: 86883700 in 60 places, all below massif's threshold (1.00%)
+#-----------
+snapshot=48
+#-----------
+time=3997426888
+mem_heap_B=5669502324
+mem_heap_extra_B=13575572
+mem_stacks_B=0
+heap_tree=detailed
+n2: 5669502324 (heap allocation functions) malloc/new/new[], --alloc-fns, etc.
+ n1: 5582618624 0x40514D: Val_HashTable::doubleTableSize() (DArray.hpp:71)
+  n1: 5582618624 0x4052A6: Val_HashTable::insert(std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> >) (Val_HashTable.cpp:56)
+   n0: 5582618624 0x401F99: main (main.cpp:252)
+ n0: 86883700 in 60 places, all below massif's threshold (1.00%)
+#-----------
+snapshot=49
+#-----------
+time=4067900683
+mem_heap_B=5401169860
+mem_heap_extra_B=13625284
+mem_stacks_B=0
+heap_tree=empty
+#-----------
+snapshot=50
+#-----------
+time=4114571755
+mem_heap_B=5403656343
+mem_heap_extra_B=13698985
+mem_stacks_B=0
+heap_tree=empty
+#-----------
+snapshot=51
+#-----------
+time=4161215871
+mem_heap_B=5403687668
+mem_heap_extra_B=13828308
+mem_stacks_B=0
+heap_tree=empty
+#-----------
+snapshot=52
+#-----------
+time=4208002671
+mem_heap_B=5403830090
+mem_heap_extra_B=13904878
+mem_stacks_B=0
+heap_tree=empty
+#-----------
+snapshot=53
+#-----------
+time=4254947408
+mem_heap_B=5416574855
+mem_heap_extra_B=13991097
+mem_stacks_B=0
+heap_tree=empty
+#-----------
+snapshot=54
+#-----------
+time=4301598596
+mem_heap_B=5416715435
+mem_heap_extra_B=14063693
+mem_stacks_B=0
+heap_tree=empty
+#-----------
+snapshot=55
+#-----------
+time=4348332187
+mem_heap_B=5416883271
+mem_heap_extra_B=14151977
+mem_stacks_B=0
+heap_tree=empty
+#-----------
+snapshot=56
+#-----------
+time=4394976460
+mem_heap_B=5417022259
+mem_heap_extra_B=14224149
+mem_stacks_B=0
+heap_tree=empty
+#-----------
+snapshot=57
+#-----------
+time=4505235235
+mem_heap_B=6492421348
+mem_heap_extra_B=14421860
+mem_stacks_B=0
+heap_tree=peak
+n2: 6492421348 (heap allocation functions) malloc/new/new[], --alloc-fns, etc.
+ n1: 6402605056 0x40514D: Val_HashTable::doubleTableSize() (DArray.hpp:71)
+  n1: 6402605056 0x4052A6: Val_HashTable::insert(std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> >) (Val_HashTable.cpp:56)
+   n0: 6402605056 0x401F99: main (main.cpp:252)
+ n0: 89816292 in 60 places, all below massif's threshold (1.00%)
+#-----------
+snapshot=58
+#-----------
+time=4597510127
+mem_heap_B=5955550484
+mem_heap_extra_B=14417828
+mem_stacks_B=0
+heap_tree=empty
+#-----------
+snapshot=59
+#-----------
+time=4644246341
+mem_heap_B=5955733764
+mem_heap_extra_B=14513972
+mem_stacks_B=0
+heap_tree=empty
+#-----------
+snapshot=60
+#-----------
+time=4690887906
+mem_heap_B=5955934792
+mem_heap_extra_B=14618272
+mem_stacks_B=0
+heap_tree=empty

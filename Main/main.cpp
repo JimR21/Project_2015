@@ -9,14 +9,18 @@
 #include "Bucket.hpp"
 #include "Key_HashTable.hpp"
 #include "Tid_HashTable.hpp"
+#include "Val_HashTable.hpp"
 #include <fstream>
 
-
 using namespace std;
+
+string stringBuilder(int start, int end, int col, int op, uint64_t value);
+
 using ns = chrono::milliseconds;
 using get_time = chrono::steady_clock;
 
 //Testing
+int predicates = 0;
 unsigned transactionCounter = 0;
 int termFlag = 0;
 
@@ -242,6 +246,14 @@ static void processValidationQueries(ValidationQueries *v){
 		// iterate over subqueries
 		for (unsigned w = 0; w < q->columnCount; w++)
         {
+			// create the key for the validation's hash
+			string key = stringBuilder(v->from, v->to, q->columns[w].column, q->columns[w].op, q->columns[w].value);
+			// update val hash
+			Journals[q->relationId]->val_htable.insert(key);
+
+			// predicates++;
+			// cout << "Predicates: " << predicates << endl;
+
 			// ean to operation einai '=' kai anaferetai sto primary key (c0)
 			if (q->columns[w].op == Query::Column::Equal && q->columns[w].column == 0)
             {
@@ -406,11 +418,11 @@ static void processFlush(Flush *fl){
     string buf;
 
 	for (i = val_offset; i < valRes_size && i<=fl->validationId; i++){
-		myfile << "Validation " << i << " : " << validationResults.get(i) << endl;
+		// myfile << "Validation " << i << " : " << validationResults.get(i) << endl;
         buf.append(BoolToString(validationResults.get(i)));
 	}
 
-    cout << buf << endl;
+    // cout << buf << endl;
 
     if(i >= fl->validationId)
 	   val_offset = fl->validationId;
@@ -450,7 +462,25 @@ static void processDestroySchema()
     destroy_end = std::chrono::high_resolution_clock::now();
     destroy_diff = destroy_end - destroy_start;
 }
+//================================================================================================
+string stringBuilder(int start, int end, int col, int op, uint64_t value){
+    string key;
 
+    key += to_string(start) + "-" + to_string(end) + " c" + to_string(col);
+
+    switch(op){
+        case Query::Column::Equal: key += "="; break;
+        case Query::Column::NotEqual: key += "!="; break;
+        case Query::Column::Less: key += "<"; break;
+        case Query::Column::LessOrEqual: key += "<="; break;
+        case Query::Column::Greater: key += ">"; break;
+        case Query::Column::GreaterOrEqual: key += ">="; break;
+    }
+
+    key += to_string(value);
+
+    return key;
+}
 //=====================================================
 //================== MAIN PROGRAM =====================
 //=====================================================

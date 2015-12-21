@@ -44,19 +44,19 @@ int Gen_HashTable::getBucketIndex(int hash, int depth)
 	return hash & ( (1 << depth) - 1);
 }
 //=======================================================================================================
-void Gen_HashTable::doubleTableSize()
-{
-    globalDepth++;
-    //unsigned new_size = size*2;
-    bucketArray.specialDouble();
-    // for(unsigned i = size; i < new_size; i++)
-    // {
-    //     bucketArray.push_back(bucketArray.get(i-size));
-    // }
-    size *= 2;
-    maxLocalCounter.push_back(0);        // Otan diplasiazetai o index sigoura de tha yparxei kanena bucket me localDepth = globalDepth
-
-}
+// void Gen_HashTable::doubleTableSize()
+// {
+//     globalDepth++;
+//     //unsigned new_size = size*2;
+//     bucketArray.specialDouble();
+//     // for(unsigned i = size; i < new_size; i++)
+//     // {
+//     //     bucketArray.push_back(bucketArray.get(i-size));
+//     // }
+//     size *= 2;
+//     maxLocalCounter.push_back(0);        // Otan diplasiazetai o index sigoura de tha yparxei kanena bucket me localDepth = globalDepth
+//
+// }
 //=======================================================================================================
 void Gen_HashTable::halveTableSize()
 {

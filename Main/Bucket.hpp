@@ -26,7 +26,6 @@ protected:
     // tid_offset is used in tid HashTable
     int tid_offset;
 
-
     Bucket();
 
     Bucket(unsigned ilocalDepth);

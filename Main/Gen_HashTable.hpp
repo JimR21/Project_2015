@@ -51,5 +51,12 @@ public:
     int deleteKey(unsigned key);
 };
 
+inline void Gen_HashTable::doubleTableSize()
+{
+    globalDepth++;
+    bucketArray.specialDouble();
+    size *= 2;
+    maxLocalCounter.push_back(0);        // Otan diplasiazetai o index sigoura de tha yparxei kanena bucket me localDepth = globalDepth
 
+}
 #endif
