@@ -72,15 +72,15 @@ int main(int argc, char const *argv[])
                     int n; //variable to store the number in
                     do
                     {
-                    n=rand()%max;
-                    //check or number is already used:
-                    check=true;
-                    for (int j=0;j<i;j++)
-                        if (n == keys.get(j)) //if number is already used
-                        {
-                            check=false; //set check to false
-                            break; //no need to check the other elements of keys[]
-                        }
+                        n=rand()%max;
+                        //check or number is already used:
+                        check=true;
+                        for (int j=0;j<i;j++)
+                            if (n == keys.get(j)) //if number is already used
+                            {
+                                check=false; //set check to false
+                                break; //no need to check the other elements of keys[]
+                            }
                     } while (!check); //loop until new, unique number is found
                     keys.push_back(n); //store the generated number in the array
                 }

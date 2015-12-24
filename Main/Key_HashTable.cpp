@@ -16,6 +16,9 @@ void Key_HashTable::insert(unsigned int key, unsigned tid, unsigned offset)
     if(tempBucket->empty == true)
     {
         tempBucket->insert(key, tid, offset);
+
+        // DEBUG
+		inserts++;
     }
     else
     {
@@ -80,6 +83,8 @@ void Key_HashTable::insert(unsigned int key, unsigned tid, unsigned offset)
                     maxLocalCounter.set(maxLocalCounter.size()-1, maxLocalCounter.get(maxLocalCounter.size()-1)+2);
             }
         }
+        // DEBUG
+		inserts++;
     }
 }
 //=======================================================================================================

@@ -2,6 +2,9 @@
 #define VAL_HASHTABLE_HPP
 #include "Gen_HashTable.hpp"
 #include <string>
+#include <stdlib.h>
+
+#define OVERFLOW 10;
 
 class BucketVal;
 
@@ -14,10 +17,12 @@ protected:
 	DArray<BucketVal*> Buckets;                 // Pointers to Buckets
 public:
 	Val_HashTable();
-	// int hashFunction(const std::string& key);
+	//int hashFunction(const std::string& key);
     void insert(std::string key);
 	void doubleTableSize();		//override giati exw new array
     int getbdata(std::string key);
+	bool splitcheck(uint32_t index, uint32_t depth);
+	void split(uint32_t index, uint32_t depth, BucketVal* newbucket);
 
 };
 

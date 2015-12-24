@@ -19,7 +19,7 @@ protected:
 
     int hashFunction(unsigned int key);          // Returns hashed number
 
-    int getBucketIndex(int hash, int depth);
+    uint32_t getBucketIndex(uint64_t hash, int depth);
 
     void doubleTableSize();
 
@@ -28,6 +28,9 @@ protected:
     unsigned int globalDepth;
 
 public:
+
+    // DEBUG
+    unsigned inserts;
 
     Gen_HashTable();
 
