@@ -16,7 +16,7 @@ void ValidationIndex::insertValidation(ValidationQueries* val){
 	if (!size)
 		start_bucket = last_bucket = newBucket;
 	else {
-		last_bucket->next = new Val_listbucket(val);
+		last_bucket->next = newBucket;
 		last_bucket = newBucket;
 	}
 	size++;
