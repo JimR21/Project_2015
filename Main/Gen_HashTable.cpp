@@ -12,6 +12,9 @@ Gen_HashTable::Gen_HashTable()
     size = HASHTABLE_SIZE;
     maxLocalCounter.push_back(HASHTABLE_SIZE);
 
+    // DEBUG
+    inserts = 0;
+
 	// cout << "Hash Table created!" << endl;
 
     for(unsigned i = 0; i < HASHTABLE_SIZE; i++)
@@ -39,7 +42,7 @@ int Gen_HashTable::hashFunction(unsigned int key)
     return (key * 2654435761 % 4294967296);    // Knuth: hash(i)=i*2654435761 mod 2^32
 }
 //=======================================================================================================
-int Gen_HashTable::getBucketIndex(int hash, int depth)
+uint32_t Gen_HashTable::getBucketIndex(uint64_t hash, int depth)
 {
 	return hash & ( (1 << depth) - 1);
 }

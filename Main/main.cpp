@@ -12,6 +12,7 @@
 #include "Val_HashTable.hpp"
 #include "ValidationIndex.hpp"
 #include <fstream>
+#include <iomanip>
 
 using namespace std;
 
@@ -444,10 +445,10 @@ static void processFlush(Flush *fl){
     else
         flush_diff = flush_end - flush_start;
 
-    // if(val_offset == 18090)
-    // {
-    //     termFlag = 1;
-    // }
+    if(val_offset == 7031)
+    {
+        termFlag = 1;
+    }
 }
 //================================================================================================
 static void processForget(Forget *fo){}
@@ -472,15 +473,15 @@ static void processDestroySchema()
 string stringBuilder(int start, int end, int col, int op, uint64_t value){
     string key;
 
-    key += to_string(start) + "-" + to_string(end) + " c" + to_string(col);
+    key = to_string(start) + "-" + to_string(end) + "@" + to_string(col);
 
     switch(op){
         case Query::Column::Equal: key += "="; break;
-        case Query::Column::NotEqual: key += "!="; break;
+        case Query::Column::NotEqual: key += "!"; break;
         case Query::Column::Less: key += "<"; break;
-        case Query::Column::LessOrEqual: key += "<="; break;
+        case Query::Column::LessOrEqual: key += "["; break;
         case Query::Column::Greater: key += ">"; break;
-        case Query::Column::GreaterOrEqual: key += ">="; break;
+        case Query::Column::GreaterOrEqual: key += "]"; break;
     }
 
     key += to_string(value);
@@ -510,12 +511,23 @@ int main(int argc, char **argv) {
 			len-=(sizeof(head) + head.messageLen);
 		}
 
-        // if(termFlag == 1)
-        //     head.type = MessageHead::Done;
+        if(termFlag == 1)
+            head.type = MessageHead::Done;
 
 		// And interpret it
 		switch (head.type) {
 			case MessageHead::Done:
+
+                // Debuging
+                cout << "============= HashTable Sizes ==============" << endl;
+                cout << "No  | Key HashTable    |   Val HashTable" << endl;
+                for(int i = 0; i < relationCount; i++)
+                {
+                    cout << setw(3) << left << i << " | Size: " << setw(8) << left << Journals[i]->key_htable.getsize() <<  " Inserts: " << setw(8) << left << Journals[i]->key_htable.inserts <<  " | Size: "  << setw(8) << left << Journals[i]->val_htable.getsize() << setw(8) << left << " Inserts: " << Journals[i]->val_htable.inserts << endl;
+                }
+
+
+
                 processDestroySchema();
 
                 globalend = std::chrono::high_resolution_clock::now();
@@ -527,6 +539,7 @@ int main(int argc, char **argv) {
                 cout << "Flush elapsed time is :  " << flush_diff.count() << " ms " << endl;
                 cout << "Destroy elapsed time is :  " << destroy_diff.count() << " ms " << endl;
                 cout << "Overal elapsed time is :  " << globaldiff.count() << " ms " << endl;
+
 
 				return 0;
 			case MessageHead::DefineSchema: processDefineSchema((DefineSchema *)body); break;
