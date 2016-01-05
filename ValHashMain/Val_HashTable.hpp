@@ -24,6 +24,8 @@ public:
 	bool splitcheck(uint32_t index, uint32_t depth);
 	void split(uint32_t index, uint32_t depth, BucketVal* newbucket);
 
+	bool datacheck(BucketVal* bucket);
+
 };
 
 

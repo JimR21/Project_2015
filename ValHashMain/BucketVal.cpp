@@ -8,6 +8,7 @@ BucketVal::BucketVal(){
     empty = true;
 	first = NULL;
 	last = NULL;
+	counter = 0;
 }
 
 BucketVal::BucketVal(unsigned ilocalDepth) : localDepth(ilocalDepth)
@@ -15,6 +16,7 @@ BucketVal::BucketVal(unsigned ilocalDepth) : localDepth(ilocalDepth)
     empty = true;
 	first = NULL;
 	last = NULL;
+	counter = 0;
 }
 
 BucketVal::BucketVal(std::string ikey, unsigned ilocalDepth)
@@ -54,7 +56,7 @@ void BucketVal::addBucketData(Val_bdata* valdata)
 	if(first == NULL)
 	{
 		first = valdata;
-		last = first;
+		last = valdata;
 	}
 	else
 	{

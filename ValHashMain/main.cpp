@@ -250,6 +250,7 @@ static void processValidationQueries(ValidationQueries *v){
 			// create the key for the validation's hash
 			string key = stringBuilder(v->from, v->to, q->columns[w].column, q->columns[w].op, q->columns[w].value);
 			// update val hash
+            cout << "ValTable: " << q->relationId << endl;
 			Journals[q->relationId]->val_htable.insert(key);
 
 			// predicates++;

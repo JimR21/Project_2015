@@ -111,7 +111,7 @@ bool Val_HashTable::splitcheck(uint32_t index, uint32_t depth)
 	Val_bdata* tempdata = bucket->first;
 	uint64_t bhashed_key;
 	uint32_t bindex;
-	for(unsigned i = 0; i < BUCKET_OVERFLOW; i++)
+	do
 	{
 		bhashed_key = hashFunction(tempdata->key);
 		bindex = getBucketIndex(bhashed_key, depth);
@@ -119,7 +119,8 @@ bool Val_HashTable::splitcheck(uint32_t index, uint32_t depth)
 		{
 			return true;
 		}
-	}
+		tempdata = tempdata->next;
+	} while(tempdata != NULL);
 	return false;
 }
 
@@ -135,7 +136,7 @@ void Val_HashTable::split(uint32_t index, uint32_t depth, BucketVal* newbucket)
 	do
 	{	// gia BUCKET_OVERFLOW epanalipseis
 		bhashed_key = hashFunction(tempdata->key);
-		bindex = getBucketIndex(bhashed_key, globalDepth);
+		bindex = getBucketIndex(bhashed_key, depth);
 		if(bindex == index)
 		{
 			// diagrafh apo to palio
@@ -143,6 +144,22 @@ void Val_HashTable::split(uint32_t index, uint32_t depth, BucketVal* newbucket)
 				oldbucket->first = tempdata->next;
 			else
 				tempprev->next = tempdata->next;
+			oldbucket->counter--;
+			if(oldbucket->counter == 0)
+			{
+				oldbucket->first = NULL;
+				oldbucket->last = NULL;
+				oldbucket->empty = true;
+			}
+			if(tempdata->next == NULL)
+			{
+				if(tempprev == NULL)	// Periptwsh pou einai tempdata = first
+					oldbucket->last = oldbucket->first;
+				else
+					oldbucket->last = tempprev;
+			}
+
+
 
 			// insert sto neo bucket
 
@@ -159,8 +176,11 @@ void Val_HashTable::split(uint32_t index, uint32_t depth, BucketVal* newbucket)
 			tempdata = tempdata->next;
 		}
 	}while(tempdata != NULL);
+	if(oldbucket->first == NULL && oldbucket->counter == 1)
+	{
+		cout << "Wrong" << endl;
+	}
 }
-
 
 void Val_HashTable::insert(std::string key)
 {
@@ -182,6 +202,10 @@ void Val_HashTable::insert(std::string key)
     }
 	else
 	{
+		if(!datacheck(tempBucket))
+		{
+			cout << "WRONG" << endl;
+		}
 		Val_bdata* tempData = tempBucket->keySearch(key);
 		if(tempData != NULL)
 		{
@@ -270,4 +294,18 @@ void Val_HashTable::insert(std::string key)
 int Val_HashTable::getbdata(std::string key)
 {
 	return 0;
+}
+
+bool Val_HashTable::datacheck(BucketVal* bucket)
+{
+	Val_bdata* tempdata = bucket->first;
+	int i = 0;
+	do
+	{
+		tempdata = tempdata->next;
+		i++;
+	} while(tempdata != NULL);
+	if(i < bucket->counter)
+		return false;
+	return true;
 }
