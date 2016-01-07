@@ -440,10 +440,10 @@ static void processFlush(Flush *fl){
     else
         flush_diff = flush_end - flush_start;
 
-    if(val_offset == 7031)
-    {
-        termFlag = 1;
-    }
+    // if(val_offset == 78425)
+    // {
+    //     termFlag = 1;
+    // }
 }
 //================================================================================================
 static void processForget(Forget *fo){}
@@ -524,7 +524,7 @@ int main(int argc, char **argv) {
 
 
 
-                processDestroySchema();
+                //processDestroySchema();
 
                 globalend = std::chrono::high_resolution_clock::now();
                 globaldiff = globalend - globalstart;

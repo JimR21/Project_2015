@@ -158,9 +158,6 @@ void Val_HashTable::split(uint32_t index, uint32_t depth, BucketVal* newbucket)
 				else
 					oldbucket->last = tempprev;
 			}
-
-
-
 			// insert sto neo bucket
 
 			tempdata->next = NULL;
@@ -223,8 +220,8 @@ void Val_HashTable::insert(std::string key)
 				while(!splitcheck(index, globalDepth))
 				{
 					doubleTableSize();
+					index = getBucketIndex(hashed_key, globalDepth);
 				}
-				index = getBucketIndex(hashed_key, globalDepth);
 
 				// bindex einai to index me diaforetiko globalDepth bit
 				unsigned i = pow(2, globalDepth-1);
@@ -241,16 +238,13 @@ void Val_HashTable::insert(std::string key)
 				else           // Split otan uparxoyn perissoteroi pointers sto bucket
 	            {
 	                unsigned local = tempBucket->localDepth;
-	                while(!splitcheck(index, local))  // Oso to localDepth den einai arketo gia na diaxwristoun ta 2 kleidia, auksanetai kai diaxwrizontai ta buckets
+	                while(!splitcheck(getBucketIndex(hashed_key, local), local))  // Oso to localDepth den einai arketo gia na diaxwristoun ta 2 kleidia, auksanetai kai diaxwrizontai ta buckets
 	                {
-	                    if(splitcheck(index, local+1)) // An sto localDepth+1 diaxwrizetai vges apo loop
+	                    if(splitcheck(getBucketIndex(hashed_key, local+1), local+1)) // An sto localDepth+1 diaxwrizetai vges apo loop
 	                        break;
 	                    local++;
 	                    tempBucket->localDepth++;
 	                    BucketVal* newBucket = new BucketVal(local);                                        // Neo empty bucket
-
-						// split val_bdata
-						split(index, local, newBucket);
 
 	                    unsigned oldindex = getBucketIndex(hashed_key, local);
 	                    unsigned newindex;                                              // Ypologismos tou bucket index poy tha diaforopoieitai sto bit pou orizei to neo local
