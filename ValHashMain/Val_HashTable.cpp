@@ -124,7 +124,7 @@ bool Val_HashTable::splitcheck(uint32_t index, uint32_t depth)
 	return false;
 }
 
-void Val_HashTable::split(uint32_t index, uint32_t depth, BucketVal* newbucket)
+void Val_HashTable::split(uint32_t index, uint32_t depth, BucketVal* newbucket, string key)
 {
 	BucketVal* oldbucket = Buckets.get(index);
 	Val_bdata* tempdata = oldbucket->first;
@@ -132,7 +132,6 @@ void Val_HashTable::split(uint32_t index, uint32_t depth, BucketVal* newbucket)
 	uint64_t bhashed_key;
 	uint32_t bindex;
 
-	Buckets.set(index, newbucket);
 	do
 	{	// gia BUCKET_OVERFLOW epanalipseis
 		bhashed_key = hashFunction(tempdata->key);
@@ -173,6 +172,13 @@ void Val_HashTable::split(uint32_t index, uint32_t depth, BucketVal* newbucket)
 			tempdata = tempdata->next;
 		}
 	}while(tempdata != NULL);
+
+	newbucket->insert(key);
+
+	oldbucket->localDepth++;
+
+	Buckets.set(index, newbucket);
+
 	if(oldbucket->first == NULL && oldbucket->counter == 1)
 	{
 		cout << "Wrong" << endl;
@@ -185,10 +191,9 @@ void Val_HashTable::insert(std::string key)
 	uint64_t hashed_key;
 	hashed_key = hashFunction(key);
 	uint32_t index = getBucketIndex(hashed_key, globalDepth); // koitaw ta globalDepth deksia bits gia na dw se poio index tha paw
-	uint32_t bindex;
     BucketVal* tempBucket = Buckets.get(index);
 
-	cout <<"String: " << key << " | HKey: " << hashed_key << " | Index: " << index << endl;
+	//cout <<"String: " << key << " | HKey: " << hashed_key << " | Index: " << index << endl;
 
 	if(tempBucket->empty == true)
     {
@@ -223,17 +228,10 @@ void Val_HashTable::insert(std::string key)
 					index = getBucketIndex(hashed_key, globalDepth);
 				}
 
-				// bindex einai to index me diaforetiko globalDepth bit
-				unsigned i = pow(2, globalDepth-1);
-				if((index & i) == 0)
-					bindex = index + i;
-				else
-					bindex = index - i;
-
-				if(tempBucket->localDepth == globalDepth -1)                        // Simple split otan uparxoun 2 pointers sto bucket
+				if(tempBucket->localDepth == globalDepth -1)  // Simple split otan uparxoun 2 pointers sto bucket
 	            {
-					split(index, globalDepth, new BucketVal(key, globalDepth));
-					Buckets.get(bindex)->localDepth++;
+					split(index, globalDepth, new BucketVal(globalDepth), key);
+					maxLocalCounter.set(maxLocalCounter.size()-1, maxLocalCounter.get(maxLocalCounter.size()-1)+2);
 				}
 				else           // Split otan uparxoyn perissoteroi pointers sto bucket
 	            {
@@ -262,11 +260,10 @@ void Val_HashTable::insert(std::string key)
 	                }
 
 	                local++;
-	                BucketVal* tempBucketnew = new BucketVal(key, local);
+	                BucketVal* tempBucketnew = new BucketVal(local);
 					// split val_bdata
-					split(index, globalDepth, tempBucketnew);
+					split(getBucketIndex(hashed_key, local), local, tempBucketnew, key);
 
-	                Buckets.get(bindex)->localDepth++;
 	                unsigned toindex = getBucketIndex(hashed_key, local);        // Ypologismos tou bucket index me to neo local depth
 	                unsigned dist = pow(2, local);                               // H apostash poy tha exei to bucket index me ton epomeno deikth poy tha deiksei sto new bucket
 	                for(unsigned i = toindex; i < size; i+=dist)                 // Metafora deiktwn tou indexTable sto tempBucketnew
@@ -287,7 +284,25 @@ void Val_HashTable::insert(std::string key)
 
 int Val_HashTable::getbdata(std::string key)
 {
-	return 0;
+	unsigned hashed_key;
+    hashed_key = hashFunction(key);
+	int index = getBucketIndex(hashed_key, globalDepth); // koitaw ta globaldepth deksia bits gia na dw se poio index tha paw
+    BucketVal* bucket = Buckets.get(index);
+	Val_bdata* tempdata = bucket->first;
+
+    if(bucket->empty == false)
+	{
+		do
+		{
+			if(key.compare(tempdata->key) == 0)
+			{
+				return 1;
+			}
+			tempdata = tempdata->next;
+		} while(tempdata != NULL);
+	}
+    cout << "getbdata: Key not found" << endl;
+    return 1;
 }
 
 bool Val_HashTable::datacheck(BucketVal* bucket)

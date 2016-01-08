@@ -22,7 +22,7 @@ public:
 	void doubleTableSize();		//override giati exw new array
     int getbdata(std::string key);
 	bool splitcheck(uint32_t index, uint32_t depth);
-	void split(uint32_t index, uint32_t depth, BucketVal* newbucket);
+	void split(uint32_t index, uint32_t depth, BucketVal* newbucket, std::string key);
 
 	bool datacheck(BucketVal* bucket);
 
