@@ -202,23 +202,21 @@ static void processTransaction(Transaction *t){
 static void processValidationQueries(ValidationQueries *v){
 
 
-	// const char* reader = v->queries;
-	// const Query* q = (Query*)reader;
+	const char* reader = v->queries;
 
+	int size = sizeof(ValidationQueries) * v->queryCount ;
+
+	for (unsigned i = 0; i != v->queryCount; i++){
+		const Query* q = (Query*)reader;
+
+		size += (sizeof(Query) + sizeof(Query::Column) * q->columnCount);
+
+		reader += sizeof(Query)+(sizeof(Query::Column)*q->columnCount);
+	}
 	// Create new valQuery and copy
-	int size = sizeof(ValidationQueries) + v->queryCount + sizeof(Query::Column)*100;
 	ValidationQueries *val1 = (ValidationQueries*)malloc(size);
 
 	memcpy(val1, v, size);
-
-	// const char* reader = v->queries;
-	// const char* reader2 = val1->queries;
-	//
-	// const Query* q = (Query*)reader;
-	// const Query* q2 = (Query*)reader2;
-
-	// cout << "QUERT COUNT: " << q->columnCount << endl;
-	// cout << "QUERT COUNT2: " << q2->columnCount << endl;
 
 	// Add validation
 	valIndex->insertValidation(val1);
@@ -226,9 +224,9 @@ static void processValidationQueries(ValidationQueries *v){
 //================================================================================================
 static void processFlush(Flush *fl){
 
-	cout << "===================================" << endl;
-	cout << "Flush: " << fl->validationId << endl;
-	cout << "===================================" << endl;
+	// cout << "===================================" << endl;
+	// cout << "Flush: " << fl->validationId << endl;
+	// cout << "===================================" << endl;
 
 	unsigned size = valIndex->getSize();
 
@@ -240,8 +238,7 @@ static void processFlush(Flush *fl){
 		ValidationQueries *cur_val = valIndex->getHeadValidation();
 		const char* reader = cur_val->queries;
 
-		cout << "Gia to validation id: " << cur_val->validationId << ", exw " << cur_val->queryCount << " subqueries" << endl;
-
+		// cout << "Gia to validation id: " << cur_val->validationId << ", exw " << cur_val->queryCount << " subqueries" << endl;
 		// Iterate over the validation's queries
 		for (unsigned i = 0; i != cur_val->queryCount; i++)
 		{
@@ -250,6 +247,7 @@ static void processFlush(Flush *fl){
 			// cout << "COLUMN COUNT: " << q->columnCount << endl;
 
 			// check an einai entos range
+			// cout << "id: " << q->relationId << endl;
 			uint64_t max_tid = Journals[q->relationId]->getLastTID();
 
 			if (cur_val->from > max_tid )	// mou dwse tid start pou einai megalutero tou max || keno query
@@ -427,7 +425,8 @@ static void processFlush(Flush *fl){
 	            break;
 		}
 
-		cout << "Conflict: " << conflict << endl;
+		cout << "Validation " << cur_val->validationId << " : " << conflict << endl;
+		// cout << "Conflict: " << conflict << endl;
 	// 	// DONT calculating validation - POP IT
 		valIndex->popValidation();
 
@@ -441,12 +440,11 @@ static void processDestroySchema()
     destroy_start = std::chrono::high_resolution_clock::now();
 
     for(int i = 0; i < relationCount; i++)
-    {   	// For every relation
+	{   	// For every relation
 		delete Journals[i];
 		//delete hash_tables[i];
   	}
     free(schema);
-    //delete[] Journals;
     free(Journals);
 
     destroy_end = std::chrono::high_resolution_clock::now();
