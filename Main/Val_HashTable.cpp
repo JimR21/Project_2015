@@ -88,7 +88,7 @@ bool Val_HashTable::splitcheck(uint32_t index, uint32_t depth)
 	return false;
 }
 
-void Val_HashTable::split(uint32_t index, uint32_t depth, BucketVal* newbucket, string key)
+void Val_HashTable::split(uint32_t index, uint32_t depth, BucketVal* newbucket, string key, unsigned range)
 {
 	BucketVal* oldbucket = Buckets.get(index);
 	Val_bdata* tempdata = oldbucket->first;
@@ -137,7 +137,7 @@ void Val_HashTable::split(uint32_t index, uint32_t depth, BucketVal* newbucket, 
 		}
 	}while(tempdata != NULL);
 
-	newbucket->insert(key);
+	newbucket->insert(key,range);
 
 	oldbucket->localDepth++;
 
@@ -149,7 +149,7 @@ void Val_HashTable::split(uint32_t index, uint32_t depth, BucketVal* newbucket, 
 	}
 }
 
-void Val_HashTable::insert(std::string key)
+void Val_HashTable::insert(std::string key, unsigned range)
 {
 	// cout << "Array size: "<< size << endl;
 	uint64_t hashed_key;
@@ -161,7 +161,7 @@ void Val_HashTable::insert(std::string key)
 
 	if(tempBucket->empty == true)
     {
-        tempBucket->insert(key);
+        tempBucket->insert(key,range);
 
 		// DEBUG
 		inserts++;
@@ -181,7 +181,7 @@ void Val_HashTable::insert(std::string key)
 		{
 			if(tempBucket->counter < BUCKET_OVERFLOW)
 			{
-				tempBucket->insert(key);
+				tempBucket->insert(key,range);
 			}
 			else
 			{
@@ -194,7 +194,7 @@ void Val_HashTable::insert(std::string key)
 
 				if(tempBucket->localDepth == globalDepth -1)  // Simple split otan uparxoun 2 pointers sto bucket
 	            {
-					split(index, globalDepth, new BucketVal(globalDepth), key);
+					split(index, globalDepth, new BucketVal(globalDepth), key,range);
 					maxLocalCounter.set(maxLocalCounter.size()-1, maxLocalCounter.get(maxLocalCounter.size()-1)+2);
 				}
 				else           // Split otan uparxoyn perissoteroi pointers sto bucket
@@ -226,7 +226,7 @@ void Val_HashTable::insert(std::string key)
 	                local++;
 	                BucketVal* tempBucketnew = new BucketVal(local);
 					// split val_bdata
-					split(getBucketIndex(hashed_key, local), local, tempBucketnew, key);
+					split(getBucketIndex(hashed_key, local), local, tempBucketnew, key, range);
 
 	                unsigned toindex = getBucketIndex(hashed_key, local);        // Ypologismos tou bucket index me to neo local depth
 	                unsigned dist = pow(2, local);                               // H apostash poy tha exei to bucket index me ton epomeno deikth poy tha deiksei sto new bucket

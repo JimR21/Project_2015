@@ -31,7 +31,7 @@ protected:
 
 	bool splitcheck(uint32_t index, uint32_t depth);
 
-	void split(uint32_t index, uint32_t depth, BucketVal* newbucket, std::string key);
+	void split(uint32_t index, uint32_t depth, BucketVal* newbucket, std::string key, unsigned range);
 
 	bool popKey(BucketVal* bucket, std::string key);
 
@@ -46,7 +46,7 @@ public:
 	unsigned getsize();
 
 	//int hashFunction(const std::string& key);
-    void insert(std::string key);
+    void insert(std::string key, unsigned range);
 
 	int deleteKey(std::string key);
 

@@ -13,13 +13,13 @@ public:
 
 	BucketVal();
 	BucketVal(unsigned ilocalDepth);
-	BucketVal(std::string ikey, unsigned ilocalDepth);     // Val HashTable
+	BucketVal(std::string ikey, unsigned range, unsigned ilocalDepth);     // Val HashTable
 	BucketVal(Val_bdata* valdata);
 
-	void addBucketData(std::string key);
+	void addBucketData(std::string key, unsigned range);
 	void addBucketData(Val_bdata* valdata);
 
-	void insert(std::string key);     // Validation HasthTable insert
+	void insert(std::string key, unsigned range);     // Validation HasthTable insert
 	void insert(Val_bdata* valdata);
 
 	Val_bdata* keySearch(std::string key);

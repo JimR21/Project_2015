@@ -19,13 +19,11 @@ BucketVal::BucketVal(unsigned ilocalDepth) : localDepth(ilocalDepth)
 	counter = 0;
 }
 
-BucketVal::BucketVal(std::string ikey, unsigned ilocalDepth)
+BucketVal::BucketVal(std::string ikey, unsigned range, unsigned ilocalDepth)
 {
 	localDepth = ilocalDepth;
 	empty = false;
-
-	first = new Val_bdata(ikey);
-	first->insert();	// counter ++ pros to paron
+	first = new Val_bdata(ikey, range);
 	last = first;
 	counter = 1;
 }
@@ -35,17 +33,17 @@ BucketVal::BucketVal(Val_bdata* valdata)
 
 }
 
-void BucketVal::addBucketData(string key)
+void BucketVal::addBucketData(string key, unsigned range)
 {
     if(first == NULL)
     {
-        first = new Val_bdata(key);
+        first = new Val_bdata(key, range);
         last = first;
     }
     else
     {
         Val_bdata* temp = last;
-        temp->next = new Val_bdata(key);
+        temp->next = new Val_bdata(key, range);
         last = temp->next;
     }
 }
@@ -67,10 +65,10 @@ void BucketVal::addBucketData(Val_bdata* valdata)
 }
 
 // val hash insert
-void BucketVal::insert(string ikey)
+void BucketVal::insert(string ikey, unsigned range)
 {
 	empty = false;
-	addBucketData(ikey);
+	addBucketData(ikey, range);
 	counter++;
 }
 

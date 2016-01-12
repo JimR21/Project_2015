@@ -248,7 +248,7 @@ static void processValidationQueries(ValidationQueries *v){
 			string key = stringBuilder(v->from, v->to, q->columns[w].column, q->columns[w].op, q->columns[w].value);
 			// update val hash
             // cout << "ValTable: " << q->relationId << endl;
-			Journals[q->relationId]->val_htable.insert(key);
+			Journals[q->relationId]->val_htable.insert(key, 5);
 			// Journals[q->relationId]->val_htable.deleteKey(key);
             // Journals[q->relationId]->val_htable.getbdata(key);
 
