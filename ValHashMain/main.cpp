@@ -7,9 +7,6 @@
 #include "mainStructs.hpp"
 #include "Journal.hpp"
 #include "Bucket.hpp"
-#include "Key_HashTable.hpp"
-#include "Tid_HashTable.hpp"
-#include "Val_HashTable.hpp"
 #include <fstream>
 #include <iomanip>
 
@@ -252,6 +249,7 @@ static void processValidationQueries(ValidationQueries *v){
 			// update val hash
             // cout << "ValTable: " << q->relationId << endl;
 			Journals[q->relationId]->val_htable.insert(key);
+			Journals[q->relationId]->val_htable.deleteKey(key);
             Journals[q->relationId]->val_htable.getbdata(key);
 
 			// predicates++;

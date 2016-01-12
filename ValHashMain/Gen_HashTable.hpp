@@ -15,6 +15,8 @@ protected:
 
     unsigned size;
 
+    unsigned int globalDepth;
+
     DArray<Bucket*> bucketArray;                 // Pointers to Buckets
 
     int hashFunction(unsigned int key);          // Returns hashed number
@@ -24,8 +26,6 @@ protected:
     void doubleTableSize();
 
     void halveTableSize();
-
-    unsigned int globalDepth;
 
 public:
 
