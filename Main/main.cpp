@@ -7,10 +7,6 @@
 #include "mainStructs.hpp"
 #include "Journal.hpp"
 #include "Bucket.hpp"
-#include "Key_HashTable.hpp"
-#include "Tid_HashTable.hpp"
-#include "Val_HashTable.hpp"
-#include "ValidationIndex.hpp"
 #include <fstream>
 #include <iomanip>
 
@@ -32,10 +28,9 @@ std::chrono::duration<double> default_diff, globaldiff, def_diff, tran_diff, val
 ofstream myfile ("out.bin", ios::out);
 static uint32_t* schema = NULL;  // keeps the # of columns for every relation
 Journal** Journals = NULL;       // keeps the Journal for every relation
+//Key_HashTable** hash_tables;		 // Extendible hashing for every relation
 DArray<bool> validationResults;	 // den xreiazetai new einai sto scope tis main
 DArray<Query::Column>* subqueries_to_check;
-
-ValidationIndex valIndex;
 
 int relationCount = 0;
 int val_offset = 0;
@@ -206,10 +201,6 @@ static void processValidationQueries(ValidationQueries *v){
 	bool conflict = true;
 	const char* reader = v->queries;
 
-	// Add validation to valIndex
-	valIndex.insertValidation(v);
-	// cout << valIndex.getSize() << endl;
-
 	// Iterate over the validation's queries
 	for (unsigned i = 0; i != v->queryCount; i++)
     {
@@ -256,7 +247,10 @@ static void processValidationQueries(ValidationQueries *v){
 			// create the key for the validation's hash
 			string key = stringBuilder(v->from, v->to, q->columns[w].column, q->columns[w].op, q->columns[w].value);
 			// update val hash
-			// Journals[q->relationId]->val_htable.insert(key);
+            // cout << "ValTable: " << q->relationId << endl;
+			Journals[q->relationId]->val_htable.insert(key);
+			// Journals[q->relationId]->val_htable.deleteKey(key);
+            // Journals[q->relationId]->val_htable.getbdata(key);
 
 			// predicates++;
 			// cout << "Predicates: " << predicates << endl;
@@ -445,10 +439,10 @@ static void processFlush(Flush *fl){
     else
         flush_diff = flush_end - flush_start;
 
-    if(val_offset == 7031)
-    {
-        termFlag = 1;
-    }
+    // if(val_offset == 78425)
+    // {
+    //     termFlag = 1;
+    // }
 }
 //================================================================================================
 static void processForget(Forget *fo){}
@@ -499,6 +493,7 @@ int main(int argc, char **argv) {
 	void *body = NULL;
 	uint32_t len;
 
+
     while(1){
 		// Retrieve the message head
 		if (read(0, &head, sizeof(head)) <= 0) { return -1; } // crude error handling, should never happen
@@ -528,7 +523,7 @@ int main(int argc, char **argv) {
 
 
 
-                processDestroySchema();
+                //processDestroySchema();
 
                 globalend = std::chrono::high_resolution_clock::now();
                 globaldiff = globalend - globalstart;

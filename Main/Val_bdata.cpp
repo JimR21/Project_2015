@@ -5,6 +5,7 @@ Val_bdata::Val_bdata(){
 	counter = 0;
 	vals = new DArray<Val_listbucket*>(2);
 	bitset = (char*)malloc(1);	//1char - 8 bits
+	next = NULL;
 }
 
 Val_bdata::Val_bdata(std::string ikey)
@@ -13,6 +14,7 @@ Val_bdata::Val_bdata(std::string ikey)
 	counter = 1;
 	vals = new DArray<Val_listbucket*>(2);
 	bitset = (char*)malloc(1);	//1char - 8 bits
+	next = NULL;
 }
 
 void Val_bdata::insert(){

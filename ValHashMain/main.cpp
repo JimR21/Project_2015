@@ -249,8 +249,8 @@ static void processValidationQueries(ValidationQueries *v){
 			// update val hash
             // cout << "ValTable: " << q->relationId << endl;
 			Journals[q->relationId]->val_htable.insert(key);
-			Journals[q->relationId]->val_htable.deleteKey(key);
-            Journals[q->relationId]->val_htable.getbdata(key);
+			// Journals[q->relationId]->val_htable.deleteKey(key);
+            // Journals[q->relationId]->val_htable.getbdata(key);
 
 			// predicates++;
 			// cout << "Predicates: " << predicates << endl;

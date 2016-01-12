@@ -52,6 +52,6 @@ uint64_t JournalRecord::getTransactionId(){
 // }
 //============================================================
 JournalRecord::~JournalRecord(){
-	delete values;
+	delete[] values;
 }
 //============================================================

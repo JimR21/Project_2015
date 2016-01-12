@@ -14,11 +14,11 @@ void ValidationIndex::insertValidation(ValidationQueries* val){
 	Val_listbucket* newBucket = new Val_listbucket(val);
 
 	if (!size)
-		start_bucket = last_bucket = newBucket;
+		start_bucket = newBucket;
 	else {
-		last_bucket->next = new Val_listbucket(val);
-		last_bucket = newBucket;
+		last_bucket->next = newBucket;
 	}
+	last_bucket = newBucket;
 	size++;
 }
 
