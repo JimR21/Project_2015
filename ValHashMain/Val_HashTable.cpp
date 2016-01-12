@@ -1,99 +1,63 @@
-#include "Bucket.hpp"
 #include "BucketVal.hpp"
 #include "Val_HashTable.hpp"
 #include <math.h>
+#include <string>
 
 using namespace std;
 
 Val_HashTable::Val_HashTable()
 {
+	globalDepth = STARTING_GLOBAL_DEAPTH;    // 2^7 = 128
+    size = HASHTABLE_SIZE;
+    maxLocalCounter.push_back(HASHTABLE_SIZE);
+
+    // DEBUG
+    inserts = 0;
+
 	// Constructor gia to val hash me ta new buckets
 	for(unsigned i = 0; i < HASHTABLE_SIZE; i++)
         Buckets.push_back(new BucketVal());
 }
 
+Val_HashTable::~Val_HashTable()
+{
+	// Delete bucketArray
+	// Val_bdata* data;
+	// Val_bdata* nextdata;
+	// BucketVal* bucket;
+    // for(unsigned i = 0; i < size; i++)
+    // {
+    //     if(Buckets.get(i) != NULL)
+    //     {
+	// 		bucket = Buckets.get(i);
+    //         unsigned p = pow(2, bucket->localDepth);
+	// 		if(bucket->empty == false)
+	// 		{
+	// 			data = bucket->first;
+	// 			nextdata = NULL;
+	// 			for(int j = 0; j < bucket->counter; j++)
+	// 			{
+	// 				nextdata = data->next;
+	// 				delete data;
+	// 				data = nextdata;
+	// 			}
+	// 		}
+    //         delete bucket;
+    //         for(unsigned j = i; j < size; j+=p)
+    //             Buckets.set(j, NULL);
+    //     }
+    // }
+}
+
 // int Val_HashTable::hashFunction(const string& key)
 // {
-// 	unsigned i = 0;
-// 	uint32_t start, end, col;
-// 	uint64_t val;
-// 	string temp = "";
-// 	while(key[i] != '-')
-// 	{
-// 		temp += key[i];
-// 		i++;
-// 	}
-// 	start = stoi(temp);
-// 	i++;
 //
-// 	temp = "";
-// 	while(key[i] != '@')
-// 	{
-// 		temp += key[i];
-// 		i++;
-// 	}
-// 	end = stoi(temp);
-// 	i++;
-//
-// 	temp = "";
-// 	while(key[i] >= '0' && key[i] <= '9')
-// 	{
-// 		temp += key[i];
-// 		i++;
-// 	}
-// 	col = stoi(temp);
-//
-// 	unsigned op;
-// 	char cop = key[i];
-// 	switch(cop)
-// 	{
-// 		case '=' : op = 1; break;
-// 		case '!' : op = 2; break;
-// 		case '<' : op = 3; break;
-// 		case '[' : op = 4; break;
-// 		case '>' : op = 5; break;
-// 		case ']' : op = 6; break;
-// 		default : cout << "Wrong op" << endl;
-// 	}
-//
-// 	i++;
-// 	temp = "";
-// 	while(i < key.length())
-// 	{
-// 		temp += key[i];
-// 		i++;
-// 	}
-// 	val = stoul(temp, 0, 10);
-//
-// 	uint64_t num;
-// 	//
-// 	// srand(op);
-// 	// unsigned lcounter = val % 997;
-// 	// for(int j = 0; j < lcounter; j++)
-// 	// {
-// 	// 	num += rand() % 997;
-// 	// }
-//
-// 	num = (end*2 + start*3 + col*4 + op*5 + val);
-//
-// 	cout << num << endl;
-//
-// 	if(num == 474)
-// 	{
-// 		cout << "ok" << endl;
-// 	}
-//
-//
-// 	// int seed = 131;
-// 	// unsigned long hash = 0;
-// 	// for(unsigned i = 0; i < key.length(); i++)
-// 	// {
-// 	// 	hash = (hash * seed) + key[i];
-// 	// }
-// 	// return hash;
-//
-// 	return (num * 2654435761 % 4294967296);    // Knuth: hash(i)=i*2654435761 mod 2^32
 // }
+
+uint32_t Val_HashTable::getBucketIndex(uint64_t hash, int depth)
+{
+	return hash & ( (1 << depth) - 1);
+}
 
 void Val_HashTable::doubleTableSize()
 {
@@ -304,6 +268,103 @@ int Val_HashTable::getbdata(std::string key)
     cout << "getbdata: Key not found" << endl;
     return 1;
 }
+
+int Val_HashTable::deleteKey(string key)
+{
+	unsigned hashed_key;
+    hashed_key = hashFunction(key);
+    unsigned idx = getBucketIndex(hashed_key, globalDepth);
+    BucketVal* bucket = Buckets.get(idx);
+
+    // TESTING IF
+    if((bucket->empty == false) && (popKey(bucket, key)))
+    {
+		if(bucket->counter == 0)
+		{
+	        if(bucket->localDepth < globalDepth)            // An einai local < global tote kane empty to bucket
+	        {
+	            bucket->empty = true;
+	        }
+	        else                                                                    // An local = global
+	        {
+	            unsigned idx2;   // index to merge into
+
+	            // Find index of the bucket to merge into
+	            unsigned i = pow(2, globalDepth-1);
+	            if((idx & i) == 0)
+	                idx2 = idx + i;
+	            else
+	                idx2 = idx - i;
+
+	            BucketVal* mergeBucket = Buckets.get(idx2);
+	            mergeBucket->localDepth--;
+
+	            // Change the pointer to mergeBucket
+	            Buckets.set(idx, mergeBucket);
+	            delete bucket;
+
+	            maxLocalCounter.set(maxLocalCounter.size()-1, maxLocalCounter.get(maxLocalCounter.size()-1)-2);
+	            if(maxLocalCounter.get(maxLocalCounter.size()-1) == 0)
+	                halveTableSize();
+	        }
+		}
+		return 1;
+    }
+    else
+        // cout << "Delete: Key " << key << " not found" << endl;
+    return 0;
+}
+
+bool Val_HashTable::popKey(BucketVal* bucket, string key)
+{
+	if(bucket->counter == 0)
+		return false;
+	Val_bdata* tempdata = bucket->first;
+	Val_bdata* prevdata = NULL;
+	do
+	{
+		if(key.compare(tempdata->key) == 0)
+		{
+			if(tempdata == bucket->first)
+			{
+				if(bucket->counter > 1)
+					bucket->first = tempdata->next;
+				else
+				{
+					bucket->first = NULL;
+					bucket->last = NULL;
+				}
+			}
+			else if(tempdata == bucket->last)
+			{
+				prevdata->next = NULL;
+				bucket->last = prevdata;
+			}
+			else
+			{
+				prevdata->next = tempdata->next;
+			}
+			bucket->counter --;
+			delete tempdata;
+			return true;
+		}
+		prevdata = tempdata;
+		tempdata = tempdata->next;
+	} while(tempdata != NULL);
+	return false;
+}
+
+void Val_HashTable::halveTableSize()
+{
+    globalDepth--;
+    size /= 2;
+    for(unsigned i = 0; i < size; i++)
+        Buckets.popLast();
+    maxLocalCounter.popLast();
+}
+
+unsigned Val_HashTable::getsize()
+{	return size; }
 
 bool Val_HashTable::datacheck(BucketVal* bucket)
 {
