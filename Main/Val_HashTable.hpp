@@ -47,12 +47,11 @@ public:
 
 	//int hashFunction(const std::string& key);
     void insert(std::string key, unsigned range);
-
 	int deleteKey(std::string key);
-
     int getbdata(std::string key);
-
 	bool datacheck(BucketVal* bucket);
+
+	void UpdateValData(std::string key, DArray<bool> *array);
 };
 
 

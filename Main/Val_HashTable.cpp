@@ -379,3 +379,26 @@ bool Val_HashTable::datacheck(BucketVal* bucket)
 		return false;
 	return true;
 }
+
+void Val_HashTable::UpdateValData(std::string key, DArray<bool> *array){
+	unsigned hashed_key;
+    hashed_key = hashFunction(key);
+	int index = getBucketIndex(hashed_key, globalDepth); // koitaw ta globaldepth deksia bits gia na dw se poio index tha paw
+
+	BucketVal* bucket = Buckets.get(index);
+	Val_bdata* tempdata = bucket->first;
+
+	if(bucket->empty == false)
+	{
+		do
+		{
+			if(key.compare(tempdata->key) == 0)
+			{
+				tempdata->validate(array);
+				return ;
+			}
+			tempdata = tempdata->next;
+		} while(tempdata != NULL);
+	}
+    cout << "getbdata: Key not found" << endl;
+}

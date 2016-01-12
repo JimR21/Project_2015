@@ -27,7 +27,9 @@ protected:
 	 void insert();	// pros to paron counter ++ mono meta tha vazei kai to val
      void setBitsetValue(int index, char *array);	// set Bitset index to 1
 	 int getBitsetValue(int index, char *array);	// get the value of this index
-	 void printBitset(); // print the array
+	 void printBitset(char c); // print the array
+
+	 void validate(DArray<bool> *array);
 };
 
 #endif

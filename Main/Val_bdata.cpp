@@ -33,14 +33,14 @@ void Val_bdata::insert(){
 	counter++;
 }
 
-void setBitsetValue(int index, char *array){
+void Val_bdata::setBitsetValue(int index, char *array){
 	int bit_index = index / CHAR_BIT;		// which char
 	int bit_number = index % CHAR_BIT;		// which bit of this char
 
 	array[bit_index] = array[bit_index] | (1 << (7 - bit_number));	// update !!
 }
 
-int getBitsetValue(int index, char *array){
+int Val_bdata::getBitsetValue(int index, char *array){
 	int bit_index = index / CHAR_BIT;		// which char
 	int bit_number = index % CHAR_BIT;		// which bit of this char
 
@@ -50,11 +50,18 @@ int getBitsetValue(int index, char *array){
 		return 0;
 }
 
-void printBitset(char c){
+void Val_bdata::printBitset(char c){
 	int i;
 
     for (i = 7; i >= 0; --i)
         putchar( (c & (1 << i)) ? '1' : '0' );
 
     putchar('\n');
+}
+
+void Val_bdata::validate(DArray<bool> *array){
+
+	for (int i = 0; i < array->size(); i ++)
+		if (array->get(i) == true)		// an conflict
+			setBitsetValue(i, bitset);	// update auto to index
 }
