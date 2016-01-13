@@ -246,7 +246,7 @@ void Val_HashTable::insert(std::string key, unsigned range)
 	}
 }
 
-int Val_HashTable::getbdata(std::string key)
+char* Val_HashTable::getbdata(std::string key)
 {
 	unsigned hashed_key;
     hashed_key = hashFunction(key);
@@ -260,13 +260,20 @@ int Val_HashTable::getbdata(std::string key)
 		{
 			if(key.compare(tempdata->key) == 0)
 			{
-				return 1;
+				if (tempdata->validated == true)
+				{
+					return tempdata->bitset;
+				}
+				else
+				{
+					return NULL;
+				}
 			}
 			tempdata = tempdata->next;
 		} while(tempdata != NULL);
 	}
     cout << "getbdata: Key not found" << endl;
-    return 1;
+    return NULL;
 }
 
 int Val_HashTable::deleteKey(string key)

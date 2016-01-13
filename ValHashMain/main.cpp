@@ -7,6 +7,7 @@
 #include "mainStructs.hpp"
 #include "Journal.hpp"
 #include "Bucket.hpp"
+#include "ValidationIndex.hpp"
 #include <fstream>
 #include <iomanip>
 

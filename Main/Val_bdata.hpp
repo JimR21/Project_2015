@@ -28,6 +28,8 @@ protected:
      void setBitsetValue(int index, char *array);	// set Bitset index to 1
 	 int getBitsetValue(int index, char *array);	// get the value of this index
 	 void printBitset(); // print the array
+
+    //  char* validation()
 };
 
 #endif

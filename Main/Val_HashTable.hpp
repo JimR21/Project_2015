@@ -50,7 +50,7 @@ public:
 
 	int deleteKey(std::string key);
 
-    int getbdata(std::string key);
+    char* getbdata(std::string key);
 
 	bool datacheck(BucketVal* bucket);
 };
