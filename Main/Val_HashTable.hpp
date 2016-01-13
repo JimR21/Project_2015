@@ -53,6 +53,8 @@ public:
     char* getbdata(std::string key);
 
 	bool datacheck(BucketVal* bucket);
+
+	void UpdateValData(std::string key, DArray<bool> *array);
 };
 
 

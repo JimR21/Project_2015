@@ -246,7 +246,7 @@ void Val_HashTable::insert(std::string key, unsigned range)
 	}
 }
 
-char* Val_HashTable::getbdata(std::string key)
+int Val_HashTable::getbdata(std::string key)
 {
 	unsigned hashed_key;
     hashed_key = hashFunction(key);
@@ -260,20 +260,13 @@ char* Val_HashTable::getbdata(std::string key)
 		{
 			if(key.compare(tempdata->key) == 0)
 			{
-				if (tempdata->validated == true)
-				{
-					return tempdata->bitset;
-				}
-				else
-				{
-					return NULL;
-				}
+				return 1;
 			}
 			tempdata = tempdata->next;
 		} while(tempdata != NULL);
 	}
     cout << "getbdata: Key not found" << endl;
-    return NULL;
+    return 1;
 }
 
 int Val_HashTable::deleteKey(string key)
@@ -385,4 +378,27 @@ bool Val_HashTable::datacheck(BucketVal* bucket)
 	if(i < bucket->counter)
 		return false;
 	return true;
+}
+
+void Val_HashTable::UpdateValData(std::string key, DArray<bool> *array){
+	unsigned hashed_key;
+    hashed_key = hashFunction(key);
+	int index = getBucketIndex(hashed_key, globalDepth); // koitaw ta globaldepth deksia bits gia na dw se poio index tha paw
+
+	BucketVal* bucket = Buckets.get(index);
+	Val_bdata* tempdata = bucket->first;
+
+	if(bucket->empty == false)
+	{
+		do
+		{
+			if(key.compare(tempdata->key) == 0)
+			{
+				tempdata->validate(array);
+				return ;
+			}
+			tempdata = tempdata->next;
+		} while(tempdata != NULL);
+	}
+    cout << "getbdata: Key not found" << endl;
 }
