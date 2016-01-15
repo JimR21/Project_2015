@@ -3,6 +3,9 @@
 
 #include <inttypes.h>
 
+// Support operations
+enum Op : uint32_t { Equal, NotEqual, Less, LessOrEqual, Greater, GreaterOrEqual };
+
 //================================================================================================
 struct MessageHead {
    	// Message types
@@ -61,8 +64,6 @@ struct ValidationQueries {
 struct Query {
    	// A column description
 	struct Column {
-      // Support operations
-      enum Op : uint32_t { Equal, NotEqual, Less, LessOrEqual, Greater, GreaterOrEqual };
       // The column id
       uint32_t column;
       // The operations

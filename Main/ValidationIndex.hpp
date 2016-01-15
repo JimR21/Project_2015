@@ -13,9 +13,9 @@ protected:
 
 public:
 	ValidationIndex();
-	void insertValidation(ValidationQueries* val);
+	void insertValidation(ValClass* val);
 	void popValidation();	// deletes first node
-	ValidationQueries* getHeadValidation();	// returns first node
+	ValClass* getHeadValidation();	// returns first node
 	unsigned getSize();
 };
 

@@ -4,16 +4,18 @@
 #include <unistd.h>
 #include <string>
 #include <chrono>
-#include "mainStructs.hpp"
+// #include "mainStructs.hpp"
 #include "Journal.hpp"
 #include "Bucket.hpp"
 #include "ValidationIndex.hpp"
+#include "valClass.hpp"
 #include <fstream>
 #include <iomanip>
 
 using namespace std;
 
 string stringBuilder(int start, int end, int col, int op, uint64_t value);
+bool valOptimize(ValClass *v);      // Part1 Optimizations
 
 using ns = chrono::milliseconds;
 using get_time = chrono::steady_clock;
@@ -44,7 +46,7 @@ uint32_t maxColumnCounts = 0;
 //=====================================================
 inline const char * const BoolToString(bool b)
 {
-  return b ? "1" : "0";
+    return b ? "1" : "0";
 }
 //==============================================================================================
 static void processDefineSchema(DefineSchema *s){
@@ -57,9 +59,7 @@ static void processDefineSchema(DefineSchema *s){
 		free(schema);
 
   	schema = (uint32_t*)malloc(sizeof(uint32_t) * s->relationCount);	// allocate space for the relations
-  	//Journals = new Journal[s->relationCount]; 	// allocate space for pointers to Journals
     Journals = (Journal**)malloc(sizeof(Journal*) * s->relationCount); 	// allocate space for pointers to Journals
-	//hash_tables = (Key_HashTable**)malloc(sizeof(Key_HashTable*) * s->relationCount);
 
     relationCount = s->relationCount;
 
@@ -114,28 +114,12 @@ static void processTransaction(Transaction *t){
 
 				// Else Delete after insertion
 
-				// record = new JournalRecord(t->transactionId, DELETE, );	// JournalRecord to be inserted
-                //
-				// JournalRecord * jr = Journals[o->relationId]->getRecord(index);
-				// for(unsigned int j = 0; j < schema[o->relationId]; j++)
-		        //     record->addValue(jr->getValue(j));  // copy the rest columns from the one found
-
                 JournalRecord * jr = Journals[o->relationId]->getRecord(index);
                 record = new JournalRecord(*jr, t->transactionId, Journals[o->relationId]->columns);
 
 				Journals[o->relationId]->insertJournalRecord(record);	// insert delete record to Journal
 
                 int size = Journals[o->relationId]->getRecordsSize();
-
-                // //===================================
-				// // Update relation's tid hash
-				// //===================================
-                // if(tidflag)
-                // {
-                //     tid_hashtables[o->relationId]->insert(t->transactionId, size - 1);
-                //     tidflag = false;
-                // }
-
 
                 //===================================
 				// Update relation's key hash
@@ -169,15 +153,6 @@ static void processTransaction(Transaction *t){
 
                 int size = Journals[o->relationId]->getRecordsSize();
 
-                // //===================================
-				// // Update relation's tid hash
-				// //===================================
-                // if(tidflag)
-                // {
-                //     tid_hashtables[o->relationId]->insert(t->transactionId, size - 1);
-                //     tidflag = false;
-                // }
-
 				//===================================
 				// Update relation's hash
 				//===================================
@@ -200,43 +175,44 @@ static void processTransaction(Transaction *t){
 static void processValidationQueries(ValidationQueries *v){
 
     const char* reader = v->queries;
-
 	int size = sizeof(ValidationQueries) * v->queryCount ;
 
-	for (unsigned i = 0; i != v->queryCount; i++){
+    QueryPtr * queries = new QueryPtr[v->queryCount];       // Pinakas apo deiktes se 
+
+	for (unsigned i = 0; i != v->queryCount; i++)
+    {
 		const Query* q = (Query*)reader;
 
-        // check an einai entos range
-        uint64_t max_tid = Journals[q->relationId]->getLastTID();
+        // // check an einai entos range
+        // uint64_t max_tid = Journals[q->relationId]->getLastTID();
+		// if (v->from > max_tid )	// mou dwse tid start pou einai megalutero tou max
+        // {
+        //     // Go to the next query
+        //     reader += sizeof(Query)+(sizeof(Query::Column)*q->columnCount);
+		// 	continue;				// no need to check the next queries for this validation
+        // }
 
-		if (v->from > max_tid )	// mou dwse tid start pou einai megalutero tou max
-        {
-            // Go to the next query
-            reader += sizeof(Query)+(sizeof(Query::Column)*q->columnCount);
-			continue;				// no need to check the next queries for this validation
-        }
-
-		size += (sizeof(Query) + sizeof(Query::Column) * q->columnCount);
-
-		reader += sizeof(Query)+(sizeof(Query::Column)*q->columnCount);
-
+        ColumnPtr * columns = new ColumnPtr[q->columnCount];
         // iterate over subqueries
 		for (unsigned w = 0; w < q->columnCount; w++)
         {
 			// create the key for the validation's hash
-			string key = stringBuilder(v->from, v->to, q->columns[w].column, q->columns[w].op, q->columns[w].value);
+			// string key = stringBuilder(v->from, v->to, q->columns[w].column, q->columns[w].op, q->columns[w].value);
+			// Journals[q->relationId]->val_htable.insert(key, v->to - v->from);
 
-			Journals[q->relationId]->val_htable.insert(key, v->to - v->from);
+            columns[w] = new ColumnClass(q->columns[w]);
         }
-	}
-	// Create new valQuery and copy
-	ValidationQueries *val1 = (ValidationQueries*)malloc(size);
 
-	memcpy(val1, v, size);
+        queries[i] = new QueryClass(q->relationId, q->columnCount, columns);
+
+        size += (sizeof(Query) + sizeof(Query::Column) * q->columnCount);
+		reader += sizeof(Query)+(sizeof(Query::Column)*q->columnCount);
+	}
+
+    ValClass* val = new ValClass(v->validationId, v->from, v->to, v->queryCount, queries);
 
 	// Add validation
-	valIndex->insertValidation(val1);
-
+	valIndex->insertValidation(val);
     val_end = std::chrono::high_resolution_clock::now();
     if(val_diff != default_diff)
         val_diff = val_diff + val_end - val_start;
@@ -246,35 +222,29 @@ static void processValidationQueries(ValidationQueries *v){
 //================================================================================================
 static void processFlush(Flush *fl){
 
+    flush_start = std::chrono::high_resolution_clock::now();
+
+    bool conflict = true;
     unsigned size = valIndex->getSize();
 
-	// flush ws to validationId i an den exei tosa, mexri to telos tis listas
-	for (unsigned i = 0; i < size && i < fl->validationId; i++){
-		bool conflict = true;
+    // flush ws to validationId i an den exei tosa, mexri to telos tis listas
+    for (unsigned i = 0; i < size && i < fl->validationId; i++)
+    {
+        // Get validation to calculate
+    	ValClass *v = valIndex->getHeadValidation();
 
-		// Get validation to calculate
-		ValidationQueries *cur_val = valIndex->getHeadValidation();
-		const char* reader = cur_val->queries;
+        conflict = valOptimize(v);
 
-        // Iterate over the validation's queries
-		for (unsigned i = 0; i != cur_val->queryCount; i++)
-		{
-			const Query* q = (Query*)reader;
-
-	        if (q->columnCount == 0) {   // an einai keno kai mesa sta oria tote conflict
-				conflict = true;
-				break;
-		    }
-
-			// iterate over subqueries
-			for (unsigned w = 0; w < q->columnCount; w++)
-	        {
-                char* bitset = (char*)malloc((cur_val->to - cur_val->from) / 8 + 1);
-                strcpy(bitset, Journals[q->relationId]->val_htable.getbdata());
-
-            }
-        }
+        //cout << "Validation " << v->validationId << " : " << conflict << endl;
+        valIndex->popValidation();
     }
+
+
+    flush_end = std::chrono::high_resolution_clock::now();
+    if(flush_diff != default_diff)
+        flush_diff = flush_diff + flush_end - flush_start;
+    else
+        flush_diff = flush_end - flush_start;
 }
 //================================================================================================
 static void processForget(Forget *fo){}
@@ -302,17 +272,199 @@ string stringBuilder(int start, int end, int col, int op, uint64_t value){
     key = to_string(start) + "-" + to_string(end) + "@" + to_string(col);
 
     switch(op){
-        case Query::Column::Equal: key += "="; break;
-        case Query::Column::NotEqual: key += "!"; break;
-        case Query::Column::Less: key += "<"; break;
-        case Query::Column::LessOrEqual: key += "["; break;
-        case Query::Column::Greater: key += ">"; break;
-        case Query::Column::GreaterOrEqual: key += "]"; break;
+        case Equal: key += "="; break;
+        case NotEqual: key += "!"; break;
+        case Less: key += "<"; break;
+        case LessOrEqual: key += "["; break;
+        case Greater: key += ">"; break;
+        case GreaterOrEqual: key += "]"; break;
     }
 
     key += to_string(value);
 
     return key;
+}
+//================================================================================================
+bool valOptimize(ValClass *v)
+{
+    bool conflict;
+    // Iterate over the validation's queries
+    for (unsigned i = 0; i != v->queryCount; i++)
+    {
+        conflict = true;
+        const QueryPtr q = v->queries[i];
+
+        // check an einai entos range
+        uint64_t max_tid = Journals[q->relationId]->getLastTID();
+
+
+        if (v->from > max_tid )	// mou dwse tid start pou einai megalutero tou max || keno query
+        {
+            // Go to the next query
+            conflict = false;   // Se periptwsh poy den uparxei allo query
+            continue;				// no need to check the next queries for this validation
+        }
+
+        if (q->columnCount == 0)    // an einai keno kai mesa sta oria tote conflict
+        {
+            conflict = true;
+            break;
+        }
+
+
+        DArray<ColumnPtr>* priority1 = new DArray<ColumnPtr>();        // subqueries me c0 =
+        DArray<ColumnPtr>* priority2 = new DArray<ColumnPtr>();        // subqueries me =
+        DArray<ColumnPtr>* priority3 = new DArray<ColumnPtr>();        // ola ta upoloipa
+
+
+        //==========================================================
+        // 1os elegxos: An einai valid ta predicates twn subqueries
+        // Arxikopoihsh twn priority tables
+        //==========================================================
+
+        // iterate over subqueries
+        for (unsigned w = 0; w < q->columnCount; w++)
+        {
+            // ean to operation einai '=' kai anaferetai sto primary key (c0)
+            if (q->columns[w]->op == Equal && q->columns[w]->column == 0)
+            {
+                if(priority1->size() == 0)
+                    priority1->push_back(q->columns[w]);
+                else
+                {
+                    if(priority1->get(0)->value != q->columns[w]->value)  // An uparxei hdh subquery me diaforetikh timh sto c0 =
+                    {
+                        // Go to the next query
+                        conflict = false;   // Se periptwsh poy den uparxei allo query
+                        break;				// no need to check the next queries for this validation
+                    }
+                }
+            }
+            else if(q->columns[w]->op == Equal)
+                priority2->push_back(q->columns[w]);
+            else
+                priority3->push_back(q->columns[w]);
+        }
+
+        if(conflict == false)   // Sthn periptvsh poy vgei false apo ton 1o elegxo
+        {
+            delete priority1;
+            delete priority2;
+            delete priority3;
+            continue;
+        }
+
+        DArray<uint64_t>* offsets_to_check = NULL;      // DArray me ta offset pou exoyme na elegksoume
+        DArray<JournalRecord*>* records_to_check = NULL;    // DArray me ta journal records poy exoume na elegksoume
+        DArray<JournalRecord*>* records_to_check2 = new DArray<JournalRecord*>();   // Voithitikos DArray me records
+
+        //================================================================
+        // 2os elegxos: Filtrarisma twn records me vash ta priority tables
+        //================================================================
+        int prsize1 = priority1->size();
+        for(int w = 0; w < prsize1; w++)
+        {
+            offsets_to_check = Journals[q->relationId]->key_htable.getHashRecord(priority1->get(w)->value, v->from, v->to);
+            if(offsets_to_check != NULL)
+            {
+                records_to_check = new DArray<JournalRecord*>();
+                for(int i = 0; i < offsets_to_check->size(); i++)
+                    records_to_check->push_back(Journals[q->relationId]->getRecord(offsets_to_check->get(i)));
+            }
+            else
+            {
+                conflict = false;
+                break;
+            }
+        }
+
+        if(conflict == true)
+        {
+            int prsize2 = priority2->size();
+            for(int w = 0; w < prsize2; w++)
+            {
+                if(records_to_check == NULL)
+                    records_to_check = Journals[q->relationId]->getJournalRecords(v->from, v->to);
+
+                int rtcsize = records_to_check->size();
+                for(int i = 0; i < rtcsize; i++)
+                {
+                    if(priority2->get(w)->value == records_to_check->get(i)->getValue(priority2->get(w)->column))
+                        records_to_check2->push_back(records_to_check->get(i));
+                }
+                if(records_to_check2->size() == 0)
+                {
+                    conflict = false;
+                    break;
+                }
+                else
+                {
+                    delete records_to_check;
+                    records_to_check = records_to_check2;
+                    records_to_check2 = new DArray<JournalRecord*>();
+                }
+            }
+        }
+
+        if(conflict == true)
+        {
+            int prsize3 = priority3->size();
+            for(int w = 0; w < prsize3; w++)
+            {
+                if(records_to_check == NULL)
+                {
+                    delete records_to_check;
+                    records_to_check = Journals[q->relationId]->getJournalRecords(v->from, v->to);
+                }
+                int rtcsize = records_to_check->size();
+                for(int i = 0; i < rtcsize; i++)
+                {
+                    uint64_t query_value = priority3->get(w)->value;
+                    uint64_t tuple_value = records_to_check->get(i)->getValue(priority3->get(w)->column);
+                    bool result;
+
+                    switch (priority3->get(w)->op)
+                    {
+                        case NotEqual: 	result=(tuple_value != query_value); break;
+                        case Less: 		result=(tuple_value < query_value); break;
+                        case LessOrEqual: result=(tuple_value <= query_value); break;
+                        case Greater: 	result=(tuple_value > query_value); break;
+                        case GreaterOrEqual: result=(tuple_value >= query_value); break;
+                        default: result = false ; break;
+                    }
+
+                    if(result == true)
+                        records_to_check2->push_back(records_to_check->get(i));
+                }
+                if(records_to_check2->size() == 0)
+                {
+                    conflict = false;
+                    break;
+                }
+                else
+                {
+                    delete records_to_check;
+                    records_to_check = records_to_check2;
+                    records_to_check2 = new DArray<JournalRecord*>();
+                }
+            }
+        }
+
+        delete offsets_to_check;
+        delete records_to_check;
+        delete records_to_check2;
+        delete priority1;
+        delete priority2;
+        delete priority3;
+
+        if(conflict == false)
+        {
+
+        }
+        else
+            break;
+    }
+    return conflict;
 }
 //=====================================================
 //================== MAIN PROGRAM =====================
@@ -347,16 +499,16 @@ int main(int argc, char **argv) {
 			case MessageHead::Done:
 
                 // Debuging
-                cout << "============= HashTable Sizes ==============" << endl;
-                cout << "No  | Key HashTable    |   Val HashTable" << endl;
-                for(int i = 0; i < relationCount; i++)
-                {
-                    cout << setw(3) << left << i << " | Size: " << setw(8) << left << Journals[i]->key_htable.getsize() <<  " Inserts: " << setw(8) << left << Journals[i]->key_htable.inserts <<  " | Size: "  << setw(8) << left << Journals[i]->val_htable.getsize() << setw(8) << left << " Inserts: " << Journals[i]->val_htable.inserts << endl;
-                }
+                // cout << "============= HashTable Sizes ==============" << endl;
+                // cout << "No  | Key HashTable    |   Val HashTable" << endl;
+                // for(int i = 0; i < relationCount; i++)
+                // {
+                //     cout << setw(3) << left << i << " | Size: " << setw(8) << left << Journals[i]->key_htable.getsize() <<  " Inserts: " << setw(8) << left << Journals[i]->key_htable.inserts <<  " | Size: "  << setw(8) << left << Journals[i]->val_htable.getsize() << setw(8) << left << " Inserts: " << Journals[i]->val_htable.inserts << endl;
+                // }
 
 
 
-                //processDestroySchema();
+                processDestroySchema();
 
                 globalend = std::chrono::high_resolution_clock::now();
                 globaldiff = globalend - globalstart;

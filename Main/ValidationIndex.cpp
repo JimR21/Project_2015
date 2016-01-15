@@ -9,7 +9,7 @@ ValidationIndex::ValidationIndex(){
 	size = 0;
 }
 
-void ValidationIndex::insertValidation(ValidationQueries* val){
+void ValidationIndex::insertValidation(ValClass* val){
 
 	Val_listbucket* newBucket = new Val_listbucket(val);
 
@@ -30,13 +30,13 @@ void ValidationIndex::popValidation(){
 		size--;
 		delete temp;
 	}
-	else
-		throw runtime_error("Trying to pop from empty list");
+	// else
+	// 	throw runtime_error("Trying to pop from empty list");
 }
 
-ValidationQueries* ValidationIndex::getHeadValidation(){
-	if (size == 0)
-		throw runtime_error("Trying to get head from empty list");
+ValClass* ValidationIndex::getHeadValidation(){
+	// if (size == 0)
+	// 	// throw runtime_error("Trying to get head from empty list");
 	return start_bucket->val;
 }
 

@@ -6,4 +6,4 @@
 */
 
 
-#define TID_HASHTABLE 0 // 1 enable, 0 disable Tid_HashTable
+#define TID_HASHTABLE 1 // 1 enable, 0 disable Tid_HashTable
