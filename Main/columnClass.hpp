@@ -20,7 +20,7 @@ public:
 
     ColumnClass(const Query::Column &col);
 
-    ColumnClass(Query::Column &col, std::string &key);
+    ColumnClass(const Query::Column &col, std::string &key);
 
     void initialize(Query::Column);
 

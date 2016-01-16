@@ -15,7 +15,7 @@ ColumnClass::ColumnClass(const Query::Column &col)
 }
 
 
-ColumnClass::ColumnClass(Query::Column &col, string &ikey)
+ColumnClass::ColumnClass(const Query::Column &col, string &ikey)
 {
     op = col.op;
     column = col.column;

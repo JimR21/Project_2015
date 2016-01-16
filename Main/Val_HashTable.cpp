@@ -168,10 +168,6 @@ void Val_HashTable::insert(std::string key, unsigned range)
     }
 	else
 	{
-		if(!datacheck(tempBucket))
-		{
-			cout << "WRONG" << endl;
-		}
 		Val_bdata* tempData = tempBucket->keySearch(key);
 		if(tempData != NULL)
 		{
@@ -272,7 +268,7 @@ char* Val_HashTable::getbdata(std::string key)
 			tempdata = tempdata->next;
 		} while(tempdata != NULL);
 	}
-    cout << "getbdata: Key not found" << endl;
+    //cout << "getbdata: Key not found" << endl;
     return NULL;
 }
 
@@ -373,21 +369,7 @@ void Val_HashTable::halveTableSize()
 unsigned Val_HashTable::getsize()
 {	return size; }
 
-bool Val_HashTable::datacheck(BucketVal* bucket)
-{
-	Val_bdata* tempdata = bucket->first;
-	int i = 0;
-	do
-	{
-		tempdata = tempdata->next;
-		i++;
-	} while(tempdata != NULL);
-	if(i < bucket->counter)
-		return false;
-	return true;
-}
-
-void Val_HashTable::UpdateValData(std::string key, DArray<bool> *array){
+char* Val_HashTable::UpdateValData(std::string key, DArray<bool> *array){
 	unsigned hashed_key;
     hashed_key = hashFunction(key);
 	int index = getBucketIndex(hashed_key, globalDepth); // koitaw ta globaldepth deksia bits gia na dw se poio index tha paw
@@ -401,11 +383,11 @@ void Val_HashTable::UpdateValData(std::string key, DArray<bool> *array){
 		{
 			if(key.compare(tempdata->key) == 0)
 			{
-				tempdata->validate(array);
-				return ;
+				return tempdata->validate(array);
 			}
 			tempdata = tempdata->next;
 		} while(tempdata != NULL);
 	}
-    cout << "getbdata: Key not found" << endl;
+	return NULL;
+    // cout << "getbdata: Key not found" << endl;
 }

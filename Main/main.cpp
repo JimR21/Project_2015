@@ -4,23 +4,39 @@
 #include <unistd.h>
 #include <string>
 #include <chrono>
-// #include "mainStructs.hpp"
 #include "Journal.hpp"
 #include "Bucket.hpp"
 #include "ValidationIndex.hpp"
 #include "valClass.hpp"
 #include <fstream>
 #include <iomanip>
+#include <algorithm>
 
 using namespace std;
 
+// operator for queries sort
+struct compare_by_columnCount
+{
+    bool operator() (const QueryPtr & lhs, const QueryPtr & rhs) { return lhs->columnCount < rhs->columnCount; }
+};
+
+// operator for column sort
+struct compare_by_value
+{
+    bool operator() (const ColumnPtr & lhs, const ColumnPtr & rhs) { return lhs->value < rhs->value; }
+};
+
+
 string stringBuilder(int start, int end, int col, int op, uint64_t value);
-bool valOptimize(ValClass *v);      // Part1 Optimizations
+bool valOptimize(ValClass *v);      // Part 1 Optimizations
+bool valHashOptimize(ValClass *v);
+DArray<bool>* checkColumn(ColumnPtr c, DArray<JournalRecord*> * records);
 
 using ns = chrono::milliseconds;
 using get_time = chrono::steady_clock;
 
 //Testing
+unsigned found = 0, totalin = 0;
 int predicates = 0;
 unsigned transactionCounter = 0;
 int termFlag = 0;
@@ -177,7 +193,7 @@ static void processValidationQueries(ValidationQueries *v){
     const char* reader = v->queries;
 	int size = sizeof(ValidationQueries) * v->queryCount ;
 
-    QueryPtr * queries = new QueryPtr[v->queryCount];       // Pinakas apo deiktes se 
+    QueryPtr * queries = new QueryPtr[v->queryCount];       // Pinakas apo deiktes se
 
 	for (unsigned i = 0; i != v->queryCount; i++)
     {
@@ -196,9 +212,18 @@ static void processValidationQueries(ValidationQueries *v){
         // iterate over subqueries
 		for (unsigned w = 0; w < q->columnCount; w++)
         {
+            /////////////////////////
+            // Part 2: Val_HashTable
+            /////////////////////////
 			// create the key for the validation's hash
-			// string key = stringBuilder(v->from, v->to, q->columns[w].column, q->columns[w].op, q->columns[w].value);
-			// Journals[q->relationId]->val_htable.insert(key, v->to - v->from);
+			string key = stringBuilder(v->from, v->to, q->columns[w].column, q->columns[w].op, q->columns[w].value);
+            if(Journals[q->relationId]->val_htable.getbdata(key) != NULL)
+                found++;
+            else
+            {
+			    Journals[q->relationId]->val_htable.insert(key, v->to - v->from);
+                totalin++;
+            }
 
             columns[w] = new ColumnClass(q->columns[w]);
         }
@@ -233,7 +258,15 @@ static void processFlush(Flush *fl){
         // Get validation to calculate
     	ValClass *v = valIndex->getHeadValidation();
 
+        /////////////////////////
+        // Part 1: Optimizations
+        /////////////////////////
         conflict = valOptimize(v);
+
+        /////////////////////////
+        // Part 2: Val_HashTable
+        /////////////////////////
+
 
         //cout << "Validation " << v->validationId << " : " << conflict << endl;
         valIndex->popValidation();
@@ -288,6 +321,10 @@ string stringBuilder(int start, int end, int col, int op, uint64_t value){
 bool valOptimize(ValClass *v)
 {
     bool conflict;
+
+    // sort queries
+    std::sort(v->queries, v->queries + v->queryCount, compare_by_columnCount());
+
     // Iterate over the validation's queries
     for (unsigned i = 0; i != v->queryCount; i++)
     {
@@ -311,11 +348,9 @@ bool valOptimize(ValClass *v)
             break;
         }
 
-
         DArray<ColumnPtr>* priority1 = new DArray<ColumnPtr>();        // subqueries me c0 =
         DArray<ColumnPtr>* priority2 = new DArray<ColumnPtr>();        // subqueries me =
         DArray<ColumnPtr>* priority3 = new DArray<ColumnPtr>();        // ola ta upoloipa
-
 
         //==========================================================
         // 1os elegxos: An einai valid ta predicates twn subqueries
@@ -457,14 +492,56 @@ bool valOptimize(ValClass *v)
         delete priority2;
         delete priority3;
 
-        if(conflict == false)
-        {
-
-        }
-        else
+        if(conflict == true)
             break;
     }
     return conflict;
+}
+//=======================================================================
+bool valHashOptimize(ValClass * v)
+{
+    bool conflict;
+
+    for(unsigned i = 0; i < v->queryCount; i++)
+    {
+        QueryPtr q = v->queries[i];
+        for (unsigned w = 0; w < q->columnCount; w++)
+        {
+            ColumnPtr c = q->columns[w];
+            char* bitset = Journals[q->relationId]->val_htable.getbdata(c->key);
+            if(bitset == NULL)
+            {
+                bitset = Journals[q->relationId]->val_htable.UpdateValData(c->key, checkColumn(c, Journals[q->relationId]->getJournalRecords(v->from, v->to)));
+            }
+            // TODO: Continue logical and, or
+        }
+    }
+}
+//=======================================================================
+DArray<bool>* checkColumn(ColumnPtr c, DArray<JournalRecord*> * records)
+{
+    // DArray<JournalRecord*> Journals[relId]->getJournalRecords()
+    DArray<bool>* bitset = new DArray<bool>(20);
+    bool result;
+    unsigned size = records->size();
+    uint64_t tuple_value, query_value;
+    for(unsigned i = 0; i < size; i++)
+    {
+        tuple_value = records->get(i)->getValue(c->column);
+        query_value = c->value;
+        switch (c->op)
+        {
+            case Equal:     result=(tuple_value == query_value); break;
+            case NotEqual: 	result=(tuple_value != query_value); break;
+            case Less: 		result=(tuple_value < query_value); break;
+            case LessOrEqual: result=(tuple_value <= query_value); break;
+            case Greater: 	result=(tuple_value > query_value); break;
+            case GreaterOrEqual: result=(tuple_value >= query_value); break;
+            default: result = false ; break;
+        }
+        bitset->push_back(result);
+    }
+    return bitset;
 }
 //=====================================================
 //================== MAIN PROGRAM =====================
@@ -505,10 +582,13 @@ int main(int argc, char **argv) {
                 // {
                 //     cout << setw(3) << left << i << " | Size: " << setw(8) << left << Journals[i]->key_htable.getsize() <<  " Inserts: " << setw(8) << left << Journals[i]->key_htable.inserts <<  " | Size: "  << setw(8) << left << Journals[i]->val_htable.getsize() << setw(8) << left << " Inserts: " << Journals[i]->val_htable.inserts << endl;
                 // }
+                //
+                // cout << "Total Val_HashTable inserts: " << totalin << endl;
+                // cout << "Times same predicate found: " << found << " (" << (double)found/totalin*100 << "\%)" << endl;
 
 
 
-                processDestroySchema();
+                //processDestroySchema();
 
                 globalend = std::chrono::high_resolution_clock::now();
                 globaldiff = globalend - globalstart;

@@ -2,14 +2,6 @@
 #include <malloc.h>
 #include <limits.h>
 
-// Val_bdata::Val_bdata(){
-// 	counter = 0;
-// 	vals = new DArray<Val_listbucket*>(2);
-// 	bitset = (char*)malloc(1);	//1char - 8 bits
-// 	validated = false;
-// 	next = NULL;
-// }
-
 Val_bdata::Val_bdata(std::string ikey, unsigned range)
 {
 	key = ikey;
@@ -59,9 +51,10 @@ void Val_bdata::printBitset(char c){
     putchar('\n');
 }
 
-void Val_bdata::validate(DArray<bool> *array){
+char* Val_bdata::validate(DArray<bool> *array){
 
 	for (int i = 0; i < array->size(); i ++)
 		if (array->get(i) == true)		// an conflict
 			setBitsetValue(i, bitset);	// update auto to index
+	return bitset;
 }
