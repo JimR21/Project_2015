@@ -10,15 +10,12 @@
 #include "valClass.hpp"
 #include <fstream>
 #include <iomanip>
-#include <algorithm>
 
 using namespace std;
 
-// operator for queries sort
-struct compare_by_columnCount
-{
-    bool operator() (const QueryPtr & lhs, const QueryPtr & rhs) { return lhs->columnCount < rhs->columnCount; }
-};
+// Quicksort operations
+void quickSort(QueryPtr* A, int p,int q);
+int partition(QueryPtr* A, int p,int q);
 
 // operator for column sort
 struct compare_by_value
@@ -51,7 +48,7 @@ Journal** Journals = NULL;       // keeps the Journal for every relation
 DArray<bool> validationResults;	 // den xreiazetai new einai sto scope tis main
 DArray<Query::Column>* subqueries_to_check;
 
-ValidationIndex* valIndex;
+ValidationIndex valIndex;
 
 int relationCount = 0;
 int val_offset = 0;
@@ -199,14 +196,6 @@ static void processValidationQueries(ValidationQueries *v){
     {
 		const Query* q = (Query*)reader;
 
-        // // check an einai entos range
-        // uint64_t max_tid = Journals[q->relationId]->getLastTID();
-		// if (v->from > max_tid )	// mou dwse tid start pou einai megalutero tou max
-        // {
-        //     // Go to the next query
-        //     reader += sizeof(Query)+(sizeof(Query::Column)*q->columnCount);
-		// 	continue;				// no need to check the next queries for this validation
-        // }
 
         ColumnPtr * columns = new ColumnPtr[q->columnCount];
         // iterate over subqueries
@@ -237,7 +226,7 @@ static void processValidationQueries(ValidationQueries *v){
     ValClass* val = new ValClass(v->validationId, v->from, v->to, v->queryCount, queries);
 
 	// Add validation
-	valIndex->insertValidation(val);
+	valIndex.insertValidation(val);
     val_end = std::chrono::high_resolution_clock::now();
     if(val_diff != default_diff)
         val_diff = val_diff + val_end - val_start;
@@ -249,27 +238,25 @@ static void processFlush(Flush *fl){
 
     flush_start = std::chrono::high_resolution_clock::now();
 
-    bool conflict = true;
-    unsigned size = valIndex->getSize();
+    unsigned size = valIndex.getSize();
 
     // flush ws to validationId i an den exei tosa, mexri to telos tis listas
     for (unsigned i = 0; i < size && i < fl->validationId; i++)
     {
         // Get validation to calculate
-    	ValClass *v = valIndex->getHeadValidation();
+    	ValClass *v = valIndex.getHeadValidation();
 
         /////////////////////////
         // Part 1: Optimizations
         /////////////////////////
-        conflict = valOptimize(v);
+        bool conflict = valOptimize(v);
 
         /////////////////////////
         // Part 2: Val_HashTable
         /////////////////////////
 
-
-        //cout << "Validation " << v->validationId << " : " << conflict << endl;
-        valIndex->popValidation();
+        // cout << "Validation " << v->validationId << " : " << conflict << endl;
+        valIndex.popValidation();
     }
 
 
@@ -286,13 +273,9 @@ static void processDestroySchema()
 {
     destroy_start = std::chrono::high_resolution_clock::now();
 
-    for(int i = 0; i < relationCount; i++)
-    {   	// For every relation
+    for(int i = 0; i < relationCount; i++) // For every relation
 		delete Journals[i];
-		//delete hash_tables[i];
-  	}
     free(schema);
-    //delete[] Journals;
     free(Journals);
 
     destroy_end = std::chrono::high_resolution_clock::now();
@@ -323,7 +306,7 @@ bool valOptimize(ValClass *v)
     bool conflict;
 
     // sort queries
-    std::sort(v->queries, v->queries + v->queryCount, compare_by_columnCount());
+	quickSort(v->queries, 0, v->queryCount);
 
     // Iterate over the validation's queries
     for (unsigned i = 0; i != v->queryCount; i++)
@@ -543,6 +526,34 @@ DArray<bool>* checkColumn(ColumnPtr c, DArray<JournalRecord*> * records)
     }
     return bitset;
 }
+//=======================================================================
+void quickSort(QueryPtr* A, int p,int q)
+{
+    int r;
+    if(p < q)
+    {
+        r = partition(A, p,q);
+        quickSort(A,p,r);
+        quickSort(A,r+1,q);
+    }
+}
+
+
+int partition(QueryPtr* A, int p,int q)
+{
+    unsigned x = A[p]->columnCount;
+    int i = p;
+
+    for(int j = p + 1; j < q; j++)
+        if(A[j]->columnCount <= x){
+            i = i + 1;
+            swap(A[i], A[j]);
+        }
+
+    swap(A[i],A[p]);
+    return i;
+}
+//=======================================================================
 //=====================================================
 //================== MAIN PROGRAM =====================
 //=====================================================
@@ -553,8 +564,6 @@ int main(int argc, char **argv) {
 	MessageHead head;
 	void *body = NULL;
 	uint32_t len;
-
-    valIndex = new ValidationIndex();
 
     while(1){
 		// Retrieve the message head

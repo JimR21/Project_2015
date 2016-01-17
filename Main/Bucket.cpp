@@ -3,37 +3,18 @@
 
 using namespace std;
 
-Bucket::Bucket()
-{
-    localDepth = 7;     // Equal to globalDepth at start
-    key = 0;
-    empty = true;
-    first = NULL;
-    last = NULL;
-}
+Bucket::Bucket(): key(0), localDepth(7), empty(true), first(NULL), last(NULL)
+{}
 
-Bucket::Bucket(unsigned ilocalDepth) : localDepth(ilocalDepth)
-{
-    key = 0;
-    empty = true;
-    first = NULL;
-    last = NULL;
-}
+Bucket::Bucket(unsigned ilocalDepth): key(0), localDepth(ilocalDepth), empty(true), first(NULL), last(NULL)
+{}
 
-Bucket::Bucket(unsigned ikey, unsigned tid, unsigned offset, unsigned ilocalDepth) : key(ikey), localDepth(ilocalDepth)
-{
-    first = NULL;
-    last = NULL;
-    empty = false;
+Bucket::Bucket(unsigned ikey, unsigned tid, unsigned offset, unsigned ilocalDepth) : key(ikey), localDepth(ilocalDepth), empty(false), first(NULL), last(NULL){
     addBucketData(tid, offset);
 }
 
-Bucket::Bucket(unsigned ikey, int offset, unsigned ilocalDepth) : key(ikey), localDepth(ilocalDepth), tid_offset(offset)
-{
-    first = NULL;
-    last = NULL;
-    empty = false;
-}
+Bucket::Bucket(unsigned ikey, int offset, unsigned ilocalDepth) : key(ikey), localDepth(ilocalDepth), empty(false), first(NULL), last(NULL), tid_offset(offset)
+{}
 
 Bucket::~Bucket()
 {
