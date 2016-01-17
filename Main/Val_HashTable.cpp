@@ -257,13 +257,9 @@ char* Val_HashTable::getbdata(std::string key)
 			if(key.compare(tempdata->key) == 0)
 			{
 				if (tempdata->validated == true)
-				{
 					return tempdata->bitset;
-				}
 				else
-				{
 					return NULL;
-				}
 			}
 			tempdata = tempdata->next;
 		} while(tempdata != NULL);

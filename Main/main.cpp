@@ -192,13 +192,17 @@ static void processValidationQueries(ValidationQueries *v){
 
     QueryPtr * queries = new QueryPtr[v->queryCount];       // Pinakas apo deiktes se
 
+	// iterate over queries of this validation
 	for (unsigned i = 0; i != v->queryCount; i++)
     {
 		const Query* q = (Query*)reader;
 
-
         ColumnPtr * columns = new ColumnPtr[q->columnCount];
-        // iterate over subqueries
+
+		// calculate total records in range for the bitset allocation
+		int records_in_range = Journals[q->relationId]->countRecordsInRange(v->from, v->to);
+
+        // iterate over subqueries of this query
 		for (unsigned w = 0; w < q->columnCount; w++)
         {
             /////////////////////////
@@ -210,7 +214,7 @@ static void processValidationQueries(ValidationQueries *v){
                 found++;
             else
             {
-			    Journals[q->relationId]->val_htable.insert(key, v->to - v->from);
+			    Journals[q->relationId]->val_htable.insert(key, records_in_range);	// predicate to val hash
                 totalin++;
             }
 
@@ -254,6 +258,7 @@ static void processFlush(Flush *fl){
         /////////////////////////
         // Part 2: Val_HashTable
         /////////////////////////
+		valHashOptimize(v);
 
         // cout << "Validation " << v->validationId << " : " << conflict << endl;
         valIndex.popValidation();
@@ -485,17 +490,27 @@ bool valHashOptimize(ValClass * v)
 {
     bool conflict;
 
+	// for every query of this validation
     for(unsigned i = 0; i < v->queryCount; i++)
     {
         QueryPtr q = v->queries[i];
+
+		// for every subquery of this query
         for (unsigned w = 0; w < q->columnCount; w++)
         {
             ColumnPtr c = q->columns[w];
+
+			// check if bitset is calculated
             char* bitset = Journals[q->relationId]->val_htable.getbdata(c->key);
-            if(bitset == NULL)
+
+            if(bitset == NULL)	// not calculated case
             {
+				// cout << "IS NULL" << endl;
                 bitset = Journals[q->relationId]->val_htable.UpdateValData(c->key, checkColumn(c, Journals[q->relationId]->getJournalRecords(v->from, v->to)));
             }
+			else{
+				// cout << "NOT NULL" << endl;
+			}
             // TODO: Continue logical and, or
         }
     }
