@@ -13,6 +13,15 @@
 
 using namespace std;
 
+void printBitset(char c){
+	int i;
+
+    for (i = 7; i >= 0; --i)
+        putchar( (c & (1 << i)) ? '1' : '0' );
+
+    putchar('\n');
+}
+
 // Quicksort operations
 void quickSort(QueryPtr* A, int p,int q);
 int partition(QueryPtr* A, int p,int q);
@@ -187,6 +196,7 @@ static void processTransaction(Transaction *t){
 //================================================================================================
 static void processValidationQueries(ValidationQueries *v){
 
+	// cout << "Val Id " << v->validationId << endl;
     const char* reader = v->queries;
 	int size = sizeof(ValidationQueries) * v->queryCount ;
 
@@ -218,7 +228,7 @@ static void processValidationQueries(ValidationQueries *v){
                 totalin++;
             }
 
-            columns[w] = new ColumnClass(q->columns[w]);
+            columns[w] = new ColumnClass(q->columns[w], key);
         }
 
         queries[i] = new QueryClass(q->relationId, q->columnCount, columns);
@@ -240,6 +250,7 @@ static void processValidationQueries(ValidationQueries *v){
 //================================================================================================
 static void processFlush(Flush *fl){
 
+	// cout << "FLUSH" << endl;
     flush_start = std::chrono::high_resolution_clock::now();
 
     unsigned size = valIndex.getSize();
@@ -253,14 +264,14 @@ static void processFlush(Flush *fl){
         /////////////////////////
         // Part 1: Optimizations
         /////////////////////////
-        bool conflict = valOptimize(v);
+        // bool conflict = valOptimize(v);
 
         /////////////////////////
         // Part 2: Val_HashTable
         /////////////////////////
-		valHashOptimize(v);
+		bool conflict = valHashOptimize(v);
 
-        // cout << "Validation " << v->validationId << " : " << conflict << endl;
+        cout << "Validation " << v->validationId << " : " << conflict << endl;
         valIndex.popValidation();
     }
 
@@ -488,12 +499,27 @@ bool valOptimize(ValClass *v)
 //=======================================================================
 bool valHashOptimize(ValClass * v)
 {
-    bool conflict;
+    bool conflict = false;
+	// cout << "===========================================" << endl;
+	// cout << "Checking validation: " << v->validationId << endl;
+	// cout << "===========================================" << endl;
+
 
 	// for every query of this validation
     for(unsigned i = 0; i < v->queryCount; i++)
     {
+		DArray<char*> *bitsets = new DArray<char*>(20);
+
         QueryPtr q = v->queries[i];
+
+		// TODO: KAPOU PREPEI NA TO KRATAW AUTO GIA NA MIN TO KSANAUPOLOGIZW
+		int records_in_range = Journals[q->relationId]->countRecordsInRange(v->from, v->to);
+
+		// empty query
+		if (q->columnCount == 0){
+			conflict = true;
+			break;
+		}
 
 		// for every subquery of this query
         for (unsigned w = 0; w < q->columnCount; w++)
@@ -502,18 +528,49 @@ bool valHashOptimize(ValClass * v)
 
 			// check if bitset is calculated
             char* bitset = Journals[q->relationId]->val_htable.getbdata(c->key);
+			// cout << "------------------------------" << endl;
+			// cout << "Key: " << c->key << endl;
+			// cout << "------------------------------" << endl;
 
             if(bitset == NULL)	// not calculated case
             {
-				// cout << "IS NULL" << endl;
+				// cout << "Den exei ypologistei" << endl;
+
+				// calculate it
                 bitset = Journals[q->relationId]->val_htable.UpdateValData(c->key, checkColumn(c, Journals[q->relationId]->getJournalRecords(v->from, v->to)));
             }
-			else{
-				// cout << "NOT NULL" << endl;
-			}
-            // TODO: Continue logical and, or
+
+			if (conflict == false)
+				bitsets->push_back(bitset);	//krataw ta bitsets mesa sto query gia na kanw to logical AND
         }
+
+		if (conflict == false){
+			int size = bitsets->size();
+			// cout << "*********************" << endl;
+			// cout << "Size = " << size << endl;
+
+			// pairnw to prwto bitset gia na kanw logical AND me ta upoloipa
+			char *and_result = bitsets->get(0);
+
+			for (int i = 1; i < size; i ++){
+				// printBitset(*bitsets->get(i));
+
+				for (int j = 0; j < records_in_range/8+1; j++)
+					// TODO: EDW THELW TO RANGE TOU BITSET GIA NA KANW TA AND &
+					and_result[j] = and_result[j] & (bitsets->get(i))[j];
+			}
+			// cout << "*********************" << endl;
+			// cout << "AND RESULT" << endl;
+			// printBitset(*and_result);
+			if (*and_result != 0){	// an to apotelesma tou and exei kapoion aso mesa exw conf
+				// cout << "EXW CONFLICT " << endl;
+				conflict = true;
+			}
+		}
+		delete bitsets;
     }
+	// cout << "CONFLICT: " << conflict << endl;
+	return conflict;
 }
 //=======================================================================
 DArray<bool>* checkColumn(ColumnPtr c, DArray<JournalRecord*> * records)

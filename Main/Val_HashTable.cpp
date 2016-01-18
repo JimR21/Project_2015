@@ -384,6 +384,7 @@ char* Val_HashTable::UpdateValData(std::string key, DArray<bool> *array){
 			tempdata = tempdata->next;
 		} while(tempdata != NULL);
 	}
+
 	return NULL;
     // cout << "getbdata: Key not found" << endl;
 }

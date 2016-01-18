@@ -12,9 +12,7 @@ Val_bdata::Val_bdata(std::string ikey, unsigned range)
 	bitset = (char*)malloc(c);	//1char - 8 bits
 
 	for (unsigned i = 0; i < c; i++)
-	{
 		bitset[i] = 0;
-	}
 
 	validated = false;
 	next = NULL;
@@ -53,8 +51,11 @@ void Val_bdata::printBitset(char c){
 
 char* Val_bdata::validate(DArray<bool> *array){
 
+	validated = true;	// to predicate se auto to range einai pleon validated
+
 	for (int i = 0; i < array->size(); i ++)
 		if (array->get(i) == true)		// an conflict
 			setBitsetValue(i, bitset);	// update auto to index
+	// printBitset(*bitset);
 	return bitset;
 }
