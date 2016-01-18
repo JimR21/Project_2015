@@ -52,7 +52,7 @@ public:
 
     char* getbdata(std::string key);
 
-	char* UpdateValData(std::string key, DArray<bool> *array);
+	char* UpdateValData(std::string key, DArray<bool> *array, int size);
 };
 
 

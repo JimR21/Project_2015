@@ -365,7 +365,7 @@ void Val_HashTable::halveTableSize()
 unsigned Val_HashTable::getsize()
 {	return size; }
 
-char* Val_HashTable::UpdateValData(std::string key, DArray<bool> *array){
+char* Val_HashTable::UpdateValData(std::string key, DArray<bool> *array, int size){
 	unsigned hashed_key;
     hashed_key = hashFunction(key);
 	int index = getBucketIndex(hashed_key, globalDepth); // koitaw ta globaldepth deksia bits gia na dw se poio index tha paw
@@ -379,7 +379,7 @@ char* Val_HashTable::UpdateValData(std::string key, DArray<bool> *array){
 		{
 			if(key.compare(tempdata->key) == 0)
 			{
-				return tempdata->validate(array);
+				return tempdata->validate(array, size);
 			}
 			tempdata = tempdata->next;
 		} while(tempdata != NULL);

@@ -113,8 +113,8 @@ int Journal::tidSearchRecord(unsigned tid)
 
 //================================================================================================
 int Journal::countRecordsInRange(uint64_t start_tid, uint64_t end_tid){	// posa records uparxoun se auto to range (gia to bitset)
-	int total_records = 0;
 	int idx = -1;
+	int idx2 = -1;
 
 	#if TID_HASHTABLE == 1
 		while((idx = tidSearchRecord(start_tid)) == -1)	// psakse se pio index tou Journal tha ksekinisw na psaxnw
@@ -124,15 +124,13 @@ int Journal::countRecordsInRange(uint64_t start_tid, uint64_t end_tid){	// posa 
 	        start_tid += 1;								// an den yparxei to tid pou mou dwse san start psakse to epomeno
 	#endif
 
-	int rsize = Records->size();
-	for (int i = idx; i < rsize; i++){	// psakse siriaka apo ekei pou sou gurise i binary search mexri to end_tid
+	#if TID_HASHTABLE == 1
+		while((idx2 = tidSearchRecord(end_tid)) == -1)	// psakse se pio index tou Journal tha ksekinisw na psaxnw
+			end_tid -= 1;								// an den yparxei to tid pou mou dwse san start psakse to epomeno
+	#else
+	    while((idx2 = searchRecord(end_tid)) == -1)	// psakse se pio index tou Journal tha ksekinisw na psaxnw
+	        end_tid -= 1;								// an den yparxei to tid pou mou dwse san start psakse to epomeno
+	#endif
 
-		uint64_t tid = (Records->get(i))->getTransactionId();	// tid of the specific JournalRecord
-
-		if (tid <= end_tid)	// oso den exw kseperasei to end_tid
-			total_records++;
-		else
-			break;
-	}
-	return total_records;
+	return idx2 - idx;
 }

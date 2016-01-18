@@ -29,7 +29,7 @@ protected:
 
 	 void printBitset(char c); // print the array
 
-	 char* validate(DArray<bool> *array);
+	 char* validate(DArray<bool> *array, int size);
 };
 
 #endif

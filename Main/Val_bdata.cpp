@@ -8,11 +8,11 @@ Val_bdata::Val_bdata(std::string ikey, unsigned range)
 	counter = 1;
 	vals = new DArray<Val_listbucket*>(2);
 
-	unsigned c = range/8+1;
-	bitset = (char*)malloc(c);	//1char - 8 bits
-
-	for (unsigned i = 0; i < c; i++)
-		bitset[i] = 0;
+	// unsigned c = range/8+1;
+	// bitset = (char*)malloc(c);	//1char - 8 bits
+	//
+	// for (unsigned i = 0; i < c; i++)
+	// 	bitset[i] = 0;
 
 	validated = false;
 	next = NULL;
@@ -49,9 +49,15 @@ void Val_bdata::printBitset(char c){
     putchar('\n');
 }
 
-char* Val_bdata::validate(DArray<bool> *array){
+char* Val_bdata::validate(DArray<bool> *array, int size){
 
 	validated = true;	// to predicate se auto to range einai pleon validated
+
+	unsigned c = size/8+1;
+	bitset = (char*)malloc(c);	//1char - 8 bits
+
+	for (unsigned i = 0; i < c; i++)
+		bitset[i] = 0;
 
 	for (int i = 0; i < array->size(); i ++)
 		if (array->get(i) == true)		// an conflict
