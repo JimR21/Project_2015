@@ -15,7 +15,7 @@ $(EXECUTABLE): $(OBJECTS) $(SOURCES) $(DEPS)
 	$(CC) $(CFLAGS) $< -o $@
 
 clean:
-	rm *.o *.gch
+	$(RM) *.o *.gch
 
 stats:
 	g++ -std=c++0x statsmain.cpp Journal.cpp JournalRecord.cpp Gen_HashTable.cpp Key_HashTable.cpp Tid_HashTable.cpp Bucket.cpp BucketData.cpp -o statsmain.out

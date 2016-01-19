@@ -22,15 +22,12 @@ void printBitset(char c){
     putchar('\n');
 }
 
-// Quicksort operations
-void quickSort(QueryPtr* A, int p,int q);
-int partition(QueryPtr* A, int p,int q);
 
-// operator for column sort
-struct compare_by_value
+// operator for query sort
+struct sorting
 {
-    bool operator() (const ColumnPtr & lhs, const ColumnPtr & rhs) { return lhs->value < rhs->value; }
-};
+    bool operator() (const QueryPtr & lhs, const QueryPtr & rhs) { return lhs->relationId < rhs->relationId; }
+} sorting_by_relationId;
 
 
 string stringBuilder(int start, int end, int col, int op, uint64_t value);
@@ -228,7 +225,7 @@ static void processValidationQueries(ValidationQueries *v){
                 totalin++;
             }
 
-            columns[w] = new ColumnClass(q->columns[w], key);
+            columns[w] = new ColumnClass(q->columns[w]);
         }
 
         queries[i] = new QueryClass(q->relationId, q->columnCount, columns);
@@ -264,7 +261,7 @@ static void processFlush(Flush *fl){
         /////////////////////////
         // Part 1: Optimizations
         /////////////////////////
-        // bool conflict = valOptimize(v);
+        //bool conflict = valOptimize(v);
 
         /////////////////////////
         // Part 2: Val_HashTable
@@ -321,8 +318,8 @@ bool valOptimize(ValClass *v)
 {
     bool conflict;
 
-    // sort queries
-	quickSort(v->queries, 0, v->queryCount);
+    // sort queries by column count
+	v->sortByColumnCount();
 
     // Iterate over the validation's queries
     for (unsigned i = 0; i != v->queryCount; i++)
@@ -347,9 +344,9 @@ bool valOptimize(ValClass *v)
             break;
         }
 
-        DArray<ColumnPtr>* priority1 = new DArray<ColumnPtr>();        // subqueries me c0 =
-        DArray<ColumnPtr>* priority2 = new DArray<ColumnPtr>();        // subqueries me =
-        DArray<ColumnPtr>* priority3 = new DArray<ColumnPtr>();        // ola ta upoloipa
+        DArray<ColumnPtr>* priority1 = new DArray<ColumnPtr>(10);        // subqueries me c0 =
+        DArray<ColumnPtr>* priority2 = new DArray<ColumnPtr>(10);        // subqueries me =
+        DArray<ColumnPtr>* priority3 = new DArray<ColumnPtr>(10);        // ola ta upoloipa
 
         //==========================================================
         // 1os elegxos: An einai valid ta predicates twn subqueries
@@ -390,7 +387,7 @@ bool valOptimize(ValClass *v)
 
         DArray<uint64_t>* offsets_to_check = NULL;      // DArray me ta offset pou exoyme na elegksoume
         DArray<JournalRecord*>* records_to_check = NULL;    // DArray me ta journal records poy exoume na elegksoume
-        DArray<JournalRecord*>* records_to_check2 = new DArray<JournalRecord*>();   // Voithitikos DArray me records
+        DArray<JournalRecord*>* records_to_check2 = new DArray<JournalRecord*>(100);   // Voithitikos DArray me records
 
         //================================================================
         // 2os elegxos: Filtrarisma twn records me vash ta priority tables
@@ -401,7 +398,7 @@ bool valOptimize(ValClass *v)
             offsets_to_check = Journals[q->relationId]->key_htable.getHashRecord(priority1->get(w)->value, v->from, v->to);
             if(offsets_to_check != NULL)
             {
-                records_to_check = new DArray<JournalRecord*>();
+                records_to_check = new DArray<JournalRecord*>(100);
                 for(int i = 0; i < offsets_to_check->size(); i++)
                     records_to_check->push_back(Journals[q->relationId]->getRecord(offsets_to_check->get(i)));
             }
@@ -435,7 +432,7 @@ bool valOptimize(ValClass *v)
                 {
                     delete records_to_check;
                     records_to_check = records_to_check2;
-                    records_to_check2 = new DArray<JournalRecord*>();
+                    records_to_check2 = new DArray<JournalRecord*>(100);
                 }
             }
         }
@@ -479,7 +476,7 @@ bool valOptimize(ValClass *v)
                 {
                     delete records_to_check;
                     records_to_check = records_to_check2;
-                    records_to_check2 = new DArray<JournalRecord*>();
+                    records_to_check2 = new DArray<JournalRecord*>(100);
                 }
             }
         }
@@ -602,34 +599,6 @@ DArray<bool>* checkColumn(ColumnPtr c, DArray<JournalRecord*> * records)
     }
     return bitset;
 }
-//=======================================================================
-void quickSort(QueryPtr* A, int p,int q)
-{
-    int r;
-    if(p < q)
-    {
-        r = partition(A, p,q);
-        quickSort(A,p,r);
-        quickSort(A,r+1,q);
-    }
-}
-
-
-int partition(QueryPtr* A, int p,int q)
-{
-    unsigned x = A[p]->columnCount;
-    int i = p;
-
-    for(int j = p + 1; j < q; j++)
-        if(A[j]->columnCount <= x){
-            i = i + 1;
-            swap(A[i], A[j]);
-        }
-
-    swap(A[i],A[p]);
-    return i;
-}
-//=======================================================================
 //=====================================================
 //================== MAIN PROGRAM =====================
 //=====================================================
