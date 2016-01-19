@@ -59,7 +59,7 @@ char* Val_bdata::validate(DArray<bool> *array, int size){
 	for (unsigned i = 0; i < c; i++)
 		bitset[i] = 0;
 
-	for (int i = 0; i < array->size(); i ++)
+	for (int i = 0; i < c; i ++)
 		if (array->get(i) == true)		// an conflict
 			setBitsetValue(i, bitset);	// update auto to index
 	// printBitset(*bitset);

@@ -10,6 +10,7 @@
 #include "valClass.hpp"
 #include <fstream>
 #include <iomanip>
+#include <algorithm>
 
 using namespace std;
 
@@ -225,7 +226,7 @@ static void processValidationQueries(ValidationQueries *v){
                 totalin++;
             }
 
-            columns[w] = new ColumnClass(q->columns[w]);
+            columns[w] = new ColumnClass(q->columns[w],key);
         }
 
         queries[i] = new QueryClass(q->relationId, q->columnCount, columns);
@@ -261,7 +262,7 @@ static void processFlush(Flush *fl){
         /////////////////////////
         // Part 1: Optimizations
         /////////////////////////
-        //bool conflict = valOptimize(v);
+        // bool conflict = valOptimize(v);
 
         /////////////////////////
         // Part 2: Val_HashTable
@@ -497,11 +498,16 @@ bool valOptimize(ValClass *v)
 bool valHashOptimize(ValClass * v)
 {
 	int bitset_size;
+	int current_rel = -1;
     bool conflict = false;
-	// cout << "===========================================" << endl;
-	// cout << "Checking validation: " << v->validationId << endl;
-	// cout << "===========================================" << endl;
 
+	DArray<JournalRecord*> *recs;
+	cout << "===========================================" << endl;
+	cout << "Checking validation: " << v->validationId << endl;
+	cout << "===========================================" << endl;
+
+	// sort queries by column count
+	std::sort(v->queries, v->queries + v->queryCount, sorting());
 
 	// for every query of this validation
     for(unsigned i = 0; i < v->queryCount; i++)
@@ -510,14 +516,23 @@ bool valHashOptimize(ValClass * v)
 
         QueryPtr q = v->queries[i];
 
-		// TODO: KAPOU PREPEI NA TO KRATAW AUTO GIA NA MIN TO KSANAUPOLOGIZW
-		// int records_in_range = Journals[q->relationId]->countRecordsInRange(v->from, v->to);
-
-		// empty query
+		// empty query ~> conflict
 		if (q->columnCount == 0){
-			conflict = true;
-			break;
+			conflict = true; break;}
+
+		// if (v->validationId == 4){
+			// cout << "Query " << i << "rel id: " << q->relationId << endl;
+		// }
+		if (current_rel == -1 || current_rel != q->relationId){
+			cout << "MESA" << endl;
+			recs = Journals[q->relationId]->getJournalRecords(v->from, v->to);
+			cout << "EKSW" << endl;
+			// cout << "Old rel ID: " << current_rel << endl;
+			current_rel = q->relationId;
+			// cout << "New rel ID: " << current_rel << endl;
 		}
+		// else
+		// 	cout << "Krataw to palio " << current_rel << endl;
 
 		// for every subquery of this query
         for (unsigned w = 0; w < q->columnCount; w++)
@@ -533,7 +548,6 @@ bool valHashOptimize(ValClass * v)
             if(bitset == NULL)	// not calculated case
             {
 				// cout << "Den exei ypologistei" << endl;
-				DArray<JournalRecord*> *recs = Journals[q->relationId]->getJournalRecords(v->from, v->to);
 
 				bitset_size = recs->size();
 
