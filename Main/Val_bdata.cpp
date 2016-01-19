@@ -56,12 +56,22 @@ char* Val_bdata::validate(DArray<bool> *array, int size){
 	unsigned c = size/8+1;
 	bitset = (char*)malloc(c);	//1char - 8 bits
 
+	// if (size == 19){
+	// 	std::cout << "SIZE " << c << std::endl;
+	// }
+
 	for (unsigned i = 0; i < c; i++)
 		bitset[i] = 0;
 
-	for (int i = 0; i < c; i ++)
+	for (int i = 0; i < size; i ++){
+		// if (key.compare("184-239@0=1106680") == 0)
+		// 		std::cout << "Array[" << i << "] is: " << array->get(i) << 	std::endl;
 		if (array->get(i) == true)		// an conflict
 			setBitsetValue(i, bitset);	// update auto to index
+
+	}
+	// if (key.compare("184-239@0=1106680") == 0)
+	// 	printBitset(bitset[7]);
 	// printBitset(*bitset);
 	return bitset;
 }

@@ -31,8 +31,6 @@ public:
 	JournalRecord *getRecord(int key);
     uint64_t getLastTID();
 
-	int countRecordsInRange(uint64_t from, uint64_t to);	// posa records uparxoun se auto to range (gia to bitset)
-
 #if TID_HASHTABLE == 1
     int tidSearchRecord(unsigned tid);
 #endif
