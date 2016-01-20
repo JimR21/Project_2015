@@ -3,6 +3,7 @@
 
 #include "DArray.hpp"
 #include "Val_listbucket.hpp"
+#include "bitset.hpp"
 
 class Bucket;
 class Val_HashTable;
@@ -14,7 +15,7 @@ class Val_bdata
 	friend class BucketVal;
 protected:
     std::string key;
-    char* bitset;
+    Bitset* bitset;
 	DArray<Val_listbucket*> *vals;	// pointers to vals
     int counter;     // counts pointers from vals
     bool validated;     // True if validated
@@ -29,7 +30,7 @@ protected:
 
 	 void printBitset(char c); // print the array
 
-	 char* validate(DArray<bool> *array, int size);
+	 Bitset* validate(DArray<bool> *array, int size);
 };
 
 #endif

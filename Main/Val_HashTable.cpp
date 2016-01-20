@@ -242,7 +242,7 @@ void Val_HashTable::insert(std::string key, unsigned range)
 	}
 }
 
-char* Val_HashTable::getbdata(std::string key)
+Bitset* Val_HashTable::getbdata(std::string key)
 {
 	unsigned hashed_key;
     hashed_key = hashFunction(key);
@@ -365,7 +365,7 @@ void Val_HashTable::halveTableSize()
 unsigned Val_HashTable::getsize()
 {	return size; }
 
-char* Val_HashTable::UpdateValData(std::string key, DArray<bool> *array, int size){
+Bitset* Val_HashTable::UpdateValData(std::string key, DArray<bool> *array, int size){
 	unsigned hashed_key;
     hashed_key = hashFunction(key);
 	int index = getBucketIndex(hashed_key, globalDepth); // koitaw ta globaldepth deksia bits gia na dw se poio index tha paw
@@ -386,5 +386,4 @@ char* Val_HashTable::UpdateValData(std::string key, DArray<bool> *array, int siz
 	}
 
 	return NULL;
-    // cout << "getbdata: Key not found" << endl;
 }

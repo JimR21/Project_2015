@@ -502,9 +502,9 @@ bool valHashOptimize(ValClass * v)
     bool conflict = false;
 
 	DArray<JournalRecord*> *recs;
-	// cout << "===========================================" << endl;
-	// cout << "Checking validation: " << v->validationId << endl;
-	// cout << "===========================================" << endl;
+	cout << "===========================================" << endl;
+	cout << "Checking validation: " << v->validationId << endl;
+	cout << "===========================================" << endl;
 
 	// sort queries by column count
 	std::sort(v->queries, v->queries + v->queryCount, sorting());
@@ -512,12 +512,10 @@ bool valHashOptimize(ValClass * v)
 	// for every query of this validation
     for(unsigned i = 0; i < v->queryCount; i++)
     {
-		DArray<char*> *bitsets = new DArray<char*>(20);
+		DArray<Bitset*> *bitsets = new DArray<Bitset*>(20);
 
         QueryPtr q = v->queries[i];
 
-		if (v->validationId == 616){
-			cout << "GIA TO REL: " << q->relationId << endl;}
 		//=========================
 		// empty query ~> conflict
 		//=========================
@@ -530,30 +528,16 @@ bool valHashOptimize(ValClass * v)
 		uint64_t max_tid = Journals[q->relationId]->getLastTID();
 
 		if (v->from > max_tid ){	// mou dwse tid start pou einai megalutero tou max || keno query
-			if (v->validationId == 616){
-				cout << "bika dw gia to relID" << q->relationId << endl;
-			// 	cout << "v->from: " << v->from << endl;
-			// 	cout << "max_tid" << max_tid << endl;
-			}
             // Go to the next query
-
             // conflict = false;   	// Se periptwsh poy den uparxei allo query
-            continue;				// no need to check the next queries for this validation
+            continue;
         }
 
 
 		if (current_rel == -1 || current_rel != q->relationId){
-			// if (v->validationId == 14)
-				// cout << "Kalw gjr" << endl;
 			recs = Journals[q->relationId]->getJournalRecords(v->from, v->to);
-			// cout << "Old rel ID: " << current_rel << endl;
 			current_rel = q->relationId;
-			// cout << "New rel ID: " << current_rel << endl;
 		}
-		// else
-		// 	cout << "Krataw to palio " << current_rel << endl;
-
-
 
 		// for every subquery of this query
         for (unsigned w = 0; w < q->columnCount; w++)
@@ -561,111 +545,56 @@ bool valHashOptimize(ValClass * v)
             ColumnPtr c = q->columns[w];
 
 			// check if bitset is calculated
-            char* bitset = Journals[q->relationId]->val_htable.getbdata(c->key);
-
-			if (v->validationId == 616 && q->relationId == 18 ){
-				// for ()
-				cout << "------------------------------" << endl;
-				cout << "Key: " << c->key << endl;
-				cout << "------------------------------" << endl;
-			}
+            Bitset* bitset = Journals[q->relationId]->val_htable.getbdata(c->key);
 
             if(bitset == NULL)	// not calculated case
             {
-				// if (v->validationId == 14)
-				// 	cout << "Den exei ypologistei" << endl;
-
 				bitset_size = recs->size();
-				if (v->validationId == 616 && q->relationId == 18 && (c->key.compare("184-239@0=1106680")==0)){
-					// cout << "Bitset size " << bitset_size << endl;
-				// }
-					DArray<bool>* res = checkColumn(c, recs);
-					for (int i = 0; i < res->size(); i++)
-						cout << res->get(i);
-					cout << endl;
-					// exit(0);
-				}
+
 				// calculate it
                 bitset = Journals[q->relationId]->val_htable.UpdateValData(c->key, checkColumn(c, recs), bitset_size);
-				if (v->validationId == 616 && q->relationId == 18 && (c->key.compare("184-239@0=1106680")==0)){
-					// printBitset(bitset[7]);
-					// exit(8);
-				}
             }
-			else{
-				cout << "exei ypologistei" << endl;
-				if (v->validationId == 616 && q->relationId == 18 && (c->key.compare("184-239@0=1106680")==0))
-					printBitset(bitset[7]);
-			}
+			// else{
+			// 	cout << "exei ypologistei" << endl;
+			// }
 			if (conflict == false)
 				bitsets->push_back(bitset);	//krataw ta bitsets mesa sto query gia na kanw to logical AND
         }
-		// if (v->validationId == 14){
-		// 	if (conflict == true){
-		// 		cout << "Conflict: true" << endl;
-		// 	}
-		// 	else
-		// 		cout << "Conflict: false" << endl;
-		// }
 		if (conflict == false){
-			// if (v->validationId == 14)
-			// 	cout << "bika edw" << endl;
 
 			int size = bitsets->size();
-			// if (v->validationId == 14){
-			// 	cout << "*********************" << endl;
-			// 	cout << "Size = " << size << endl;
-			// 	cout << "*********************" << endl;
-			// }
 
 			// pairnw to prwto bitset gia na kanw logical AND me ta upoloipa
-			char *and_result = bitsets->get(0);
-			// if (v->validationId == 14){
-			// 	cout << "to prwto:" << endl;
-			// 	printBitset(*and_result);
-			// 	exit(9);
-			// }
-			if (v->validationId == 616 && q->relationId == 18){
-				cout << "bika dw" << endl;
-				printBitset(*bitsets->get(0));
-			}
+
+			Bitset* bit = bitsets->get(0);	// pernw to prwto bitset
+			int bit_size = bit->getSize();	// pernw to megethos tou
+			char *and_result = (char*)malloc(bit_size/8+1);
+
+			memcpy(and_result, bit->getBitsetArray(), sizeof(bit->getSize()));
+			// strcpy(and_result, bit->getBitsetArray());
+
 			for (int i = 1; i < size; i ++){
-				printBitset(*bitsets->get(i));
+				// printBitset(*bitsets->get(i));
 
-				for (int j = 0; j < bitset_size/8+1; j++)
+				for (int j = 0; j < bit_size/8+1; j++)
 					// TODO: EDW THELW TO RANGE TOU BITSET GIA NA KANW TA AND &
-					and_result[j] = and_result[j] & (bitsets->get(i))[j];
+					and_result[j] = and_result[j] & (bitsets->get(i)->getBitsetArray())[j];
 			}
-			// cout << "*********************" << endl;
-			// cout << "AND RESULT" << endl;
-			// if (v->validationId == 14)
-			// 	printBitset(*and_result);
-			// if (v->validationId == 26){
-			// 	cout << "Gia to rel: " << q->relationId << endl;
-			// 	printBitset(*and_result);
-			// 	// exit(9);
-			// }
 
-			for (int k = 0; k < bitset_size/8+1; k++)
+
+			for (int k = 0; k < bit_size/8+1; k++)
 			{
-				if (v->validationId == 616){
-					// cout << bitset_size/8+1 << endl; exit(9);
-					printBitset(and_result[k]);
-				}
-
 				if (and_result[k] != 0){	// an to apotelesma tou and exei kapoion aso mesa exw conf
 
-					cout << "EXW CONFLICT " << endl;
+					// cout << "EXW CONFLICT " << endl;
 					conflict = true;
 					break;
 				}
 			}
-			cout << endl;
-			cout << "============================" << endl;
 		}
 		delete bitsets;
     }
-	if (v->validationId == 616)
+	if (v->validationId == 20)
 		exit(0);
 	// cout << "CONFLICT: " << conflict << endl;
 	return conflict;

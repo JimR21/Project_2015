@@ -2,6 +2,7 @@
 #define VAL_HASHTABLE_HPP
 //#include <string>
 #include "DArray.hpp"
+#include "bitset.hpp"
 
 #define HASHTABLE_SIZE 128
 #define STARTING_GLOBAL_DEAPTH 7
@@ -50,9 +51,9 @@ public:
 
 	int deleteKey(std::string key);
 
-    char* getbdata(std::string key);
+    Bitset* getbdata(std::string key);
 
-	char* UpdateValData(std::string key, DArray<bool> *array, int size);
+	Bitset* UpdateValData(std::string key, DArray<bool> *array, int size);
 };
 
 
