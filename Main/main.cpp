@@ -299,7 +299,7 @@ static void processDestroySchema()
 string stringBuilder(int start, int end, int col, int op, uint64_t value){
     string key;
 
-    key = to_string(start) + "-" + to_string(end) + "@" + to_string(col);
+    key = to_string(start) + "-" + to_string(end) + "c" + to_string(col);
 
     switch(op){
         case Equal: key += "="; break;
@@ -502,9 +502,6 @@ bool valHashOptimize(ValClass * v)
     bool conflict = false;
 
 	DArray<JournalRecord*> *recs;
-	cout << "===========================================" << endl;
-	cout << "Checking validation: " << v->validationId << endl;
-	cout << "===========================================" << endl;
 
 	// sort queries by column count
 	std::sort(v->queries, v->queries + v->queryCount, sorting());
@@ -516,24 +513,19 @@ bool valHashOptimize(ValClass * v)
 
         QueryPtr q = v->queries[i];
 
-		//=========================
-		// empty query ~> conflict
-		//=========================
-		if (q->columnCount == 0){
-			conflict = true; break;}
-
 		//=============================
 		// check an einai entos range
 		//=============================
 		uint64_t max_tid = Journals[q->relationId]->getLastTID();
 
-		if (v->from > max_tid ){	// mou dwse tid start pou einai megalutero tou max || keno query
-            // Go to the next query
-            // conflict = false;   	// Se periptwsh poy den uparxei allo query
-            continue;
-        }
+		if (v->from > max_tid )	// mou dwse tid start pou einai megalutero tou max || keno query
+            continue;			// Go to the next query
 
-
+		//=========================
+		// empty query ~> conflict
+		//=========================
+		if (q->columnCount == 0){
+			conflict = true; break;}
 		if (current_rel == -1 || current_rel != q->relationId){
 			recs = Journals[q->relationId]->getJournalRecords(v->from, v->to);
 			current_rel = q->relationId;
@@ -553,6 +545,7 @@ bool valHashOptimize(ValClass * v)
 
 				// calculate it
                 bitset = Journals[q->relationId]->val_htable.UpdateValData(c->key, checkColumn(c, recs), bitset_size);
+
             }
 			// else{
 			// 	cout << "exei ypologistei" << endl;
@@ -564,39 +557,26 @@ bool valHashOptimize(ValClass * v)
 
 			int size = bitsets->size();
 
+
 			// pairnw to prwto bitset gia na kanw logical AND me ta upoloipa
 
 			Bitset* bit = bitsets->get(0);	// pernw to prwto bitset
 			int bit_size = bit->getSize();	// pernw to megethos tou
-			char *and_result = (char*)malloc(bit_size/8+1);
+			char *and_result = (char*)malloc(bit_size);
+			memcpy(and_result, bit->getBitsetArray(), bit->getSize());
 
-			memcpy(and_result, bit->getBitsetArray(), sizeof(bit->getSize()));
-			// strcpy(and_result, bit->getBitsetArray());
-
-			for (int i = 1; i < size; i ++){
-				// printBitset(*bitsets->get(i));
-
-				for (int j = 0; j < bit_size/8+1; j++)
-					// TODO: EDW THELW TO RANGE TOU BITSET GIA NA KANW TA AND &
+			for (int i = 1; i < size; i ++)
+				for (int j = 0; j < bit_size; j++)
 					and_result[j] = and_result[j] & (bitsets->get(i)->getBitsetArray())[j];
-			}
 
-
-			for (int k = 0; k < bit_size/8+1; k++)
-			{
+			for (int k = 0; k < bit_size; k++)
 				if (and_result[k] != 0){	// an to apotelesma tou and exei kapoion aso mesa exw conf
-
-					// cout << "EXW CONFLICT " << endl;
 					conflict = true;
 					break;
 				}
-			}
 		}
 		delete bitsets;
     }
-	if (v->validationId == 20)
-		exit(0);
-	// cout << "CONFLICT: " << conflict << endl;
 	return conflict;
 }
 //=======================================================================

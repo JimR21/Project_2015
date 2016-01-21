@@ -39,7 +39,7 @@ void Bitset::validateBitset(DArray<bool> *array, int isize){
 	unsigned c = isize/8+1;
 	bitset_array = (char*)malloc(c);	//1char - 8 bits
 
-	size = isize;	// keep bitset size
+	size = isize/8+1;	// keep bitset size
 
 	// initialize bitset
 	for (unsigned i = 0; i < c; i++)
