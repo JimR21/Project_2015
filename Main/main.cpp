@@ -499,7 +499,7 @@ bool valHashOptimize(ValClass * v)
 	int current_rel = -1;
     bool conflict = false;
 
-	DArray<JournalRecord*> *recs;
+	DArray<JournalRecord*> *recs = NULL;
 
 	// sort queries by column count
 	std::sort(v->queries, v->queries + v->queryCount, sorting());
@@ -525,6 +525,7 @@ bool valHashOptimize(ValClass * v)
 		if (q->columnCount == 0){
 			conflict = true; break;}
 		if (current_rel == -1 || current_rel != q->relationId){
+			delete recs;
 			recs = Journals[q->relationId]->getJournalRecords(v->from, v->to);
 			current_rel = q->relationId;
 		}
@@ -584,6 +585,8 @@ bool valHashOptimize(ValClass * v)
 			delete bitsets->get(i);
 		}
 		delete bitsets;
+		if(i == v->queryCount - 1)
+			delete recs;
     }
 	return conflict;
 }
