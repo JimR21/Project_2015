@@ -16,7 +16,7 @@ class Val_bdata
 protected:
     std::string key;
     Bitset* bitset;
-	DArray<Val_listbucket*> *vals;	// pointers to vals
+	//DArray<Val_listbucket*> *vals;	// pointers to vals
     int counter;     // counts pointers from vals
     bool validated;     // True if validated
     Val_bdata* next;
@@ -24,6 +24,7 @@ protected:
 
  public:
 	 Val_bdata(std::string key, unsigned range);
+	 ~Val_bdata();
 	 void insert();	// pros to paron counter ++ mono meta tha vazei kai to val
      void setBitsetValue(int index, char *array);	// set Bitset index to 1
 	 int getBitsetValue(int index, char *array);	// get the value of this index

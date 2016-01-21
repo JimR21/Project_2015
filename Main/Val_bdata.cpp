@@ -6,11 +6,16 @@ Val_bdata::Val_bdata(std::string ikey, unsigned range)
 {
 	key = ikey;
 	counter = 1;
-	vals = new DArray<Val_listbucket*>(2);
+	//vals = new DArray<Val_listbucket*>(2);
 	bitset = new Bitset();
 
 	validated = false;
 	next = NULL;
+}
+
+Val_bdata::~Val_bdata()
+{
+	delete bitset;
 }
 
 void Val_bdata::insert(){

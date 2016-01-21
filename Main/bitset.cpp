@@ -9,6 +9,16 @@ Bitset::Bitset(){
 	size = -1;
 }
 
+Bitset::Bitset(const Bitset &bit)
+{
+	size = bit.size;
+	bitset_array = (char*)malloc(size);
+	for(unsigned i = 0; i < size; i++)
+	{
+		bitset_array[i] = bit.bitset_array[i];
+	}
+}
+
 void Bitset::setBitsetValue(int index, char *array){
 	int bit_index = index / CHAR_BIT;		// which char
 	int bit_number = index % CHAR_BIT;		// which bit of this char

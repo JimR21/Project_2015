@@ -33,6 +33,21 @@ BucketVal::BucketVal(Val_bdata* valdata)
 
 }
 
+BucketVal::~BucketVal()
+{
+	if(first != NULL)
+	{
+		Val_bdata* temp = first;
+		Val_bdata* prev = first;
+		do
+		{
+			prev = temp;
+			temp = temp->next;
+			delete prev;
+		} while(temp != NULL);
+	}
+}
+
 void BucketVal::addBucketData(string key, unsigned range)
 {
     if(first == NULL)

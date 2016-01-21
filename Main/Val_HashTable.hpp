@@ -51,7 +51,7 @@ public:
 
 	int deleteKey(std::string key);
 
-    Bitset* getbdata(std::string key);
+    Bitset* getbdata(std::string key, int *counter);
 
 	Bitset* UpdateValData(std::string key, DArray<bool> *array, int size);
 };

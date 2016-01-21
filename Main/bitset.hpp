@@ -18,6 +18,8 @@ protected:
 public:
 	Bitset();
 
+	Bitset(const Bitset &bit);
+
 	void setBitsetValue(int index, char *array);	// set Bitset index to 1
 	int getBitsetValue(int index, char *array);		// get the value of this index
 

@@ -15,6 +15,7 @@ public:
 	BucketVal(unsigned ilocalDepth);
 	BucketVal(std::string ikey, unsigned range, unsigned ilocalDepth);     // Val HashTable
 	BucketVal(Val_bdata* valdata);
+	~BucketVal();
 
 	void addBucketData(std::string key, unsigned range);
 	void addBucketData(Val_bdata* valdata);

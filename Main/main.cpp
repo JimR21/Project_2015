@@ -35,6 +35,7 @@ string stringBuilder(int start, int end, int col, int op, uint64_t value);
 bool valOptimize(ValClass *v);      // Part 1 Optimizations
 bool valHashOptimize(ValClass *v);
 DArray<bool>* checkColumn(ColumnPtr c, DArray<JournalRecord*> * records);
+unsigned forget = 0;
 
 using ns = chrono::milliseconds;
 using get_time = chrono::steady_clock;
@@ -218,13 +219,7 @@ static void processValidationQueries(ValidationQueries *v){
             /////////////////////////
 			// create the key for the validation's hash
 			string key = stringBuilder(v->from, v->to, q->columns[w].column, q->columns[w].op, q->columns[w].value);
-            if(Journals[q->relationId]->val_htable.getbdata(key) != NULL)
-                found++;
-            else
-            {
-			    Journals[q->relationId]->val_htable.insert(key, 0);	// predicate to val hash
-                totalin++;
-            }
+			Journals[q->relationId]->val_htable.insert(key, 0);	// predicate to val hash
 
             columns[w] = new ColumnClass(q->columns[w],key);
         }
@@ -281,7 +276,10 @@ static void processFlush(Flush *fl){
         flush_diff = flush_end - flush_start;
 }
 //================================================================================================
-static void processForget(Forget *fo){}
+static void processForget(Forget *fo)
+{
+	forget = fo->transactionId;
+}
 //================================================================================================
 static void processDestroySchema()
 {
@@ -537,8 +535,8 @@ bool valHashOptimize(ValClass * v)
             ColumnPtr c = q->columns[w];
 
 			// check if bitset is calculated
-            Bitset* bitset = Journals[q->relationId]->val_htable.getbdata(c->key);
-
+			int counter;
+            Bitset* bitset = Journals[q->relationId]->val_htable.getbdata(c->key, &counter);
             if(bitset == NULL)	// not calculated case
             {
 				bitset_size = recs->size();
@@ -547,11 +545,16 @@ bool valHashOptimize(ValClass * v)
                 bitset = Journals[q->relationId]->val_htable.UpdateValData(c->key, checkColumn(c, recs), bitset_size);
 
             }
-			// else{
-			// 	cout << "exei ypologistei" << endl;
-			// }
+
 			if (conflict == false)
-				bitsets->push_back(bitset);	//krataw ta bitsets mesa sto query gia na kanw to logical AND
+				bitsets->push_back(new Bitset(*bitset));	//krataw ta bitsets mesa sto query gia na kanw to logical
+
+			// Delete
+			if((counter == 0) && (forget > v->from))
+			{
+				cout << "Deleting in val: " << v->validationId << endl;
+				Journals[q->relationId]->val_htable.deleteKey(c->key);
+			}
         }
 		if (conflict == false){
 
@@ -574,6 +577,11 @@ bool valHashOptimize(ValClass * v)
 					conflict = true;
 					break;
 				}
+			free(and_result);
+		}
+		for(int i = 0; i < bitsets->size(); i++)
+		{
+			delete bitsets->get(i);
 		}
 		delete bitsets;
     }

@@ -1,5 +1,5 @@
 CC=g++
-CFLAGS=-c -g -w -std=c++0x -O3 -march=native -flto
+CFLAGS=-c -g -w -std=c++0x -O0 #-march=native -flto
 LDFLAGS=
 SOURCES=main.cpp Journal.cpp JournalRecord.cpp Gen_HashTable.cpp Key_HashTable.cpp Val_HashTable.cpp Tid_HashTable.cpp Bucket.cpp BucketData.cpp BucketVal.cpp Val_bdata.cpp ValidationIndex.cpp valClass.cpp queryClass.cpp columnClass.cpp bitset.cpp
 OBJECTS=$(SOURCES:.cpp=.o)
