@@ -9,6 +9,11 @@ Bitset::Bitset(){
 	size = -1;
 }
 
+Bitset::Bitset(unsigned isize) : size(isize)
+{
+	bitset_array = (char*)malloc(isize);
+}
+
 Bitset::Bitset(const Bitset &bit)
 {
 	size = bit.size;
@@ -17,6 +22,11 @@ Bitset::Bitset(const Bitset &bit)
 	{
 		bitset_array[i] = bit.bitset_array[i];
 	}
+}
+
+Bitset::~Bitset()
+{
+	free(bitset_array);
 }
 
 void Bitset::setBitsetValue(int index, char *array){
@@ -31,6 +41,25 @@ int Bitset::getBitsetValue(int index, char *array){
 	int bit_number = index % CHAR_BIT;		// which bit of this char
 
 	if (array[bit_index] & (1 << bit_number))
+		return 1;
+	else
+		return 0;
+}
+
+void Bitset::setBitsetArray(int index)
+{
+	int bit_index = index / CHAR_BIT;		// which char
+	int bit_number = index % CHAR_BIT;		// which bit of this char
+
+	bitset_array[bit_index] = bitset_array[bit_index] | (1 << (7 - bit_number));	// update !!
+}
+
+int Bitset::getBitsetArray(int index)
+{
+	int bit_index = index / CHAR_BIT;		// which char
+	int bit_number = index % CHAR_BIT;		// which bit of this char
+
+	if (bitset_array[bit_index] & (1 << bit_number))
 		return 1;
 	else
 		return 0;

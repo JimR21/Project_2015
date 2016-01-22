@@ -18,10 +18,17 @@ protected:
 public:
 	Bitset();
 
+	~Bitset();
+
+	Bitset(unsigned size);
+
 	Bitset(const Bitset &bit);
 
 	void setBitsetValue(int index, char *array);	// set Bitset index to 1
 	int getBitsetValue(int index, char *array);		// get the value of this index
+
+	void setBitsetArray(int index);	// set Bitset index to 1
+	int getBitsetArray(int index);		// get the value of this index
 
 	void printBitset(char c); // print the array
 

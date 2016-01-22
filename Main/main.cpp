@@ -525,9 +525,6 @@ bool valHashOptimize(ValClass * v)
 		if (q->columnCount == 0){
 			conflict = true; break;}
 
-		//=========================
-		// empty query ~> conflict
-		//=========================
 		if (current_rel == -1 || current_rel != q->relationId){
 			delete recs;
 			recs = Journals[q->relationId]->getJournalRecords(v->from, v->to);
@@ -538,6 +535,7 @@ bool valHashOptimize(ValClass * v)
         for (unsigned w = 0; w < q->columnCount; w++)
         {
             ColumnPtr c = q->columns[w];
+			conflict = false;
 
 			// check if bitset is calculated
 			int counter;
@@ -548,7 +546,14 @@ bool valHashOptimize(ValClass * v)
 				bitset_size = recs->size();
 
 				// calculate it
-                bitset = Journals[q->relationId]->val_htable.UpdateValData(c->key, checkColumn(c, recs), bitset_size);
+				// if(c->op == Equal && c->column == 0)
+				// {
+				// 	DArray<uint64_t>* offsets = Journals[q->relationId]->key_htable.getHashRecord(c->value, v->from, v->to);
+				// 	for(unsigned k = 0; k < offsets->getSize(); k++)
+				// 		bitset =
+				// }
+				// else
+                	bitset = Journals[q->relationId]->val_htable.UpdateValData(c->key, checkColumn(c, recs), bitset_size);
 
             }
 
@@ -557,20 +562,29 @@ bool valHashOptimize(ValClass * v)
 			else		// an eimai sta epomena predicates apla kane tin praksi
 				for (int j = 0; j < bitset->getSize(); j++)
 					(resultBitset->getBitsetArray())[j] = (resultBitset->getBitsetArray())[j] & (bitset->getBitsetArray())[j];
+				//if(resultBitset == 0)
 
 			// Delete
 			if((counter == 0) && (forget > v->from)){
 				// cout << "Deleting in val: " << v->validationId << endl;
 				Journals[q->relationId]->val_htable.deleteKey(c->key);
 			}
+			for (int j = 0; j < resultBitset->getSize(); j++)
+				if ((resultBitset->getBitsetArray())[j] != 0){
+					conflict = true;
+					break;
+				}
+			if(conflict == false)
+				break;
         }
 
-		for (int j = 0; j < resultBitset->getSize(); j++)
-			if ((resultBitset->getBitsetArray())[j] != 0){
-				conflict = true;
-				break;
-			}
+		delete resultBitset;
 
+		if(conflict == true)
+		{
+			delete recs;
+			break;
+		}
 		if(i == v->queryCount - 1)
 			delete recs;
     }
