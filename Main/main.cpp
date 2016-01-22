@@ -499,6 +499,8 @@ bool valHashOptimize(ValClass * v)
 	int current_rel = -1;
     bool conflict = false;
 
+	Bitset *resultBitset = NULL;
+
 	DArray<JournalRecord*> *recs = NULL;
 
 	// sort queries by column count
@@ -507,8 +509,6 @@ bool valHashOptimize(ValClass * v)
 	// for every query of this validation
     for(unsigned i = 0; i < v->queryCount; i++)
     {
-		DArray<Bitset*> *bitsets = new DArray<Bitset*>(20);
-
         QueryPtr q = v->queries[i];
 
 		//=============================
@@ -524,6 +524,10 @@ bool valHashOptimize(ValClass * v)
 		//=========================
 		if (q->columnCount == 0){
 			conflict = true; break;}
+
+		//=========================
+		// empty query ~> conflict
+		//=========================
 		if (current_rel == -1 || current_rel != q->relationId){
 			delete recs;
 			recs = Journals[q->relationId]->getJournalRecords(v->from, v->to);
@@ -537,6 +541,7 @@ bool valHashOptimize(ValClass * v)
 
 			// check if bitset is calculated
 			int counter;
+
             Bitset* bitset = Journals[q->relationId]->val_htable.getbdata(c->key, &counter);
             if(bitset == NULL)	// not calculated case
             {
@@ -547,44 +552,25 @@ bool valHashOptimize(ValClass * v)
 
             }
 
-			if (conflict == false)
-				bitsets->push_back(new Bitset(*bitset));	//krataw ta bitsets mesa sto query gia na kanw to logical
+			if (w == 0)	// an eimai sto 1o predicate
+				resultBitset = new Bitset(*bitset);
+			else		// an eimai sta epomena predicates apla kane tin praksi
+				for (int j = 0; j < bitset->getSize(); j++)
+					(resultBitset->getBitsetArray())[j] = (resultBitset->getBitsetArray())[j] & (bitset->getBitsetArray())[j];
 
 			// Delete
-			if((counter == 0) && (forget > v->from))
-			{
-				cout << "Deleting in val: " << v->validationId << endl;
+			if((counter == 0) && (forget > v->from)){
+				// cout << "Deleting in val: " << v->validationId << endl;
 				Journals[q->relationId]->val_htable.deleteKey(c->key);
 			}
         }
-		if (conflict == false){
 
-			int size = bitsets->size();
+		for (int j = 0; j < resultBitset->getSize(); j++)
+			if ((resultBitset->getBitsetArray())[j] != 0){
+				conflict = true;
+				break;
+			}
 
-
-			// pairnw to prwto bitset gia na kanw logical AND me ta upoloipa
-
-			Bitset* bit = bitsets->get(0);	// pernw to prwto bitset
-			int bit_size = bit->getSize();	// pernw to megethos tou
-			char *and_result = (char*)malloc(bit_size);
-			memcpy(and_result, bit->getBitsetArray(), bit->getSize());
-
-			for (int i = 1; i < size; i ++)
-				for (int j = 0; j < bit_size; j++)
-					and_result[j] = and_result[j] & (bitsets->get(i)->getBitsetArray())[j];
-
-			for (int k = 0; k < bit_size; k++)
-				if (and_result[k] != 0){	// an to apotelesma tou and exei kapoion aso mesa exw conf
-					conflict = true;
-					break;
-				}
-			free(and_result);
-		}
-		for(int i = 0; i < bitsets->size(); i++)
-		{
-			delete bitsets->get(i);
-		}
-		delete bitsets;
 		if(i == v->queryCount - 1)
 			delete recs;
     }
