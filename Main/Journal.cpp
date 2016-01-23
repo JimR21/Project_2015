@@ -124,6 +124,7 @@ DArray<JournalRecord*> * Journal::getRecordsbyKey(unsigned key, uint64_t start_t
         records->push_back(getRecordatOffset(offsets->get(i)));
     }
 
+    delete offsets;
     return records;
 }
 

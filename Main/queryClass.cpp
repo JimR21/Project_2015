@@ -93,7 +93,7 @@ bool QueryClass::validate(Journal &journal, uint64_t &from, uint64_t &to)
                 rtcsize--;
             }
         }
-        if(records_to_check->size() == 0)
+        if(rtcsize == 0)
         {
             delete priority1;
             delete priority2;
@@ -130,7 +130,7 @@ bool QueryClass::validate(Journal &journal, uint64_t &from, uint64_t &to)
                 rtcsize--;
             }
         }
-        if(records_to_check->size() == 0)
+        if(rtcsize == 0)
         {
             delete priority1;
             delete priority2;

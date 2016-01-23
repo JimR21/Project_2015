@@ -95,7 +95,7 @@ DArray<uint64_t>* Key_HashTable::getHashRecords(unsigned &key, uint64_t &start_t
 	int index = getBucketIndex(hashed_key, globalDepth); // koitaw ta globaldepth deksia bits gia na dw se poio index tha paw
     Bucket* tempBucket = bucketArray.get(index);
 
-    DArray<uint64_t>* array = new DArray<uint64_t>();
+    DArray<uint64_t>* array = new DArray<uint64_t>(100);
 
 	if((tempBucket->empty == false) && (tempBucket->key == key))
     {
