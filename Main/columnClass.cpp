@@ -2,10 +2,6 @@
 
 using namespace std;
 
-ColumnClass::ColumnClass()
-{
-
-}
 
 ColumnClass::ColumnClass(const Query::Column &col)
 {

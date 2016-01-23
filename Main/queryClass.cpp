@@ -1,8 +1,11 @@
 #include "queryClass.hpp"
 
-QueryClass::QueryClass()
+QueryClass::~QueryClass()
 {
-
+    for(unsigned i = 0; i < columnCount; i++)
+        delete columns[i];
+    if(columnCount > 1)
+        delete columns;
 }
 
 QueryClass::QueryClass(const uint32_t &relId, const uint32_t &colCount, ColumnPtr * cols)

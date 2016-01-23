@@ -224,10 +224,10 @@ static void processValidationQueries(ValidationQueries *v){
             // Part 2: Val_HashTable
             /////////////////////////
 			// create the key for the validation's hash
-			// string key = stringBuilder(v->from, v->to, q->columns[w].column, q->columns[w].op, q->columns[w].value);
-			// Journals[q->relationId]->val_htable.insert(key, 0);	// predicate to val hash
+			string key = stringBuilder(v->from, v->to, q->columns[w].column, q->columns[w].op, q->columns[w].value);
+			Journals[q->relationId]->val_htable.insert(key, 0);	// predicate to val hash
 
-            columns[w] = new ColumnClass(q->columns[w]);
+            columns[w] = new ColumnClass(q->columns[w], key);
         }
 
         queries[i] = new QueryClass(q->relationId, q->columnCount, columns);
@@ -263,12 +263,12 @@ static void processFlush(Flush *fl){
         /////////////////////////
         // Part 1: Optimizations
         /////////////////////////
-        bool conflict = valOptimize(v);
+        //bool conflict = valOptimize(v);
 
         /////////////////////////
         // Part 2: Val_HashTable
         /////////////////////////
-		//bool conflict = valHashOptimize(v);
+		bool conflict = valHashOptimize(v);
 
         cout << "Validation " << v->validationId << " : " << conflict << endl;
         valIndex.popValidation();

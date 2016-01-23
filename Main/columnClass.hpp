@@ -16,8 +16,6 @@ public:
     // Val_HashTable
     std::string key;
 
-    ColumnClass();
-
     ColumnClass(const Query::Column &col);
 
     ColumnClass(const Query::Column &col, std::string &key);

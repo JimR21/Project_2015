@@ -15,7 +15,7 @@ public:
     // The bindings
     ColumnPtr * columns;
 
-    QueryClass();
+    ~QueryClass();
 
     QueryClass(const uint32_t &relId, const uint32_t &colCount, ColumnPtr * cols);
 
