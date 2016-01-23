@@ -24,7 +24,7 @@ void Val_bdata::insert(){
 }
 
 
-Bitset* Val_bdata::validate(DArray<bool> *array, int size){
+Bitset* Val_bdata::validate(char *array, int size){
 
 	validated = true;	// to predicate se auto to range einai pleon validated
 

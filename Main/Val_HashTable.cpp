@@ -368,7 +368,7 @@ void Val_HashTable::halveTableSize()
 unsigned Val_HashTable::getsize()
 {	return size; }
 
-Bitset* Val_HashTable::UpdateValData(std::string key, DArray<bool> *array, int size){
+Bitset* Val_HashTable::UpdateValData(std::string key, char *array, int size){
 	unsigned hashed_key;
     hashed_key = hashFunction(key);
 	int index = getBucketIndex(hashed_key, globalDepth); // koitaw ta globaldepth deksia bits gia na dw se poio index tha paw

@@ -27,12 +27,11 @@ public:
 	void setBitsetValue(int index, char *array);	// set Bitset index to 1
 	int getBitsetValue(int index, char *array);		// get the value of this index
 
-	void setBitsetArray(int index);	// set Bitset index to 1
 	int getBitsetArray(int index);		// get the value of this index
 
 	void printBitset(char c); // print the array
 
-	void validateBitset(DArray<bool> *array, int size);
+	void validateBitset(char *array, int size);
 
 	char* getBitsetArray();
 	int getSize();

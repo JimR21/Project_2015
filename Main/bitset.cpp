@@ -46,14 +46,6 @@ int Bitset::getBitsetValue(int index, char *array){
 		return 0;
 }
 
-void Bitset::setBitsetArray(int index)
-{
-	int bit_index = index / CHAR_BIT;		// which char
-	int bit_number = index % CHAR_BIT;		// which bit of this char
-
-	bitset_array[bit_index] = bitset_array[bit_index] | (1 << (7 - bit_number));	// update !!
-}
-
 int Bitset::getBitsetArray(int index)
 {
 	int bit_index = index / CHAR_BIT;		// which char
@@ -74,7 +66,7 @@ void Bitset::printBitset(char c){
     putchar('\n');
 }
 
-void Bitset::validateBitset(DArray<bool> *array, int isize){
+void Bitset::validateBitset(char *array, int isize){
 	unsigned c = isize/8+1;
 	bitset_array = (char*)malloc(c);	//1char - 8 bits
 
@@ -84,10 +76,7 @@ void Bitset::validateBitset(DArray<bool> *array, int isize){
 	for (unsigned i = 0; i < c; i++)
 		bitset_array[i] = 0;
 
-	// update bitset
-	for (int i = 0; i < isize; i ++)
-		if (array->get(i) == true)				// an conflict
-			setBitsetValue(i, bitset_array);	// update auto to index
+	bitset_array = array;	// update bitset
 
 }
 

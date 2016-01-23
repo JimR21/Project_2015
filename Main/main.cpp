@@ -11,6 +11,7 @@
 #include <fstream>
 #include <iomanip>
 #include <algorithm>
+#include <limits.h>
 
 using namespace std;
 
@@ -22,7 +23,12 @@ void printBitset(char c){
 
     putchar('|');
 }
+void setBitsetValue(int index, char *array){
+	int bit_index = index / CHAR_BIT;		// which char
+	int bit_number = index % CHAR_BIT;		// which bit of this char
 
+	array[bit_index] = array[bit_index] | (1 << (7 - bit_number));	// update !!
+}
 
 // operator for query sort
 struct sorting
@@ -34,7 +40,7 @@ struct sorting
 string stringBuilder(int start, int end, int col, int op, uint64_t value);
 bool valOptimize(ValClass *v);      // Part 1 Optimizations
 bool valHashOptimize(ValClass *v);
-DArray<bool>* checkColumn(ColumnPtr c, DArray<JournalRecord*> * records);
+char* checkColumn(ColumnPtr c, DArray<JournalRecord*> * records);
 unsigned forget = 0;
 
 using ns = chrono::milliseconds;
@@ -264,7 +270,7 @@ static void processFlush(Flush *fl){
         /////////////////////////
 		bool conflict = valHashOptimize(v);
 
-        cout << "Validation " << v->validationId << " : " << conflict << endl;
+        // cout << "Validation " << v->validationId << " : " << conflict << endl;
         valIndex.popValidation();
     }
 
@@ -545,15 +551,7 @@ bool valHashOptimize(ValClass * v)
             {
 				bitset_size = recs->size();
 
-				// calculate it
-				// if(c->op == Equal && c->column == 0)
-				// {
-				// 	DArray<uint64_t>* offsets = Journals[q->relationId]->key_htable.getHashRecord(c->value, v->from, v->to);
-				// 	for(unsigned k = 0; k < offsets->getSize(); k++)
-				// 		bitset =
-				// }
-				// else
-                	bitset = Journals[q->relationId]->val_htable.UpdateValData(c->key, checkColumn(c, recs), bitset_size);
+            	bitset = Journals[q->relationId]->val_htable.UpdateValData(c->key, checkColumn(c, recs), bitset_size);
 
             }
 
@@ -562,7 +560,6 @@ bool valHashOptimize(ValClass * v)
 			else		// an eimai sta epomena predicates apla kane tin praksi
 				for (int j = 0; j < bitset->getSize(); j++)
 					(resultBitset->getBitsetArray())[j] = (resultBitset->getBitsetArray())[j] & (bitset->getBitsetArray())[j];
-				//if(resultBitset == 0)
 
 			// Delete
 			if((counter == 0) && (forget > v->from)){
@@ -591,13 +588,20 @@ bool valHashOptimize(ValClass * v)
 	return conflict;
 }
 //=======================================================================
-DArray<bool>* checkColumn(ColumnPtr c, DArray<JournalRecord*> * records)
+char* checkColumn(ColumnPtr c, DArray<JournalRecord*> * records)
 {
-    // DArray<JournalRecord*> Journals[relId]->getJournalRecords()
-    DArray<bool>* bitset = new DArray<bool>(20);
-    bool result;
+	char *bitset;
+
+	bool result;
     unsigned size = records->size();
-    uint64_t tuple_value, query_value;
+
+	// DArray<bool>* bitset = new DArray<bool>(size);
+	bitset = (char*)malloc(size/8 + 1);
+
+	for (unsigned i = 0; i < size/8 + 1; i++)
+		bitset[i] = 0;
+
+	uint64_t tuple_value, query_value;
     for(unsigned i = 0; i < size; i++)
     {
         tuple_value = records->get(i)->getValue(c->column);
@@ -612,8 +616,11 @@ DArray<bool>* checkColumn(ColumnPtr c, DArray<JournalRecord*> * records)
             case GreaterOrEqual: result=(tuple_value >= query_value); break;
             default: result = false ; break;
         }
-        bitset->push_back(result);
+		if (result == true)
+			setBitsetValue(i, bitset);
     }
+	// printBitset(*bitset);
+	// cout << endl;
     return bitset;
 }
 //=====================================================

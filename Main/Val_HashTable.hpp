@@ -53,7 +53,7 @@ public:
 
     Bitset* getbdata(std::string key, int *counter);
 
-	Bitset* UpdateValData(std::string key, DArray<bool> *array, int size);
+	Bitset* UpdateValData(std::string key, char *array, int size);
 };
 
 

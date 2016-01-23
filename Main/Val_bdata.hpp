@@ -31,7 +31,7 @@ protected:
 
 	 void printBitset(char c); // print the array
 
-	 Bitset* validate(DArray<bool> *array, int size);
+	 Bitset* validate(char *array, int size);
 };
 
 #endif
