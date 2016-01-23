@@ -28,8 +28,9 @@ public:
 	DArray<JournalRecord*> * getJournalRecords(uint64_t, uint64_t);	// returns array of arrays(JournalRecords)
     void printJournal();
 	int getRecordsSize();
-	JournalRecord *getRecord(int key);
+	JournalRecord *getRecordatOffset(int key);
     uint64_t getLastTID();
+    DArray<JournalRecord*> * getRecordsbyKey(unsigned key, uint64_t start_tid, uint64_t end_tid);	// Uses Key_HashTable
 
 #if TID_HASHTABLE == 1
     int tidSearchRecord(unsigned tid);

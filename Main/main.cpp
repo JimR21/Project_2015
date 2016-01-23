@@ -4,7 +4,7 @@
 #include <unistd.h>
 #include <string>
 #include <chrono>
-#include "Journal.hpp"
+//#include "Journal.hpp"
 #include "Bucket.hpp"
 #include "ValidationIndex.hpp"
 #include "valClass.hpp"
@@ -135,13 +135,13 @@ static void processTransaction(Transaction *t){
 			else {
 
 				// checking case of multiple deletes
-				if (Journals[o->relationId]->getRecord(index)->getType() == DELETE){
+				if (Journals[o->relationId]->getRecordatOffset(index)->getType() == DELETE){
 					// Sunexomeno delete case
 					continue;}
 
 				// Else Delete after insertion
 
-                JournalRecord * jr = Journals[o->relationId]->getRecord(index);
+                JournalRecord * jr = Journals[o->relationId]->getRecordatOffset(index);
                 record = new JournalRecord(*jr, t->transactionId, Journals[o->relationId]->columns);
 
 				Journals[o->relationId]->insertJournalRecord(record);	// insert delete record to Journal
@@ -224,10 +224,10 @@ static void processValidationQueries(ValidationQueries *v){
             // Part 2: Val_HashTable
             /////////////////////////
 			// create the key for the validation's hash
-			string key = stringBuilder(v->from, v->to, q->columns[w].column, q->columns[w].op, q->columns[w].value);
-			Journals[q->relationId]->val_htable.insert(key, 0);	// predicate to val hash
+			// string key = stringBuilder(v->from, v->to, q->columns[w].column, q->columns[w].op, q->columns[w].value);
+			// Journals[q->relationId]->val_htable.insert(key, 0);	// predicate to val hash
 
-            columns[w] = new ColumnClass(q->columns[w],key);
+            columns[w] = new ColumnClass(q->columns[w]);
         }
 
         queries[i] = new QueryClass(q->relationId, q->columnCount, columns);
@@ -263,17 +263,16 @@ static void processFlush(Flush *fl){
         /////////////////////////
         // Part 1: Optimizations
         /////////////////////////
-        // bool conflict = valOptimize(v);
+        bool conflict = valOptimize(v);
 
         /////////////////////////
         // Part 2: Val_HashTable
         /////////////////////////
-		bool conflict = valHashOptimize(v);
+		//bool conflict = valHashOptimize(v);
 
-        // cout << "Validation " << v->validationId << " : " << conflict << endl;
+        cout << "Validation " << v->validationId << " : " << conflict << endl;
         valIndex.popValidation();
     }
-
 
     flush_end = std::chrono::high_resolution_clock::now();
     if(flush_diff != default_diff)
@@ -334,8 +333,6 @@ bool valOptimize(ValClass *v)
 
         // check an einai entos range
         uint64_t max_tid = Journals[q->relationId]->getLastTID();
-
-
         if (v->from > max_tid )	// mou dwse tid start pou einai megalutero tou max || keno query
         {
             // Go to the next query
@@ -349,152 +346,10 @@ bool valOptimize(ValClass *v)
             break;
         }
 
-        DArray<ColumnPtr>* priority1 = new DArray<ColumnPtr>(10);        // subqueries me c0 =
-        DArray<ColumnPtr>* priority2 = new DArray<ColumnPtr>(10);        // subqueries me =
-        DArray<ColumnPtr>* priority3 = new DArray<ColumnPtr>(10);        // ola ta upoloipa
+        conflict = q->validate(*Journals[q->relationId], v->from, v->to);
 
-        //==========================================================
-        // 1os elegxos: An einai valid ta predicates twn subqueries
-        // Arxikopoihsh twn priority tables
-        //==========================================================
-
-        // iterate over subqueries
-        for (unsigned w = 0; w < q->columnCount; w++)
-        {
-            // ean to operation einai '=' kai anaferetai sto primary key (c0)
-            if (q->columns[w]->op == Equal && q->columns[w]->column == 0)
-            {
-                if(priority1->size() == 0)
-                    priority1->push_back(q->columns[w]);
-                else
-                {
-                    if(priority1->get(0)->value != q->columns[w]->value)  // An uparxei hdh subquery me diaforetikh timh sto c0 =
-                    {
-                        // Go to the next query
-                        conflict = false;   // Se periptwsh poy den uparxei allo query
-                        break;				// no need to check the next queries for this validation
-                    }
-                }
-            }
-            else if(q->columns[w]->op == Equal)
-                priority2->push_back(q->columns[w]);
-            else
-                priority3->push_back(q->columns[w]);
-        }
-
-        if(conflict == false)   // Sthn periptvsh poy vgei false apo ton 1o elegxo
-        {
-            delete priority1;
-            delete priority2;
-            delete priority3;
-            continue;
-        }
-
-        DArray<uint64_t>* offsets_to_check = NULL;      // DArray me ta offset pou exoyme na elegksoume
-        DArray<JournalRecord*>* records_to_check = NULL;    // DArray me ta journal records poy exoume na elegksoume
-        DArray<JournalRecord*>* records_to_check2 = new DArray<JournalRecord*>(100);   // Voithitikos DArray me records
-
-        //================================================================
-        // 2os elegxos: Filtrarisma twn records me vash ta priority tables
-        //================================================================
-        int prsize1 = priority1->size();
-        for(int w = 0; w < prsize1; w++)
-        {
-            offsets_to_check = Journals[q->relationId]->key_htable.getHashRecord(priority1->get(w)->value, v->from, v->to);
-            if(offsets_to_check != NULL)
-            {
-                records_to_check = new DArray<JournalRecord*>(100);
-                for(int i = 0; i < offsets_to_check->size(); i++)
-                    records_to_check->push_back(Journals[q->relationId]->getRecord(offsets_to_check->get(i)));
-            }
-            else
-            {
-                conflict = false;
-                break;
-            }
-        }
-
-        if(conflict == true)
-        {
-            int prsize2 = priority2->size();
-            for(int w = 0; w < prsize2; w++)
-            {
-                if(records_to_check == NULL)
-                    records_to_check = Journals[q->relationId]->getJournalRecords(v->from, v->to);
-
-                int rtcsize = records_to_check->size();
-                for(int i = 0; i < rtcsize; i++)
-                {
-                    if(priority2->get(w)->value == records_to_check->get(i)->getValue(priority2->get(w)->column))
-                        records_to_check2->push_back(records_to_check->get(i));
-                }
-                if(records_to_check2->size() == 0)
-                {
-                    conflict = false;
-                    break;
-                }
-                else
-                {
-                    delete records_to_check;
-                    records_to_check = records_to_check2;
-                    records_to_check2 = new DArray<JournalRecord*>(100);
-                }
-            }
-        }
-
-        if(conflict == true)
-        {
-            int prsize3 = priority3->size();
-            for(int w = 0; w < prsize3; w++)
-            {
-                if(records_to_check == NULL)
-                {
-                    delete records_to_check;
-                    records_to_check = Journals[q->relationId]->getJournalRecords(v->from, v->to);
-                }
-                int rtcsize = records_to_check->size();
-                for(int i = 0; i < rtcsize; i++)
-                {
-                    uint64_t query_value = priority3->get(w)->value;
-                    uint64_t tuple_value = records_to_check->get(i)->getValue(priority3->get(w)->column);
-                    bool result;
-
-                    switch (priority3->get(w)->op)
-                    {
-                        case NotEqual: 	result=(tuple_value != query_value); break;
-                        case Less: 		result=(tuple_value < query_value); break;
-                        case LessOrEqual: result=(tuple_value <= query_value); break;
-                        case Greater: 	result=(tuple_value > query_value); break;
-                        case GreaterOrEqual: result=(tuple_value >= query_value); break;
-                        default: result = false ; break;
-                    }
-
-                    if(result == true)
-                        records_to_check2->push_back(records_to_check->get(i));
-                }
-                if(records_to_check2->size() == 0)
-                {
-                    conflict = false;
-                    break;
-                }
-                else
-                {
-                    delete records_to_check;
-                    records_to_check = records_to_check2;
-                    records_to_check2 = new DArray<JournalRecord*>(100);
-                }
-            }
-        }
-
-        delete offsets_to_check;
-        delete records_to_check;
-        delete records_to_check2;
-        delete priority1;
-        delete priority2;
-        delete priority3;
-
-        if(conflict == true)
-            break;
+		if(conflict == true)
+			break;
     }
     return conflict;
 }

@@ -23,8 +23,9 @@ public:
     void push_back(T const& x);
     void set(int i, T val);
     T get(int i) const;
-    int popAt(int i);  // Removes data at position i. Returns 1 on success, -1 if i > n
-    int popLast();     // Removes last. 1 on succes, -1 if empty
+    void popAt(int i);  // Removes data at position i
+    void fastPopAt(unsigned i); // Fast remove
+    void popLast();     // Removes last
     void specialDouble();
     T& operator[](int i);
     const T& operator[](int i) const;
@@ -112,9 +113,9 @@ T DArray<T>::get(int i) const {
 //=========================================================
 
 template <class T>
-int DArray<T>::popAt(int i) {
+void DArray<T>::popAt(int i) {
     if(i >= n)
-        return -1;                  // i bigger than size
+        return;                  // i bigger than size
     if(i == n-1)
     {
         arr[n-1] = 0;
@@ -129,18 +130,37 @@ int DArray<T>::popAt(int i) {
         arr[j] = 0;
     }
     n--;
-    return 1;
+    return;
 }
 
 //=========================================================
 
 template <class T>
-int DArray<T>::popLast() {
+void DArray<T>::fastPopAt(unsigned i) {
+    if(i >= n)
+        return;                  // i bigger than size
+    if(i == n-1)
+    {
+        arr[i] = 0;
+    }
+    else
+    {
+        arr[i] = arr[n-1];
+        arr[n-1] = 0;
+    }
+    n--;
+    return;
+}
+
+//=========================================================
+
+template <class T>
+void DArray<T>::popLast() {
     if(n == 0)
-        return -1;
+        return;
     arr[n-1] = 0;
     n--;
-    return 1;
+    return;
 }
 
 //=========================================================

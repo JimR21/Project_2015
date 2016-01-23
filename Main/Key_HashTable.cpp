@@ -89,7 +89,7 @@ void Key_HashTable::insert(unsigned int key, unsigned tid, unsigned offset)
 }
 //=======================================================================================================
 
-DArray<uint64_t>* Key_HashTable::getHashRecord(unsigned key, uint64_t start_tid, uint64_t end_tid){
+DArray<uint64_t>* Key_HashTable::getHashRecords(unsigned &key, uint64_t &start_tid, uint64_t &end_tid){
 	unsigned hashed_key;
     hashed_key = hashFunction(key);
 	int index = getBucketIndex(hashed_key, globalDepth); // koitaw ta globaldepth deksia bits gia na dw se poio index tha paw
@@ -129,7 +129,7 @@ DArray<uint64_t>* Key_HashTable::getHashRecord(unsigned key, uint64_t start_tid,
 	return array;
 }
 //=======================================================================================================
-DArray<uint64_t>* Key_HashTable::getHashRecords(unsigned key)
+DArray<uint64_t>* Key_HashTable::getHashRecords(unsigned &key)
 {
     unsigned hashed_key;
     hashed_key = hashFunction(key);
@@ -182,7 +182,7 @@ bool Key_HashTable::existCheck(unsigned key, uint64_t start_tid, uint64_t end_ti
 	return false;
 }
 //=======================================================================================================
-int Key_HashTable::getLastJournalInsert(unsigned key)  // NEW
+int Key_HashTable::getLastJournalInsert(const uint64_t &key)  // NEW
 {
     unsigned hashed_key;
     hashed_key = hashFunction(key);

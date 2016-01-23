@@ -2,6 +2,7 @@
 #define QUERYCLASS_HPP
 #include <inttypes.h>
 #include "columnClass.hpp"
+#include "Journal.hpp"
 
 
 class QueryClass
@@ -18,7 +19,7 @@ public:
 
     QueryClass(const uint32_t &relId, const uint32_t &colCount, ColumnPtr * cols);
 
-    void initialize(const uint32_t &relId, const uint32_t &colCount, ColumnPtr * cols);
+    bool validate(Journal &journal, uint64_t &form, uint64_t &to);
 };
 
 typedef QueryClass* QueryPtr;

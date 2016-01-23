@@ -9,6 +9,20 @@ ValidationIndex::ValidationIndex(){
 	size = 0;
 }
 
+ValidationIndex::~ValidationIndex()
+{
+	if(size == 0)
+		return;
+	Val_listbucket* temp = start_bucket;
+	Val_listbucket* prev = start_bucket;
+	do
+	{
+		temp = temp->next;
+		delete prev;
+		prev = temp;
+	}while(temp != NULL);
+}
+
 void ValidationIndex::insertValidation(ValClass* val){
 
 	Val_listbucket* newBucket = new Val_listbucket(val);

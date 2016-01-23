@@ -95,7 +95,7 @@ int Journal::getRecordsSize(){
 	return Records->size();
 }
 //================================================================================================
-JournalRecord* Journal::getRecord(int offset){
+JournalRecord* Journal::getRecordatOffset(int offset){
 	return Records->get(offset);
 }
 //================================================================================================
@@ -109,6 +109,22 @@ int Journal::tidSearchRecord(unsigned tid)
 {
     return tid_hashtable.getOffset(tid);
 }
-#endif
-
 //================================================================================================
+DArray<JournalRecord*> * Journal::getRecordsbyKey(unsigned key, uint64_t start_tid, uint64_t end_tid)
+{
+    DArray<uint64_t>* offsets = key_htable.getHashRecords(key, start_tid, end_tid);
+    if(offsets == NULL)
+        return NULL;
+
+    DArray<JournalRecord*> * records = new DArray<JournalRecord*>(100);
+
+    unsigned size = offsets->size();
+    for (unsigned i = 0; i < size; i++)
+    {
+        records->push_back(getRecordatOffset(offsets->get(i)));
+    }
+
+    return records;
+}
+
+#endif

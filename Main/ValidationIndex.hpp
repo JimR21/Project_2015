@@ -13,6 +13,7 @@ protected:
 
 public:
 	ValidationIndex();
+	~ValidationIndex();
 	void insertValidation(ValClass* val);
 	void popValidation();	// deletes first node
 	ValClass* getHeadValidation();	// returns first node

@@ -14,13 +14,8 @@ protected:
     Val_listbucket* next;
 
 public:
-	// inline constructor gia na min ftiaxnw .cpp mono gia ton constructor
-	inline Val_listbucket(ValClass* validation);
+	Val_listbucket(ValClass* validation);
+	~Val_listbucket();
 };
 
 #endif
-
-Val_listbucket::Val_listbucket(ValClass* validation){
-	val = validation;
-	next = NULL;
-}

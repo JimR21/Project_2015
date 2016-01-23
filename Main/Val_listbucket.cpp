@@ -5,3 +5,8 @@ Val_listbucket::Val_listbucket(ValClass* validation){
 	val = validation;
 	next = NULL;
 }
+
+Val_listbucket::~Val_listbucket()
+{
+	delete val;
+}
