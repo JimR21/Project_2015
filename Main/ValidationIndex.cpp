@@ -6,6 +6,7 @@ using namespace std;
 ValidationIndex::ValidationIndex(){
 	start_bucket = NULL;
 	last_bucket = NULL;
+	iteratedBucket=NULL;
 	size = 0;
 }
 
@@ -27,8 +28,10 @@ void ValidationIndex::insertValidation(ValClass* val){
 
 	Val_listbucket* newBucket = new Val_listbucket(val);
 
-	if (!size)
+	if (!size){
 		start_bucket = newBucket;
+		iteratedBucket=newBucket;
+	}
 	else {
 		last_bucket->next = newBucket;
 	}
@@ -48,10 +51,31 @@ void ValidationIndex::popValidation(){
 	// 	throw runtime_error("Trying to pop from empty list");
 }
 
+
+void ValidationIndex::fakePopValidation(){       //like popValidation but only move the pointer to get the next pointer with getNextValidation()
+	if (size != 0){
+		Val_listbucket* temp = iteratedBucket;
+		iteratedBucket = iteratedBucket->next;
+
+	}
+
+}
+
 ValClass* ValidationIndex::getHeadValidation(){
 	// if (size == 0)
 	// 	// throw runtime_error("Trying to get head from empty list");
 	return start_bucket->val;
+}
+
+Val_listbucket* ValidationIndex::getHeadBucket(){                
+	// if (size == 0)
+	// 	// throw runtime_error("Trying to get head from empty list");
+	return start_bucket;
+}
+
+
+Val_listbucket* ValidationIndex::getNextValidation(){
+	return iteratedBucket;
 }
 
 unsigned ValidationIndex::getSize(){

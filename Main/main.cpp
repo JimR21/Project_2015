@@ -12,6 +12,8 @@
 #include <iomanip>
 #include <algorithm>
 #include <limits.h>
+#include <pthread.h>
+#define NUM_OF_THREADS 4  //me 2 threads petaei seg fault
 
 using namespace std;
 
@@ -40,6 +42,7 @@ struct sorting
 string stringBuilder(int start, int end, int col, int op, uint64_t value);
 bool valOptimize(ValClass *v);      // Part 1 Optimizations
 bool valHashOptimize(ValClass *v);
+//void threadExecuteValidations(DArray<ValClass*>* validationArray);
 char* checkColumn(ColumnPtr c, DArray<JournalRecord*> * records);
 unsigned forget = 0;
 
@@ -247,20 +250,45 @@ static void processValidationQueries(ValidationQueries *v){
         val_diff = val_end - val_start;
 }
 //================================================================================================
+
+
+void* threadExecuteValidations(void* parameterArray){                                          //this function call every thread to execute its validation list
+				DArray<Val_listbucket*>* validationArray=(DArray<Val_listbucket*>*)parameterArray;
+			 for(unsigned i=0;i<validationArray->size();i++){
+
+			 bool conflict = valOptimize(validationArray->get(i)->getVal());
+			 //cout<<"Validation ID: "<<validationArray->get(i)->getVal()->validationId;
+			 //cout<<" "<<conflict<<endl;
+			 validationArray->get(i)->setResult(conflict);
+		 }
+			 pthread_exit(NULL);
+
+}
 static void processFlush(Flush *fl){
 
 	// cout << "FLUSH" << endl;
     flush_start = std::chrono::high_resolution_clock::now();
+		void* status;
+		int rc;
+		DArray<Val_listbucket*> *threadArrays[NUM_OF_THREADS];                        //create array for every thread
+		for(unsigned i=0;i<NUM_OF_THREADS;i++){
+			threadArrays[i]=new DArray<Val_listbucket*>();
+		}
 
+		pthread_t threads[NUM_OF_THREADS];                                               //create threads
     unsigned size = valIndex.getSize();
 
     // flush ws to validationId i an den exei tosa, mexri to telos tis listas
     for (unsigned i = 0; i < size && i < fl->validationId; i++)
     {
         // Get validation to calculate
-    	ValClass *v = valIndex.getHeadValidation();
+    	//ValClass *v = valIndex.getHeadValidation();
 
-        /////////////////////////
+			//cout<<"insert to array 0 validation " << valIndex.getNextValidation()->getVal()->validationId ;//<<" go to thread "<<v->validationId %3<<endl;
+			threadArrays[(valIndex.getNextValidation()->getVal()->validationId)%3]->push_back(valIndex.getNextValidation());  //every thread take its validation with logic of mod that was descriped on part3
+			//threadArrays[0]->push_back(valIndex.getNextValidation());
+
+				/////////////////////////
         // Part 1: Optimizations
         /////////////////////////
         //bool conflict = valOptimize(v);
@@ -268,11 +296,48 @@ static void processFlush(Flush *fl){
         /////////////////////////
         // Part 2: Val_HashTable
         /////////////////////////
-		bool conflict = valHashOptimize(v);
+		//bool conflict = valHashOptimize(v);
 
-        cout << "Validation " << v->validationId << " : " << conflict << endl;
-        valIndex.popValidation();
+        //cout << "Validation " << v->validationId << " : " << conflict << endl;
+        valIndex.fakePopValidation();                          //like popvalidation but dont delete validations it only moves the pointer
     }
+
+
+
+		for(unsigned i=0;i<NUM_OF_THREADS;i++){
+	      //cout <<"i : "<<i<<endl;
+				rc = pthread_create(&threads[i], NULL,threadExecuteValidations,(void*)threadArrays[i]);        //every thread execute its array
+
+	      if (rc){
+	         cout << "Error:unable to create thread," << rc << endl;
+	         exit(-1);
+	   }
+			}
+
+
+
+			for(unsigned i=0; i < NUM_OF_THREADS; i++ ){                     //main thread wait for subthreads to complete their computation
+       rc = pthread_join(threads[i], &status);
+       if (rc){
+          cout << "Error:unable to join," << rc << endl;
+          exit(-1);
+       }
+       //cout << "Main: completed thread id :" << i ;
+       //cout << "  exiting with status :" << status << endl;
+    }
+
+
+
+				 for (unsigned i = 0; i < size && i < fl->validationId; i++){    //print result that have been saved on validation index
+	 				ValClass *v = valIndex.getHeadValidation();
+				  cout<<valIndex.getHeadBucket()->getResult();
+	 				valIndex.popValidation();
+	 			}
+
+
+
+
+
 
     flush_end = std::chrono::high_resolution_clock::now();
     if(flush_diff != default_diff)
@@ -318,6 +383,10 @@ string stringBuilder(int start, int end, int col, int op, uint64_t value){
     return key;
 }
 //================================================================================================
+
+
+
+
 bool valOptimize(ValClass *v)
 {
     bool conflict;
@@ -526,12 +595,12 @@ int main(int argc, char **argv) {
                 globalend = std::chrono::high_resolution_clock::now();
                 globaldiff = globalend - globalstart;
 
-                cout << "Define schema elapsed time is :  " << def_diff.count() << " ms " << endl;
-                cout << "Transactions elapsed time is :  " << tran_diff.count() << " ms " << endl;
-                cout << "Validations elapsed time is :  " << val_diff.count() << " ms " << endl;
-                cout << "Flush elapsed time is :  " << flush_diff.count() << " ms " << endl;
-                cout << "Destroy elapsed time is :  " << destroy_diff.count() << " ms " << endl;
-                cout << "Overal elapsed time is :  " << globaldiff.count() << " ms " << endl;
+          //      cout << "Define schema elapsed time is :  " << def_diff.count() << " ms " << endl;
+          //      cout << "Transactions elapsed time is :  " << tran_diff.count() << " ms " << endl;
+          //      cout << "Validations elapsed time is :  " << val_diff.count() << " ms " << endl;
+          //      cout << "Flush elapsed time is :  " << flush_diff.count() << " ms " << endl;
+          //      cout << "Destroy elapsed time is :  " << destroy_diff.count() << " ms " << endl;
+          //      cout << "Overal elapsed time is :  " << globaldiff.count() << " ms " << endl;
 
 
 				return 0;
