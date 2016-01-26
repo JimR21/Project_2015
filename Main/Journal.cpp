@@ -109,6 +109,7 @@ int Journal::tidSearchRecord(unsigned tid)
 {
     return tid_hashtable.getOffset(tid);
 }
+#endif
 //================================================================================================
 DArray<JournalRecord*> * Journal::getRecordsbyKey(unsigned key, uint64_t start_tid, uint64_t end_tid)
 {
@@ -127,5 +128,3 @@ DArray<JournalRecord*> * Journal::getRecordsbyKey(unsigned key, uint64_t start_t
     delete offsets;
     return records;
 }
-
-#endif

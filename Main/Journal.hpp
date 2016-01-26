@@ -18,9 +18,12 @@ private:
 
 public:
     Key_HashTable key_htable;
-	Val_HashTable val_htable;
-    uint32_t columns;
 
+#if VAL_HASHTABLE == 1
+    Val_HashTable val_htable;
+#endif
+
+    uint32_t columns;
     Journal(uint32_t);
     ~Journal();
     void insertJournalRecord(JournalRecord*);
