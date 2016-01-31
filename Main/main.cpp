@@ -391,7 +391,7 @@ string stringBuilder(int start, int end, int col, int op, uint64_t value){
 bool valOptimize(ValClass *v)
 {
     bool conflict;
-	
+
     // sort queries by column count
 	v->sortByColumnCount();
 
@@ -421,6 +421,7 @@ bool valOptimize(ValClass *v)
 		if(conflict == true)
 			break;
     }
+
     return conflict;
 }
 //=======================================================================
@@ -448,9 +449,11 @@ bool valHashOptimize(ValClass * v)
 		//=============================
 		uint64_t max_tid = Journals[q->relationId]->getLastTID();
 
-		if (v->from > max_tid )	// mou dwse tid start pou einai megalutero tou max || keno query
-            continue;			// Go to the next query
-
+		if (v->from > max_tid ){	// mou dwse tid start pou einai megalutero tou max || keno query{
+			if (i == v->queryCount - 1)
+				delete recs;
+		    continue;			// Go to the next query
+		}
 		//=========================
 		// empty query ~> conflict
 		//=========================
@@ -503,14 +506,18 @@ bool valHashOptimize(ValClass * v)
 
 		delete resultBitset;
 
-		if(conflict == true)
-		{
+		if(conflict == true){
 			delete recs;
 			break;
 		}
-		if(i == v->queryCount - 1)
+		if(i == v->queryCount - 1){
 			delete recs;
+		}
+
     }
+
+	cout << "Validation " << v->validationId << ": " << conflict << endl;
+
 	return conflict;
 }
 #endif
