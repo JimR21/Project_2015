@@ -23,6 +23,8 @@ public:
     void push_back(T const& x);
     void set(int i, T val);
     T get(int i) const;
+    T getLast() const;
+    T popGetLast();
     void popAt(int i);  // Removes data at position i
     void fastPopAt(unsigned i); // Fast remove
     void popLast();     // Removes last
@@ -85,6 +87,8 @@ void DArray<T>::changeSize(int i) {
     n = i;
 }
 
+
+
 //=========================================================
 
 template <class T>
@@ -109,6 +113,24 @@ T DArray<T>::get(int i) const {
     //if (i < 0 || i >= n) error("range error");
     return arr[i];
 }
+
+
+template <class T>
+T DArray<T>::getLast() const {
+    //if (i < 0 || i >= n) error("range error");
+    return arr[n-1];
+}
+
+template <class T>
+T DArray<T>::popGetLast() {
+    if(n == 0)
+        return NULL;
+    T res=arr[n-1];
+    arr[n-1] = 0;
+    n--;
+    return res;
+}
+
 
 //=========================================================
 
@@ -162,6 +184,10 @@ void DArray<T>::popLast() {
     n--;
     return;
 }
+
+
+
+
 
 //=========================================================
 

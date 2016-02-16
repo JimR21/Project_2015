@@ -8,12 +8,13 @@
 #include "Bucket.hpp"
 #include "ValidationIndex.hpp"
 #include "valClass.hpp"
+#include "ValidationNode.hpp"
 #include <fstream>
 #include <iomanip>
 #include <algorithm>
 #include <limits.h>
 #include <pthread.h>
-#define NUM_OF_THREADS 5  //me 2 threads petaei seg fault
+#define NUM_OF_THREADS 3  //me 2 threads petaei seg fault
 
 using namespace std;
 
@@ -66,6 +67,9 @@ DArray<bool> validationResults;	 // den xreiazetai new einai sto scope tis main
 DArray<Query::Column>* subqueries_to_check;
 
 ValidationIndex valIndex;
+DArray<ValidationNode*> validationList;
+DArray<ValidationNode*> resultValidationList;
+DArray<Val_listbucket*> *jobs;
 
 int relationCount = 0;
 int val_offset = 0;
@@ -245,8 +249,8 @@ static void processValidationQueries(ValidationQueries *v){
     ValClass* val = new ValClass(v->validationId, v->from, v->to, v->queryCount, queries);
 
 	// Add validation
-	valIndex.insertValidation(val);
-
+	//valIndex.insertValidation(val);
+  validationList.push_back(new ValidationNode(val));
     val_end = std::chrono::high_resolution_clock::now();
     if(val_diff != default_diff)
         val_diff = val_diff + val_end - val_start;
@@ -264,6 +268,38 @@ void* threadExecuteValidations(void* parameterArray){                           
 
 }
 //================================================================================================
+bool printValidationsUntilFlush(DArray<ValidationNode*>* validationList,uint64_t validationId){
+	while (validationList->size()!=0){
+		ValidationNode* validationNode=validationList->getLast();
+		ValClass* val=validationNode->getValidation();
+		if(val->validationId>validationId)
+		   return true;
+    cout<<validationNode->getResult();
+		validationList->popLast();
+	}
+return false;
+
+}
+
+void validateAndMove(DArray<ValidationNode*>* validationList,DArray<ValidationNode*>* resultValidationList){
+
+	while (validationList->size()!=0){
+		ValidationNode* validationNode=validationList->getLast();
+		ValClass* val=validationNode->getValidation();
+		bool conflict=false;
+		#if VAL_THREADS == 1
+		#elif VAL_HASHTABLE == 1
+			conflict = valHashOptimize(val);
+		#else
+			conflict = valOptimize(val);
+		#endif
+		validationNode->setResult(conflict);
+		resultValidationList->push_back(validationNode);
+		validationList->popLast();
+	}
+
+}
+
 static void processFlush(Flush *fl){
 
     flush_start = std::chrono::high_resolution_clock::now();
@@ -271,7 +307,8 @@ static void processFlush(Flush *fl){
 	#if VAL_THREADS == 1
 		void* status;
 		int rc;
-		DArray<Val_listbucket*> *threadArrays[NUM_OF_THREADS];              //create array for every thread
+		DArray<Val_listbucket*> *t?
+		hreadArrays[NUM_OF_THREADS];              //create array for every thread
 		for(unsigned i=0;i<NUM_OF_THREADS;i++){
 			threadArrays[i]=new DArray<Val_listbucket*>();
 		}
@@ -280,16 +317,42 @@ static void processFlush(Flush *fl){
 
 
     unsigned size = valIndex.getSize();
+		unsigned testSize=validationList.size();
+
+
+    /*we have two darrays for validation list
+		validationlist has validations that coming
+		resultValidationList has validations tha we have compute but we dont print them yet
+		when coming flush if resultValidationList is empty we compute all validations on validationlist
+		and move them to resultValidationList
+		we dont compute other validations until we print all validatios that we have compute and are on
+		resultValidationList
+		ex we have 10 validations
+		come flush 3
+		we compute all validations and we put them on resultValidationList
+		we print the three last validatios
+		coming other 10 validations we put them on validationlist
+		and we dont compute them until we finish with all validation of resultValidationList
+		*/
+
+		bool result=printValidationsUntilFlush(&resultValidationList,fl->validationId);
+		if (!result){
+		  validateAndMove(&validationList,&resultValidationList);
+			printValidationsUntilFlush(&resultValidationList,fl->validationId);
+		}
+
+
 
     // flush ws to validationId i an den exei tosa, mexri to telos tis listas
-    for (unsigned i = 0; i < size && i < fl->validationId; i++)
+    /*for (unsigned i = 0; i < testSize && i < fl->validationId; i++)
     {
 
 		#if VAL_THREADS == 1
 			/////////////////////////
 			// Part 3: Val Threads
 			/////////////////////////
-			threadArrays[(valIndex.getNextValidation()->getVal()->validationId)%3]->push_back(valIndex.getNextValidation());  //every thread take its validation with logic of mod that was descriped on part3
+			jobs->push_back(valIndex.getNextValidation());  //put validations to job arrays
+		//	threadArrays[(valIndex.getNextValidation()->getVal()->validationId)%3]->push_back(valIndex.getNextValidation());  //every thread take its validation with logic of mod that was descriped on part3
 			valIndex.fakePopValidation();                          //like popvalidation but dont delete validations it only moves the pointer
 		#elif VAL_HASHTABLE == 1
 	        /////////////////////////
@@ -304,11 +367,15 @@ static void processFlush(Flush *fl){
 			// Part 1: Optimizations
 			/////////////////////////
 			// Get validation to calculate
-	    	ValClass *v = valIndex.getHeadValidation();
+	    	//ValClass *v = valIndex.getHeadValidation();
+				ValClass *v=validationList.get(validationList.size())->getValidation();
+
 			bool conflict = valOptimize(v);
-			valIndex.popValidation();
+			cout<<conflict;
+			validationList.popLast();
+			//valIndex.popValidation();
 		#endif
-    }
+	}
 
 
 	#if VAL_THREADS == 1
@@ -338,12 +405,12 @@ static void processFlush(Flush *fl){
 
 		for (unsigned i = 0; i < size && i < fl->validationId; i++){    //print result that have been saved on validation index
 			ValClass *v = valIndex.getHeadValidation();
-			//cout<<valIndex.getHeadBucket()->getResult();
+			cout<<valIndex.getHeadBucket()->getResult();
 			valIndex.popValidation();
 		}
 	#endif
 
-
+*/
     flush_end = std::chrono::high_resolution_clock::now();
     if(flush_diff != default_diff)
         flush_diff = flush_diff + flush_end - flush_start;
@@ -516,7 +583,7 @@ bool valHashOptimize(ValClass * v)
 
     }
 
-	cout << "Validation " << v->validationId << ": " << conflict << endl;
+	cout << conflict;
 
 	return conflict;
 }
@@ -605,12 +672,12 @@ int main(int argc, char **argv) {
                 globalend = std::chrono::high_resolution_clock::now();
                 globaldiff = globalend - globalstart;
 
-               cout << "Define schema elapsed time is :  " << def_diff.count() << " ms " << endl;
-               cout << "Transactions elapsed time is :  " << tran_diff.count() << " ms " << endl;
-               cout << "Validations elapsed time is :  " << val_diff.count() << " ms " << endl;
-               cout << "Flush elapsed time is :  " << flush_diff.count() << " ms " << endl;
-               cout << "Destroy elapsed time is :  " << destroy_diff.count() << " ms " << endl;
-               cout << "Overal elapsed time is :  " << globaldiff.count() << " ms " << endl;
+            //   cout << "Define schema elapsed time is :  " << def_diff.count() << " ms " << endl;
+            //   cout << "Transactions elapsed time is :  " << tran_diff.count() << " ms " << endl;
+            //   cout << "Validations elapsed time is :  " << val_diff.count() << " ms " << endl;
+            //   cout << "Flush elapsed time is :  " << flush_diff.count() << " ms " << endl;
+            //   cout << "Destroy elapsed time is :  " << destroy_diff.count() << " ms " << endl;
+            //   cout << "Overal elapsed time is :  " << globaldiff.count() << " ms " << endl;
 
 
 				return 0;
