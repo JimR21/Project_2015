@@ -1,15 +1,26 @@
 #ifndef DARRAY_HPP
 #define DARRAY_HPP
 
+#include <cstring>
 #include <iostream>
 #include <stdint.h>
-#include <cstring>
+#include <pthread.h>
+#include "options.hpp"
 
 template <class T>
 class DArray {
     T* arr;  // pointer to the first element of this myvec
     int capacity; // number of elements arr can hold (i.e. size of underlying array)
     int n;        // size of this myvec
+
+	//======================================
+	// mutex kai cond_var otan exw threads
+	//======================================
+	#if VAL_THREADS == 1
+		pthread_mutex_t arr_mutex;
+		pthread_cond_t  arr_condv;
+	#endif
+
 
     void increase_capacity(int sz);
 
@@ -32,24 +43,81 @@ public:
     T& operator[](int i);
     const T& operator[](int i) const;
 
+	//======================================
+	// thread safe DArray functions
+	//======================================
+	#if VAL_THREADS == 1
+		DArray(unsigned c, char threadsafe); // 2 orismata giati ama evazes mono 1 p.x char threadsafe
+								 			 // otan tin kalouses me int elege ambiguous call asxeta pou kaleis
+											 // me int. (ligo bakaliko alla doulevei)
+		void destroy();
+		void safe_push_back(T const& x);
+		T safe_popGetLast();
+	#endif
+
+
+
+
 
 }; // class DArray
 
 //=========================================================
-
 // create an empty vector
 template <class T>
-// DArray<T>::DArray() : capacity(32768), n(0) {
 DArray<T>::DArray() : capacity(32768), n(0) {
 	arr = new T[capacity];
 }
 //=========================================================
 // create an empty vector
 template <class T>
-// DArray<T>::DArray() : capacity(32768), n(0) {
 DArray<T>::DArray(unsigned icapacity) : capacity(icapacity), n(0) {
 	arr = new T[capacity];
 }
+//=========================================================
+
+#if VAL_THREADS == 1
+	//=========================================================
+	template <class T>
+	DArray<T>::DArray(unsigned c, char threadsafe) : capacity(c), n(0) {
+		arr = new T[capacity];
+
+		pthread_mutex_init(&arr_mutex, NULL);	// initialize mutex
+		pthread_cond_init(&arr_condv, NULL);	// initialize cond var
+	}
+	//=========================================================
+	template <class T>				  // prin to delete tha ginetai kai auto
+	void DArray<T>::destroy() {       // destroy mutex and cond var
+		pthread_mutex_destroy(&arr_mutex);
+    	pthread_cond_destroy(&arr_condv);
+	}
+	//=========================================================
+	template <class T>
+	void DArray<T>::safe_push_back(T const& x) {
+		pthread_mutex_lock(&arr_mutex);	// lock arr
+		    if (n >= capacity) increase_capacity (2 * capacity);
+		    arr[n] = x;
+		    n++;
+		pthread_cond_signal(&arr_condv);	// wake 1 worker
+	    pthread_mutex_unlock(&arr_mutex);	// unlock arr
+	}
+	//=========================================================
+	template <class T>
+	T DArray<T>::safe_popGetLast() {
+		pthread_mutex_lock(&arr_mutex);	// lock arr
+			while (n == 0) {	// no items available to pop
+				pthread_cond_wait(&arr_condv, &arr_mutex);	// release mutex & wait till the condition is signaled
+			}
+		    if(n == 0)	// den xriazetai mallon
+		        return NULL;
+			T item = arr[n-1];
+			arr[n-1] = 0;
+		    n--;
+		pthread_mutex_unlock(&arr_mutex);
+	    return item;
+	}
+	//=========================================================
+
+#endif
 //=========================================================
 
 template <class T>
