@@ -1,7 +1,7 @@
 
 /*
             OPTIONS
-1. Enable Ttandactions HashTable
+1. Enable Transactions HashTable
 2. Enable Validations HashTalbe
 */
 

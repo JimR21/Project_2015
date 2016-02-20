@@ -47,10 +47,11 @@ public:
 	// thread safe DArray functions
 	//======================================
 	#if VAL_THREADS == 1
-		DArray(unsigned c, char threadsafe); // 2 orismata giati ama evazes mono 1 p.x char threadsafe
+		DArray(char c, char threadsafe); // 2 orismata giati ama evazes mono 1 p.x char threadsafe
 								 			 // otan tin kalouses me int elege ambiguous call asxeta pou kaleis
 											 // me int. (ligo bakaliko alla doulevei)
 		void destroy();
+		void wakeUpWorkers();
 		void safe_push_back(T const& x);
 		T safe_popGetLast();
 	#endif
@@ -78,7 +79,7 @@ DArray<T>::DArray(unsigned icapacity) : capacity(icapacity), n(0) {
 #if VAL_THREADS == 1
 	//=========================================================
 	template <class T>
-	DArray<T>::DArray(unsigned c, char threadsafe) : capacity(c), n(0) {
+	DArray<T>::DArray(char c, char threadsafe) : capacity(32768), n(0) {
 		arr = new T[capacity];
 
 		pthread_mutex_init(&arr_mutex, NULL);	// initialize mutex
@@ -89,6 +90,11 @@ DArray<T>::DArray(unsigned icapacity) : capacity(icapacity), n(0) {
 	void DArray<T>::destroy() {       // destroy mutex and cond var
 		pthread_mutex_destroy(&arr_mutex);
     	pthread_cond_destroy(&arr_condv);
+	}
+	//=========================================================
+	template <class T>
+	void DArray<T>::wakeUpWorkers() {
+		pthread_cond_broadcast(&arr_condv);	// wake up workers
 	}
 	//=========================================================
 	template <class T>

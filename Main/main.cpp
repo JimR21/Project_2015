@@ -1,19 +1,21 @@
+#include <chrono>
+#include <string>
+#include <fstream>
+#include <iomanip>
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdint.h>
 #include <unistd.h>
-#include <string>
-#include <chrono>
-//#include "Journal.hpp"
-#include "Bucket.hpp"
-#include "ValidationIndex.hpp"
-#include "valClass.hpp"
-#include "ValidationNode.hpp"
-#include <fstream>
-#include <iomanip>
-#include <algorithm>
 #include <limits.h>
 #include <pthread.h>
+#include <algorithm>
+//#include "Journal.hpp"
+#include "Bucket.hpp"
+#include "valClass.hpp"
+// #include "ValidationNode.hpp"
+#include "ValidationIndex.hpp"
+#include "Threads/Thread.hpp"
+
 #define NUM_OF_THREADS 3  //me 2 threads petaei seg fault
 
 using namespace std;
@@ -51,10 +53,10 @@ using ns = chrono::milliseconds;
 using get_time = chrono::steady_clock;
 
 //Testing
-unsigned found = 0, totalin = 0;
+int termFlag = 0;
 int predicates = 0;
 unsigned transactionCounter = 0;
-int termFlag = 0;
+unsigned found = 0, totalin = 0;
 
 std::chrono::time_point<std::chrono::high_resolution_clock> default_time, globalstart, globalend, def_start, def_end, tran_start, tran_end, val_start, val_end, flush_start, flush_end, destroy_start, destroy_end;
 std::chrono::duration<double> default_diff, globaldiff, def_diff, tran_diff, val_diff, flush_diff, destroy_diff;
@@ -62,14 +64,18 @@ std::chrono::duration<double> default_diff, globaldiff, def_diff, tran_diff, val
 ofstream myfile ("out.bin", ios::out);
 static uint32_t* schema = NULL;  // keeps the # of columns for every relation
 Journal** Journals = NULL;       // keeps the Journal for every relation
-//Key_HashTable** hash_tables;		 // Extendible hashing for every relation
 DArray<bool> validationResults;	 // den xreiazetai new einai sto scope tis main
 DArray<Query::Column>* subqueries_to_check;
 
 ValidationIndex valIndex;
 
-DArray<ValidationNode*> validationList;
 DArray<ValidationNode*> resultValidationList;
+
+#if VAL_THREADS == 1
+	DArray<ValidationNode*> validationList('a','a');
+#else
+	DArray<ValidationNode*> validationList;
+#endif
 
 DArray<Val_listbucket*> *jobs;
 
@@ -263,7 +269,7 @@ static void processValidationQueries(ValidationQueries *v){
 //================================================================================================
 void* threadExecuteValidations(void* parameterArray){                                          //this function call every thread to execute its validation list
 	DArray<Val_listbucket*>* validationArray=(DArray<Val_listbucket*>*)parameterArray;
-	for(unsigned i=0;i<validationArray->size();i++){
+	for(int i=0;i<validationArray->size();i++){
 		bool conflict = valOptimize(validationArray->get(i)->getVal());
 		validationArray->get(i)->setResult(conflict);
 	}
@@ -314,20 +320,15 @@ static void processFlush(Flush *fl){
 
     flush_start = std::chrono::high_resolution_clock::now();
 
+	// exoume ta validations sto queue. mas irthe to flush ara ksipname
+	// ola ta worker threads gia na arxisoun na travane apo to validationList queue
 	#if VAL_THREADS == 1
-		void* status;
-		int rc;
-		DArray<Val_listbucket*> *threadArrays[NUM_OF_THREADS];	//create array for every thread
-
-		for(unsigned i = 0; i < NUM_OF_THREADS; i++){
-			threadArrays[i] = new DArray<Val_listbucket*>();
-		}
-		pthread_t threads[NUM_OF_THREADS];	//create threads
+		validationList.wakeUpWorkers();
 	#endif
 
-
-    unsigned size = valIndex.getSize();
-	unsigned testSize=validationList.size();
+	sleep(50);
+    // unsigned size = valIndex.getSize();
+	// unsigned testSize=validationList.size();
 
 
     /*	we have two darrays for validation list
@@ -646,7 +647,17 @@ int main(int argc, char **argv) {
 	void *body = NULL;
 	uint32_t len;
 
-    while(1){
+	Thread* thread1 = new Thread(validationList);
+    Thread* thread2 = new Thread(validationList);
+    thread1->start();
+    thread2->start();
+
+	cout << "PARENT SLEEPING.." << endl;
+	sleep(10);		// test gia na dw an kolane ta paidia
+	cout << "PARENT WOKE UP.." << endl;
+
+
+	while(1){
 		// Retrieve the message head
 		if (read(0, &head, sizeof(head)) <= 0) { return -1; } // crude error handling, should never happen
 

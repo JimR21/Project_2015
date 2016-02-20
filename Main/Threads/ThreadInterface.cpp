@@ -1,13 +1,9 @@
-#include "thread.h"
+#include "ThreadInterface.hpp"
+#include <pthread.h>
 
-static void* runThread(void* arg)
-{
-    return ((Thread*)arg)->run();
-}
+ThreadInterface::ThreadInterface() : m_tid(0), m_running(0), m_detached(0) {}
 
-Thread::Thread() : m_tid(0), m_running(0), m_detached(0) {}
-
-Thread::~Thread()
+ThreadInterface::~ThreadInterface()
 {
     if (m_running == 1 && m_detached == 0) {
         pthread_detach(m_tid);
@@ -17,7 +13,9 @@ Thread::~Thread()
     }
 }
 
-int Thread::start()
+static void* runThread(void* arg);
+
+int ThreadInterface::start()
 {
     int result = pthread_create(&m_tid, NULL, runThread, this);
     if (result == 0) {
@@ -26,19 +24,24 @@ int Thread::start()
     return result;
 }
 
-int Thread::join()
+static void* runThread(void* arg)
+{
+    return ((ThreadInterface*)arg)->run();
+}
+
+int ThreadInterface::join()
 {
     int result = -1;
     if (m_running == 1) {
         result = pthread_join(m_tid, NULL);
         if (result == 0) {
-            m_detached = 0;
+            m_detached = 1;
         }
     }
     return result;
 }
 
-int Thread::detach()
+int ThreadInterface::detach()
 {
     int result = -1;
     if (m_running == 1 && m_detached == 0) {
@@ -50,6 +53,6 @@ int Thread::detach()
     return result;
 }
 
-pthread_t Thread::self() {
+pthread_t ThreadInterface::self() {
     return m_tid;
 }

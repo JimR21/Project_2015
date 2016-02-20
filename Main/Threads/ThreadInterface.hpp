@@ -1,13 +1,13 @@
-#ifndef __thread_h__
-#define __thread_h__
+#ifndef THREADINTERFACE_HPP
+#define THREADINTERFACE_HPP
 
 #include <pthread.h>
 
-class Thread
+class ThreadInterface
 {
   public:
-    Thread();
-    virtual ~Thread();
+    ThreadInterface();
+    virtual ~ThreadInterface();
 
     int start();
     int join();
