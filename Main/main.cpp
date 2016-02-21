@@ -318,6 +318,9 @@ void validateAndMove(DArray<ValidationNode*>* validationList,DArray<ValidationNo
 
 		resultValidationList->push_back(validationNode);
 		validationList->popLast();
+
+		// edw tha borousame sto thread case na kanoume copy to valList sto resultValidationList
+		// kai delete meta olon ton valList anti gia ena ena pop
 	}
 
 }
@@ -346,7 +349,7 @@ static void processFlush(Flush *fl){
 			while (jobs > 0){
 				pthread_cond_wait(&counter_cv, &counter_mutex);	// release mutex & wait till the condition is signaled
 			}
-			cout << "Workers are done" << endl;
+			// cout << "Workers are done" << endl;
 	    pthread_mutex_unlock(&counter_mutex);	// unlock counter
 	#endif
 
@@ -590,9 +593,13 @@ int main(int argc, char **argv) {
 		pthread_cond_init(&counter_cv, NULL);	// initialize cond var
 
 		Thread* thread1 = new Thread(validationList);
-	    Thread* thread2 = new Thread(validationList);
+		Thread* thread2 = new Thread(validationList);
+		Thread* thread3 = new Thread(validationList);
+	    Thread* thread4 = new Thread(validationList);
 	    thread1->start();
-	    thread2->start();
+		thread2->start();
+		thread3->start();
+	    thread4->start();
 
 		// cout << "PARENT SLEEPING.." << endl;
 		// sleep(5);		// test gia na dw an kolane ta paidia
@@ -623,15 +630,17 @@ int main(int argc, char **argv) {
                 globalend = std::chrono::high_resolution_clock::now();
                 globaldiff = globalend - globalstart;
 
-            //   cout << "Define schema elapsed time is :  " << def_diff.count() << " ms " << endl;
-            //   cout << "Transactions elapsed time is :  " << tran_diff.count() << " ms " << endl;
-            //   cout << "Validations elapsed time is :  " << val_diff.count() << " ms " << endl;
-            //   cout << "Flush elapsed time is :  " << flush_diff.count() << " ms " << endl;
-            //   cout << "Destroy elapsed time is :  " << destroy_diff.count() << " ms " << endl;
-            //   cout << "Overal elapsed time is :  " << globaldiff.count() << " ms " << endl;
-				pthread_mutex_destroy(&counter_mutex);
-				pthread_cond_destroy(&counter_cv);
+              cout << "Define schema elapsed time is :  " << def_diff.count() << " ms " << endl;
+              cout << "Transactions elapsed time is :  " << tran_diff.count() << " ms " << endl;
+              cout << "Validations elapsed time is :  " << val_diff.count() << " ms " << endl;
+              cout << "Flush elapsed time is :  " << flush_diff.count() << " ms " << endl;
+              cout << "Destroy elapsed time is :  " << destroy_diff.count() << " ms " << endl;
+              cout << "Overal elapsed time is :  " << globaldiff.count() << " ms " << endl;
 
+			  	#if VAL_THREADS == 1
+					pthread_mutex_destroy(&counter_mutex);
+					pthread_cond_destroy(&counter_cv);
+			    #endif
 				return 0;
 			case MessageHead::DefineSchema: processDefineSchema((DefineSchema *)body); break;
 			case MessageHead::Transaction: processTransaction((Transaction *)body); break;
