@@ -73,10 +73,14 @@ DArray<ValidationNode*> resultValidationList;
 
 #if VAL_THREADS == 1
 	DArray<ValidationNode*> validationList('a','a');
+
+	pthread_mutex_t counter_mutex;
+	pthread_cond_t  counter_cv;
 #else
 	DArray<ValidationNode*> validationList;
 #endif
 
+unsigned jobs = 0;
 // DArray<Val_listbucket*> *jobs;
 
 int relationCount = 0;
@@ -321,22 +325,29 @@ void validateAndMove(DArray<ValidationNode*>* validationList,DArray<ValidationNo
 static void processFlush(Flush *fl){
 
 	// cout << "FLUSH " << fl->validationId << endl;
+	flush_start = std::chrono::high_resolution_clock::now();
 
-	///////////////////////////////////
 	#if VAL_THREADS == 1
+
+		jobs = validationList.size();	// jobs = osa validations exw gia ypologismo
+
+		///////////////////////////////////
 		validationList.resetIndex();	// reset to index tou array gia to epomeno paketo validations
-	#endif
-	///////////////////////////////////
+		///////////////////////////////////
 
-    flush_start = std::chrono::high_resolution_clock::now();
-
-	// exoume ta validations sto queue. mas irthe to flush ara ksipname
-	// ola ta worker threads gia na arxisoun na travane apo to validationList queue
-	#if VAL_THREADS == 1
+		// exoume ta validations sto queue. mas irthe to flush ara ksipname
+		// ola ta worker threads gia na arxisoun na travane apo to validationList queue
 		validationList.wakeUpWorkers();
 
-		sleep(1);	// sleep pros to paron alla edw tha koitaei ton counter gia na exoun teleiwsei ta workers
+		// sleep(1);	// sleep pros to paron alla edw tha koitaei ton counter gia na exoun teleiwsei ta workers
 
+
+		pthread_mutex_lock(&counter_mutex);	// lock counter
+			while (jobs > 0){
+				pthread_cond_wait(&counter_cv, &counter_mutex);	// release mutex & wait till the condition is signaled
+			}
+			cout << "Workers are done" << endl;
+	    pthread_mutex_unlock(&counter_mutex);	// unlock counter
 	#endif
 
 
@@ -574,14 +585,18 @@ int main(int argc, char **argv) {
 	uint32_t len;
 
 	#if VAL_THREADS == 1
+
+		pthread_mutex_init(&counter_mutex, NULL);	// initialize mutex
+		pthread_cond_init(&counter_cv, NULL);	// initialize cond var
+
 		Thread* thread1 = new Thread(validationList);
 	    Thread* thread2 = new Thread(validationList);
 	    thread1->start();
 	    thread2->start();
 
-		cout << "PARENT SLEEPING.." << endl;
-		sleep(5);		// test gia na dw an kolane ta paidia
-		cout << "PARENT WOKE UP.." << endl;
+		// cout << "PARENT SLEEPING.." << endl;
+		// sleep(5);		// test gia na dw an kolane ta paidia
+		// cout << "PARENT WOKE UP.." << endl;
 	#endif
 
 	while(1){
@@ -603,19 +618,6 @@ int main(int argc, char **argv) {
 		switch (head.type) {
 			case MessageHead::Done:
 
-                // Debuging
-                // cout << "============= HashTable Sizes ==============" << endl;
-                // cout << "No  | Key HashTable    |   Val HashTable" << endl;
-                // for(int i = 0; i < relationCount; i++)
-                // {
-                //     cout << setw(3) << left << i << " | Size: " << setw(8) << left << Journals[i]->key_htable.getsize() <<  " Inserts: " << setw(8) << left << Journals[i]->key_htable.inserts <<  " | Size: "  << setw(8) << left << Journals[i]->val_htable.getsize() << setw(8) << left << " Inserts: " << Journals[i]->val_htable.inserts << endl;
-                // }
-                //
-                // cout << "Total Val_HashTable inserts: " << totalin << endl;
-                // cout << "Times same predicate found: " << found << " (" << (double)found/totalin*100 << "\%)" << endl;
-
-
-
                 //processDestroySchema();
 
                 globalend = std::chrono::high_resolution_clock::now();
@@ -627,7 +629,8 @@ int main(int argc, char **argv) {
             //   cout << "Flush elapsed time is :  " << flush_diff.count() << " ms " << endl;
             //   cout << "Destroy elapsed time is :  " << destroy_diff.count() << " ms " << endl;
             //   cout << "Overal elapsed time is :  " << globaldiff.count() << " ms " << endl;
-
+				pthread_mutex_destroy(&counter_mutex);
+				pthread_cond_destroy(&counter_cv);
 
 				return 0;
 			case MessageHead::DefineSchema: processDefineSchema((DefineSchema *)body); break;

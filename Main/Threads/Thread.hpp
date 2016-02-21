@@ -11,7 +11,10 @@
 
 using namespace std;
 
+extern unsigned jobs;			// declared at main.cpp
 extern Journal** Journals;	// declared at main.cpp
+extern pthread_mutex_t counter_mutex;
+extern pthread_cond_t  counter_cv;
 
 class Thread : public ThreadInterface
 {
@@ -42,6 +45,15 @@ public:
             printf("thread %lu, loop %d - got one item\n", (long unsigned int)self(), i);
 			printf("thread %lu, loop %d, calculating validation: %lu\n", (long unsigned int)self(), i, val->validationId);
 			// delete item;
+
+			pthread_mutex_lock(&counter_mutex);	// lock counter
+				jobs--;
+				if (jobs == 0){
+					pthread_cond_signal(&counter_cv);
+					cout << "All jobs are done" << endl;
+				}
+		    pthread_mutex_unlock(&counter_mutex);	// unlock counter
+
         }
         return NULL;
     }
