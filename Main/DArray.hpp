@@ -19,6 +19,7 @@ class DArray {
 	#if VAL_THREADS == 1
 		pthread_mutex_t arr_mutex;
 		pthread_cond_t  arr_condv;
+		unsigned index; 	// index gia to fake pop
 	#endif
 
 
@@ -54,6 +55,8 @@ public:
 		void wakeUpWorkers();
 		void safe_push_back(T const& x);
 		T safe_popGetLast();
+		T safe_fake_popGetLast();
+		void resetIndex();
 	#endif
 
 
@@ -79,7 +82,7 @@ DArray<T>::DArray(unsigned icapacity) : capacity(icapacity), n(0) {
 #if VAL_THREADS == 1
 	//=========================================================
 	template <class T>
-	DArray<T>::DArray(char c, char threadsafe) : capacity(32768), n(0) {
+	DArray<T>::DArray(char c, char threadsafe) : capacity(32768), n(0), index(0) {
 		arr = new T[capacity];
 
 		pthread_mutex_init(&arr_mutex, NULL);	// initialize mutex
@@ -103,6 +106,7 @@ DArray<T>::DArray(unsigned icapacity) : capacity(icapacity), n(0) {
 		    if (n >= capacity) increase_capacity (2 * capacity);
 		    arr[n] = x;
 		    n++;
+			index = n;
 		pthread_cond_signal(&arr_condv);	// wake 1 worker
 	    pthread_mutex_unlock(&arr_mutex);	// unlock arr
 	}
@@ -113,13 +117,39 @@ DArray<T>::DArray(unsigned icapacity) : capacity(icapacity), n(0) {
 			while (n == 0) {	// no items available to pop
 				pthread_cond_wait(&arr_condv, &arr_mutex);	// release mutex & wait till the condition is signaled
 			}
-		    if(n == 0)	// den xriazetai mallon
-		        return NULL;
+		    if(n == 0){	// den xriazetai mallon
+				std::cout << "Mpainei edw?" << std::endl;
+				return NULL;
+			}
 			T item = arr[n-1];
 			arr[n-1] = 0;
 		    n--;
+			index = n;
 		pthread_mutex_unlock(&arr_mutex);
 	    return item;
+	}
+	//=========================================================
+	//=========================================================
+	template <class T>
+	T DArray<T>::safe_fake_popGetLast() {
+		pthread_mutex_lock(&arr_mutex);	// lock arr
+			while (index == 0) {	// no items available to pop
+				pthread_cond_wait(&arr_condv, &arr_mutex);	// release mutex & wait till the condition is signaled
+				// std::cout << "ksipnisa! INDEX = " << index << std::endl;
+			}
+		    if(index == 0){	// den xriazetai mallon
+				std::cout << "Mpainei edw?" << std::endl;
+				return NULL;
+			}
+			T item = arr[index-1];
+		    index--;
+		pthread_mutex_unlock(&arr_mutex);
+	    return item;
+	}
+	//=========================================================
+	template <class T>
+	void DArray<T>::resetIndex(){
+		index = n;
 	}
 	//=========================================================
 
@@ -170,6 +200,9 @@ void DArray<T>::push_back(T const& x) {
     if (n >= capacity) increase_capacity (2 * capacity);
     arr[n] = x;
     n++;
+	#if VAL_THREADS == 1
+		index = n;
+	#endif
 }
 
 //=========================================================

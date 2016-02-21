@@ -77,7 +77,7 @@ DArray<ValidationNode*> resultValidationList;
 	DArray<ValidationNode*> validationList;
 #endif
 
-DArray<Val_listbucket*> *jobs;
+// DArray<Val_listbucket*> *jobs;
 
 int relationCount = 0;
 int val_offset = 0;
@@ -279,7 +279,7 @@ void* threadExecuteValidations(void* parameterArray){                           
 //================================================================================================
 bool printValidationsUntilFlush(DArray<ValidationNode*>* resultValidationList,uint64_t validationId){
 
-	// oso exw pragmata sto validationList mou
+	// oso exw pragmata sto resultValidationList mou
 	while (resultValidationList->size() != 0){
 
 		ValidationNode* validationNode = resultValidationList->getLast();	// pare to teleutaio validation
@@ -289,7 +289,7 @@ bool printValidationsUntilFlush(DArray<ValidationNode*>* resultValidationList,ui
 		   return true;
 
 		cout << validationNode->getResult();	// alliws tupwse to apotelesma
-		resultValidationList->popLast();				// remove to teleutaio validation, pame sto epomeno
+		resultValidationList->popLast();		// remove to teleutaio validation, pame sto epomeno
 	}
 	return false;
 }
@@ -298,18 +298,20 @@ void validateAndMove(DArray<ValidationNode*>* validationList,DArray<ValidationNo
 
 	while (validationList->size()!=0){
 
-		ValidationNode* validationNode=validationList->getLast();
-		ValClass* val=validationNode->getValidation();
-		bool conflict=false;
+		ValidationNode* validationNode = validationList->getLast();
+		ValClass* val = validationNode->getValidation();
+		bool conflict = false;
 
-		#if VAL_THREADS == 1
+		#if VAL_THREADS == 1	// sto thread case apla tha kaneis tin metafora apo val se res
+								// ta vals einai idi ipologismena apo ta threads
 		#elif VAL_HASHTABLE == 1
 			conflict = valHashOptimize(val);
+			validationNode->setResult(conflict);
 		#else
 			conflict = valOptimize(val);
+			validationNode->setResult(conflict);
 		#endif
 
-		validationNode->setResult(conflict);
 		resultValidationList->push_back(validationNode);
 		validationList->popLast();
 	}
@@ -318,111 +320,35 @@ void validateAndMove(DArray<ValidationNode*>* validationList,DArray<ValidationNo
 //================================================================================================
 static void processFlush(Flush *fl){
 
+	// cout << "FLUSH " << fl->validationId << endl;
+
+	///////////////////////////////////
+	#if VAL_THREADS == 1
+		validationList.resetIndex();	// reset to index tou array gia to epomeno paketo validations
+	#endif
+	///////////////////////////////////
+
     flush_start = std::chrono::high_resolution_clock::now();
 
 	// exoume ta validations sto queue. mas irthe to flush ara ksipname
 	// ola ta worker threads gia na arxisoun na travane apo to validationList queue
 	#if VAL_THREADS == 1
 		validationList.wakeUpWorkers();
+
+		sleep(1);	// sleep pros to paron alla edw tha koitaei ton counter gia na exoun teleiwsei ta workers
+
 	#endif
 
-	sleep(50);
-    // unsigned size = valIndex.getSize();
-	// unsigned testSize=validationList.size();
 
 
-    /*	we have two darrays for validation list
-		validationlist has validations that coming
-		resultValidationList has validations tha we have compute but we dont print them yet
-		when coming flush if resultValidationList is empty we compute all validations on validationlist
-		and move them to resultValidationList
-		we dont compute other validations until we print all validations that we have compute and are on
-		resultValidationList
-		ex we have 10 validations
-		come flush 3
-		we compute all validations and we put them on resultValidationList
-		we print the three last validations
-		coming other 10 validations we put them on validationlist
-		and we dont compute them until we finish with all validation of resultValidationList
-		*/
+	bool result = printValidationsUntilFlush(&resultValidationList,fl->validationId);
 
-		bool result = printValidationsUntilFlush(&resultValidationList,fl->validationId);
-
-		if (!result){
-		  	validateAndMove(&validationList,&resultValidationList);
-			printValidationsUntilFlush(&resultValidationList,fl->validationId);
-		}
-
-
-
-    // flush ws to validationId i an den exei tosa, mexri to telos tis listas
-    /*for (unsigned i = 0; i < testSize && i < fl->validationId; i++)
-    {
-
-		#if VAL_THREADS == 1
-			/////////////////////////
-			// Part 3: Val Threads
-			/////////////////////////
-			jobs->push_back(valIndex.getNextValidation());  //put validations to job arrays
-		//	threadArrays[(valIndex.getNextValidation()->getVal()->validationId)%3]->push_back(valIndex.getNextValidation());  //every thread take its validation with logic of mod that was descriped on part3
-			valIndex.fakePopValidation();                          //like popvalidation but dont delete validations it only moves the pointer
-		#elif VAL_HASHTABLE == 1
-	        /////////////////////////
-	        // Part 2: Val_HashTable
-	        /////////////////////////
-			// Get validation to calculate
-	    	ValClass *v = valIndex.getHeadValidation();
-			bool conflict = valHashOptimize(v);
-			valIndex.popValidation();
-		#else
-			/////////////////////////
-			// Part 1: Optimizations
-			/////////////////////////
-			// Get validation to calculate
-	    	//ValClass *v = valIndex.getHeadValidation();
-				ValClass *v=validationList.get(validationList.size())->getValidation();
-
-			bool conflict = valOptimize(v);
-			cout<<conflict;
-			validationList.popLast();
-			//valIndex.popValidation();
-		#endif
+	if (!result){
+	  	validateAndMove(&validationList,&resultValidationList);
+		printValidationsUntilFlush(&resultValidationList,fl->validationId);
 	}
 
 
-	#if VAL_THREADS == 1
-		/////////////////////////
-		// Part 3: Val Threads
-		/////////////////////////
-		for(unsigned i=0;i<NUM_OF_THREADS;i++)
-		{
-		    //cout <<"i : "<<i<<endl;
-			rc = pthread_create(&threads[i], NULL,threadExecuteValidations,(void*)threadArrays[i]);        //every thread execute its array
-
-			if (rc){
-				cout << "Error:unable to create thread," << rc << endl;
-				exit(-1);
-			}
-		}
-
-		for(unsigned i=0; i < NUM_OF_THREADS; i++ ){                     //main thread wait for subthreads to complete their computation
-			rc = pthread_join(threads[i], &status);
-			if (rc){
-				cout << "Error:unable to join," << rc << endl;
-				exit(-1);
-			}
-			//cout << "Main: completed thread id :" << i ;
-			//cout << "  exiting with status :" << status << endl;
-		}
-
-		for (unsigned i = 0; i < size && i < fl->validationId; i++){    //print result that have been saved on validation index
-			ValClass *v = valIndex.getHeadValidation();
-			cout<<valIndex.getHeadBucket()->getResult();
-			valIndex.popValidation();
-		}
-	#endif
-
-*/
     flush_end = std::chrono::high_resolution_clock::now();
     if(flush_diff != default_diff)
         flush_diff = flush_diff + flush_end - flush_start;
@@ -647,15 +573,16 @@ int main(int argc, char **argv) {
 	void *body = NULL;
 	uint32_t len;
 
-	Thread* thread1 = new Thread(validationList);
-    Thread* thread2 = new Thread(validationList);
-    thread1->start();
-    thread2->start();
+	#if VAL_THREADS == 1
+		Thread* thread1 = new Thread(validationList);
+	    Thread* thread2 = new Thread(validationList);
+	    thread1->start();
+	    thread2->start();
 
-	cout << "PARENT SLEEPING.." << endl;
-	sleep(10);		// test gia na dw an kolane ta paidia
-	cout << "PARENT WOKE UP.." << endl;
-
+		cout << "PARENT SLEEPING.." << endl;
+		sleep(5);		// test gia na dw an kolane ta paidia
+		cout << "PARENT WOKE UP.." << endl;
+	#endif
 
 	while(1){
 		// Retrieve the message head
