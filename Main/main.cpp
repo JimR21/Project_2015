@@ -292,7 +292,7 @@ bool printValidationsUntilFlush(DArray<ValidationNode*>* resultValidationList,ui
 		if(val->validationId > validationId)	// an vrika valID > tou flush val ID vges
 		   return true;
 
-		cout << validationNode->getResult();	// alliws tupwse to apotelesma
+		// cout << validationNode->getResult();	// alliws tupwse to apotelesma
 		resultValidationList->popLast();		// remove to teleutaio validation, pame sto epomeno
 	}
 	return false;
@@ -589,21 +589,16 @@ int main(int argc, char **argv) {
 
 	#if VAL_THREADS == 1
 
+		int total_threads = 4;
+
 		pthread_mutex_init(&counter_mutex, NULL);	// initialize mutex
-		pthread_cond_init(&counter_cv, NULL);	// initialize cond var
+		pthread_cond_init(&counter_cv, NULL);		// initialize cond var
 
-		Thread* thread1 = new Thread(validationList);
-		Thread* thread2 = new Thread(validationList);
-		Thread* thread3 = new Thread(validationList);
-	    Thread* thread4 = new Thread(validationList);
-	    thread1->start();
-		thread2->start();
-		thread3->start();
-	    thread4->start();
+		for (int i = 0; i < total_threads; i++){
+			Thread *thread = new Thread(validationList);
+			thread->start();
+		}
 
-		// cout << "PARENT SLEEPING.." << endl;
-		// sleep(5);		// test gia na dw an kolane ta paidia
-		// cout << "PARENT WOKE UP.." << endl;
 	#endif
 
 	while(1){
