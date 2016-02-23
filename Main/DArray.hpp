@@ -7,6 +7,7 @@
 #include <pthread.h>
 #include "options.hpp"
 
+
 template <class T>
 class DArray {
     T* arr;  // pointer to the first element of this myvec
@@ -21,7 +22,6 @@ class DArray {
 		pthread_cond_t  arr_condv;
 		unsigned index; 	// index gia to fake pop
 	#endif
-
 
     void increase_capacity(int sz);
 
@@ -57,11 +57,9 @@ public:
 		T safe_popGetLast();
 		T safe_fake_popGetLast();
 		void resetIndex();
+
+        bool mainFlag;
 	#endif
-
-
-
-
 
 }; // class DArray
 
@@ -117,10 +115,6 @@ DArray<T>::DArray(unsigned icapacity) : capacity(icapacity), n(0) {
 			while (n == 0) {	// no items available to pop
 				pthread_cond_wait(&arr_condv, &arr_mutex);	// release mutex & wait till the condition is signaled
 			}
-		    if(n == 0){	// den xriazetai mallon
-				std::cout << "Mpainei edw?" << std::endl;
-				return NULL;
-			}
 			T item = arr[n-1];
 			arr[n-1] = 0;
 		    n--;
@@ -133,13 +127,8 @@ DArray<T>::DArray(unsigned icapacity) : capacity(icapacity), n(0) {
 	template <class T>
 	T DArray<T>::safe_fake_popGetLast() {
 		pthread_mutex_lock(&arr_mutex);	// lock arr
-			while (index == 0) {	// no items available to pop
+			while (index == 0 || mainFlag == false) {	// no items available to pop
 				pthread_cond_wait(&arr_condv, &arr_mutex);	// release mutex & wait till the condition is signaled
-				// std::cout << "ksipnisa! INDEX = " << index << std::endl;
-			}
-		    if(index == 0){	// den xriazetai mallon
-				std::cout << "Mpainei edw?" << std::endl;
-				return NULL;
 			}
 			T item = arr[index-1];
 		    index--;
@@ -183,15 +172,12 @@ void DArray<T>::increase_capacity(int sz) {     // x2
      arr = new_arr;
 }
 
-
 //=========================================================
 
 template <class T>
 void DArray<T>::changeSize(int i) {
     n = i;
 }
-
-
 
 //=========================================================
 
@@ -237,7 +223,6 @@ T DArray<T>::popGetLast() {
     n--;
     return res;
 }
-
 
 //=========================================================
 
@@ -291,10 +276,6 @@ void DArray<T>::popLast() {
     n--;
     return;
 }
-
-
-
-
 
 //=========================================================
 

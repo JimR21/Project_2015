@@ -16,9 +16,8 @@
 #include "ValidationIndex.hpp"
 #include "Threads/Thread.hpp"
 
-#define NUM_OF_THREADS 3  //me 2 threads petaei seg fault
-
 using namespace std;
+
 
 void printBitset(char c){
 	int i;
@@ -292,7 +291,7 @@ bool printValidationsUntilFlush(DArray<ValidationNode*>* resultValidationList,ui
 		if(val->validationId > validationId)	// an vrika valID > tou flush val ID vges
 		   return true;
 
-		// cout << validationNode->getResult();	// alliws tupwse to apotelesma
+		// cout << "Validation " << validationNode->getValidation()->validationId << " : " << validationNode->getResult() << endl;	// alliws tupwse to apotelesma
 		resultValidationList->popLast();		// remove to teleutaio validation, pame sto epomeno
 	}
 	return false;
@@ -340,6 +339,7 @@ static void processFlush(Flush *fl){
 
 		// exoume ta validations sto queue. mas irthe to flush ara ksipname
 		// ola ta worker threads gia na arxisoun na travane apo to validationList queue
+		validationList.mainFlag = true;
 		validationList.wakeUpWorkers();
 
 		// sleep(1);	// sleep pros to paron alla edw tha koitaei ton counter gia na exoun teleiwsei ta workers
@@ -349,6 +349,7 @@ static void processFlush(Flush *fl){
 			while (jobs > 0){
 				pthread_cond_wait(&counter_cv, &counter_mutex);	// release mutex & wait till the condition is signaled
 			}
+			validationList.mainFlag = false;
 			// cout << "Workers are done" << endl;
 	    pthread_mutex_unlock(&counter_mutex);	// unlock counter
 	#endif

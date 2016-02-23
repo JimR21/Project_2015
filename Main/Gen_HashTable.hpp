@@ -15,7 +15,7 @@ protected:
 
     unsigned size;
 
-    unsigned int globalDepth;
+    volatile unsigned int globalDepth;
 
     DArray<Bucket*> bucketArray;                 // Pointers to Buckets
 

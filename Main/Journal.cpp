@@ -8,6 +8,10 @@ Journal::Journal(uint32_t icolumns){
     columns = icolumns;
 	Records = new DArray<JournalRecord*>();
     // cout << "Created New Journal for Relation: " << relation_id << endl;
+
+    #if VAL_THREADS == 1
+        pthread_mutex_init(&arr_mutex, NULL);	// initialize mutex
+    #endif
 }
 //================================================================================================
 Journal::~Journal(){
@@ -113,7 +117,12 @@ int Journal::tidSearchRecord(unsigned tid)
 //================================================================================================
 DArray<JournalRecord*> * Journal::getRecordsbyKey(unsigned key, uint64_t start_tid, uint64_t end_tid)
 {
-    DArray<uint64_t>* offsets = key_htable.getHashRecords(key, start_tid, end_tid);
+
+    #if VAL_THREADS == 1
+        pthread_mutex_lock(&arr_mutex);	// lock arr
+        DArray<uint64_t>* offsets = key_htable.getHashRecords(key, start_tid, end_tid);
+        pthread_mutex_unlock(&arr_mutex);	// unlock arr
+    #endif
     if(offsets == NULL)
         return NULL;
 

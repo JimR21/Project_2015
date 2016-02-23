@@ -23,6 +23,10 @@ public:
     Val_HashTable val_htable;
 #endif
 
+#if VAL_THREADS == 1
+    pthread_mutex_t arr_mutex;
+#endif
+
     uint32_t columns;
     Journal(uint32_t);
     ~Journal();
