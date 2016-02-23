@@ -68,7 +68,7 @@ DArray<Query::Column>* subqueries_to_check;
 
 ValidationIndex valIndex;
 
-DArray<ValidationNode*> resultValidationList;
+DArray<bool> resultValidationList;
 
 #if VAL_THREADS == 1
 	DArray<ValidationNode*> validationList('a','a');
@@ -85,6 +85,8 @@ unsigned jobs = 0;
 int relationCount = 0;
 int val_offset = 0;
 uint32_t maxColumnCounts = 0;
+
+unsigned lastFlushId = 0;
 
 //=====================================================
 //=================== FUNCTIONS =======================
@@ -280,24 +282,22 @@ void* threadExecuteValidations(void* parameterArray){                           
 
 }
 //================================================================================================
-bool printValidationsUntilFlush(DArray<ValidationNode*>* resultValidationList,uint64_t validationId){
-
+bool printValidationsUntilFlush(DArray<bool>* resultValidationList,uint64_t validationId){
+	unsigned i = 0;
 	// oso exw pragmata sto resultValidationList mou
 	while (resultValidationList->size() != 0){
 
-		ValidationNode* validationNode = resultValidationList->getLast();	// pare to teleutaio validation
-		ValClass* val = validationNode->getValidation();			// pare ta dedomena tou validation autou
-
-		if(val->validationId > validationId)	// an vrika valID > tou flush val ID vges
+		if(validationId - lastFlushId < i)	// an vrika valID > tou flush val ID vges
 		   return true;
 
-		// cout << "Validation " << validationNode->getValidation()->validationId << " : " << validationNode->getResult() << endl;	// alliws tupwse to apotelesma
-		resultValidationList->popLast();		// remove to teleutaio validation, pame sto epomeno
+		// myfile << "Validation " << lastFlushId + i << " : " << resultValidationList->GetLast() << endl;	// alliws tupwse to apotelesma
+		resultValidationList->popLast();
+		i++;
 	}
 	return false;
 }
 //================================================================================================
-void validateAndMove(DArray<ValidationNode*>* validationList,DArray<ValidationNode*>* resultValidationList){
+void validateAndMove(DArray<ValidationNode*>* validationList,DArray<bool>* resultValidationList){
 
 	while (validationList->size()!=0){
 
@@ -315,7 +315,7 @@ void validateAndMove(DArray<ValidationNode*>* validationList,DArray<ValidationNo
 			validationNode->setResult(conflict);
 		#endif
 
-		resultValidationList->push_back(validationNode);
+		resultValidationList->push_back(validationNode->getResult());
 		validationList->popLast();
 
 		// edw tha borousame sto thread case na kanoume copy to valList sto resultValidationList
@@ -363,6 +363,7 @@ static void processFlush(Flush *fl){
 		printValidationsUntilFlush(&resultValidationList,fl->validationId);
 	}
 
+	lastFlushId = fl->validationId;
 
     flush_end = std::chrono::high_resolution_clock::now();
     if(flush_diff != default_diff)
