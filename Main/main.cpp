@@ -8,11 +8,8 @@
 #include <unistd.h>
 #include <limits.h>
 #include <pthread.h>
-#include <algorithm>
-//#include "Journal.hpp"
 #include "Bucket.hpp"
 #include "valClass.hpp"
-// #include "ValidationNode.hpp"
 #include "ValidationIndex.hpp"
 #include "Threads/Thread.hpp"
 
@@ -39,6 +36,10 @@ struct sorting
 {
     bool operator() (const QueryPtr & lhs, const QueryPtr & rhs) { return lhs->relationId < rhs->relationId; }
 } sorting_by_relationId;
+
+// Quicksort operations
+void quickSort(QueryPtr* A, int p,int q);
+int partition(QueryPtr* A, int p,int q);
 
 
 string stringBuilder(int start, int end, int col, int op, uint64_t value);
@@ -458,7 +459,8 @@ bool valHashOptimize(ValClass * v)
 	DArray<JournalRecord*> *recs = NULL;
 
 	// sort queries by column count
-	std::sort(v->queries, v->queries + v->queryCount, sorting());
+	// std::sort(v->queries, v->queries + v->queryCount, sorting());
+	quickSort(v->queries, 0, v->queryCount);
 
 	// for every query of this validation
     for(unsigned i = 0; i < v->queryCount; i++)
@@ -578,6 +580,33 @@ char* checkColumn(ColumnPtr c, DArray<JournalRecord*> * records)
 	// cout << endl;
     return bitset;
 }
+//=======================================================================
+void quickSort(QueryPtr* A, int p,int q)
+{
+    int r;
+    if(p < q)
+    {
+        r = partition(A, p,q);
+        quickSort(A,p,r);
+        quickSort(A,r+1,q);
+    }
+}
+
+
+int partition(QueryPtr* A, int p,int q)
+{
+    unsigned x = A[p]->columnCount;
+    int i = p;
+
+    for(int j = p + 1; j < q; j++)
+        if(A[j]->columnCount <= x){
+            i = i + 1;
+            swap(A[i], A[j]);
+        }
+
+    swap(A[i],A[p]);
+    return i;
+}
 //=====================================================
 //================== MAIN PROGRAM =====================
 //=====================================================
@@ -591,12 +620,10 @@ int main(int argc, char **argv) {
 
 	#if VAL_THREADS == 1
 
-		int total_threads = 4;
-
 		pthread_mutex_init(&counter_mutex, NULL);	// initialize mutex
 		pthread_cond_init(&counter_cv, NULL);		// initialize cond var
 
-		for (int i = 0; i < total_threads; i++){
+		for (int i = 0; i < NUM_OF_THREADS; i++){
 			Thread *thread = new Thread(validationList);
 			thread->start();
 		}
