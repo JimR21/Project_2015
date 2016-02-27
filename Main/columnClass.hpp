@@ -1,7 +1,7 @@
 #ifndef COLUMNCLASS_HPP
 #define COLUMNCLASS_HPP
-#include <string>
 
+#include <string>
 #include "mainStructs.hpp"
 #include "bitset.hpp"
 #include "DArray.hpp"
@@ -19,8 +19,7 @@ public:
     uint64_t value;
 
 #if VAL_HASHTABLE == 1
-    // Val_HashTable
-    std::string key;
+    std::string key;	// Val_HashTable
 #endif
 
     ColumnClass(const Query::Column &col);

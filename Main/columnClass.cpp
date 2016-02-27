@@ -64,8 +64,6 @@ Bitset* ColumnClass::checkColumn(DArray<JournalRecord*> &records)
 		if (result == true)
 			bitset->setBitsetValue(i);
     }
-	// printBitset(*bitset);
-	// cout << endl;
     return bitset;
 }
 #endif

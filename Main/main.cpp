@@ -88,14 +88,13 @@ static void processDefineSchema(DefineSchema *s){
     relationCount = s->relationCount;
 
 	for(i = 0; i < s->relationCount; i++){
-		schema[i] = s->columnCounts[i];				// add # of columns for every relation to schema
-        if(schema[i] > maxColumnCounts) maxColumnCounts = schema[i];
+		schema[i] = s->columnCounts[i];		// add # of columns for every relation to schema
+        if(schema[i] > maxColumnCounts)
+			maxColumnCounts = schema[i];
 	}
 
-    for(i = 0; i < s->relationCount; i++) {   	// For every relation
-  		Journals[i] = new Journal(s->columnCounts[i]);    	// Create empty Journal
-		//hash_tables[i] = new Key_HashTable();		// Create empty Hash for every rel
-    }
+    for(i = 0; i < s->relationCount; i++)    			// For every relation
+  		Journals[i] = new Journal(s->columnCounts[i]);  // Create empty Journal
 
     def_end = std::chrono::high_resolution_clock::now();
     def_diff = def_end - def_start;
@@ -112,8 +111,6 @@ static void processTransaction(Transaction *t){
     JournalRecord* record;
 
     transactionCounter = t->transactionId;
-
-    //bool tidflag = true;
 
 	//=================================
 	// Delete operations
@@ -132,9 +129,9 @@ static void processTransaction(Transaction *t){
 			else {
 
 				// checking case of multiple deletes
-				if (Journals[o->relationId]->getRecordatOffset(index)->getType() == DELETE){
-					// Sunexomeno delete case
-					continue;}
+				if (Journals[o->relationId]->getRecordatOffset(index)->getType() == DELETE)
+					continue;		// Sunexomeno delete case
+
 
 				// Else Delete after insertion
 
@@ -200,7 +197,6 @@ static void processValidationQueries(ValidationQueries *v){
 
 	bool flag = false;
 
-	// cout << "Val Id " << v->validationId << endl;
     const char* reader = v->queries;
 	int size = sizeof(ValidationQueries) * v->queryCount ;
 
@@ -280,7 +276,7 @@ bool printValidationsUntilFlush(DArray<bool>* resultValidationList,uint64_t vali
 		if(validationId - lastFlushId < i)	// an vrika valID > tou flush val ID vges
 		   return true;
 
-		cout << "Validation " << lastFlushId + i << " : " << resultValidationList->getLast() << endl;	// alliws tupwse to apotelesma
+		// cout << "Validation " << lastFlushId + i << " : " << resultValidationList->getLast() << endl;	// alliws tupwse to apotelesma
 		resultValidationList->popLast();
 		i++;
 	}
@@ -515,12 +511,12 @@ int main(int argc, char **argv) {
                 globalend = std::chrono::high_resolution_clock::now();
                 globaldiff = globalend - globalstart;
 
-              cout << "Define schema elapsed time is :  " << def_diff.count() << " ms " << endl;
-              cout << "Transactions elapsed time is :  " << tran_diff.count() << " ms " << endl;
-              cout << "Validations elapsed time is :  " << val_diff.count() << " ms " << endl;
-              cout << "Flush elapsed time is :  " << flush_diff.count() << " ms " << endl;
-              cout << "Destroy elapsed time is :  " << destroy_diff.count() << " ms " << endl;
-              cout << "Overal elapsed time is :  " << globaldiff.count() << " ms " << endl;
+              cout << "Define schema elapsed time is :  " << def_diff.count() << " s " << endl;
+              cout << "Transactions elapsed time is :  " << tran_diff.count() << " s " << endl;
+              cout << "Validations elapsed time is :  " << val_diff.count() << " s " << endl;
+              cout << "Flush elapsed time is :  " << flush_diff.count() << " s " << endl;
+              cout << "Destroy elapsed time is :  " << destroy_diff.count() << " s " << endl;
+              cout << "Overal elapsed time is :  " << globaldiff.count() << " s " << endl;
 
 			  	#if VAL_THREADS == 1
 					pthread_mutex_destroy(&counter_mutex);

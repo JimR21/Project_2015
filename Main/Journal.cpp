@@ -3,15 +3,8 @@
 using namespace std;
 
 //================================================================================================
-Journal::Journal(uint32_t icolumns){
-    //relation_id = rel_id;
-    columns = icolumns;
+Journal::Journal(uint32_t icolumns): columns(icolumns){
 	Records = new DArray<JournalRecord*>();
-    // cout << "Created New Journal for Relation: " << relation_id << endl;
-
-    #if VAL_THREADS == 1
-        pthread_mutex_init(&arr_mutex, NULL);	// initialize mutex
-    #endif
 }
 //================================================================================================
 Journal::~Journal(){
@@ -45,10 +38,9 @@ DArray<JournalRecord*> * Journal::getJournalRecords(uint64_t start_tid, uint64_t
         start_tid += 1;								// an den yparxei to tid pou mou dwse san start psakse to epomeno
 #endif
 
-	// cout << "To range ksekinaei sto index: " << idx << endl;
     int rsize = Records->size();
-	for (int i = idx; i < rsize; i++){	// psakse siriaka apo ekei pou sou gurise i binary search
-													// mexri to end_tid
+	for (int i = idx; i < rsize; i++){		// psakse siriaka apo ekei pou sou gurise i binary search
+											// mexri to end_tid
 		uint64_t tid = (Records->get(i))->getTransactionId();	// tid of the specific JournalRecord
 
 		if (tid <= end_tid)	{	// oso den exw kseperasei to end_tid
@@ -62,7 +54,6 @@ DArray<JournalRecord*> * Journal::getJournalRecords(uint64_t start_tid, uint64_t
 //================================================================================================
 int Journal::searchRecord(uint64_t key){
 
-	// cout << "Searching for transaction id: " << key << endl;
     int start = 0;  				// start of the array
     int end = Records->size() - 1;  // end of the array
 	int m;
@@ -74,6 +65,7 @@ int Journal::searchRecord(uint64_t key){
 
 		cur_val = (Records->get(m))->getTransactionId();
 		cur_val2 = (Records->get(m-1))->getTransactionId();
+
 		if (cur_val == key){	// if element is found
 			if (m > 0 && cur_val == cur_val2)	// check if it is the first occurence
 				end = m - 1;
@@ -87,13 +79,6 @@ int Journal::searchRecord(uint64_t key){
 	}
 	return -1;
 }
-//================================================================================================
-// void Journal::printJournal() {
-// 	for(int i = 0; i < Records->size(); i++){
-//         cout << (Records->get(i))->getTransactionId() << " ";
-//         (Records->get(i))->printRecord();
-//     }
-// }
 //================================================================================================
 int Journal::getRecordsSize(){
 	return Records->size();
@@ -109,8 +94,7 @@ uint64_t Journal::getLastTID()
 }
 //================================================================================================
 #if TID_HASHTABLE == 1
-int Journal::tidSearchRecord(unsigned tid)
-{
+int Journal::tidSearchRecord(unsigned tid){
     return tid_hashtable.getOffset(tid);
 }
 #endif

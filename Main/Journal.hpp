@@ -8,7 +8,6 @@
 
 class Journal {
 private:
-    //uint32_t relation_id;
     DArray<JournalRecord*> *Records;
     uint64_t lastTID;
 
