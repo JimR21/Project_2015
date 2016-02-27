@@ -1,9 +1,0 @@
-+0.2 sec apo ta ValHash kai to initialize me BucketVals
-+0.1-0.2 sec apo to stringBuilder
-
-1) Inline double table size
-2) Darray me constructor pou boreis na valeis esu to capacity. + to vala to val Darray sto valbdata na xei elaxisto capacity gia test
-3) Stin arxi to xa valei to valbdata san object mesa bucketVal alla to allaksa san pointer etsi wste na min ftiaxnetai otan kanoume
-   arxikopoihsh ston pinaka tou valhash table kai to vala etsi opws exeis valei kai esu stin addbucketdata pou kaneis na koitaei an o pointer
-   einai NULL opote tote kanei to allocation. 
-4) Epishs kaleitai o constructor tou gen hashtable opote gemizei kai me buckets enan array pou den xrisimopoieitai pote ousiastika

@@ -18,31 +18,13 @@ unsigned flush_counter = 0;
 
 using namespace std;
 
-void printBitset(char c){
-	int i;
 
-    for (i = 7; i >= 0; --i)
-        putchar( (c & (1 << i)) ? '1' : '0' );
-
-    putchar('|');
-}
 void setBitsetValue(int index, char *array){
 	int bit_index = index / CHAR_BIT;		// which char
 	int bit_number = index % CHAR_BIT;		// which bit of this char
 
 	array[bit_index] = array[bit_index] | (1 << (7 - bit_number));	// update !!
 }
-
-// operator for query sort
-struct sorting
-{
-    bool operator() (const QueryPtr & lhs, const QueryPtr & rhs) { return lhs->relationId < rhs->relationId; }
-} sorting_by_relationId;
-
-// Quicksort operations
-void quickSort(QueryPtr* A, int p,int q);
-int partition(QueryPtr* A, int p,int q);
-
 
 bool valOptimize(ValClass *v);      // Part 1 Optimizations
 bool valHashOptimize(ValClass *v);
@@ -89,10 +71,7 @@ unsigned lastFlushId = 0;
 //=====================================================
 //=================== FUNCTIONS =======================
 //=====================================================
-inline const char * const BoolToString(bool b)
-{
-    return b ? "1" : "0";
-}
+
 //==============================================================================================
 static void processDefineSchema(DefineSchema *s){
 
@@ -368,8 +347,6 @@ static void processFlush(Flush *fl){
 		validationList.mainFlag = true;
 		validationList.wakeUpWorkers();
 
-		// sleep(1);	// sleep pros to paron alla edw tha koitaei ton counter gia na exoun teleiwsei ta workers
-
 
 		pthread_mutex_lock(&counter_mutex);	// lock counter
 			while (jobs > 0){
@@ -389,7 +366,6 @@ static void processFlush(Flush *fl){
 		printValidationsUntilFlush(&resultValidationList,fl->validationId);
 	}
 
-	// cout << "Tid: " << fl->validationId << endl;
 
     flush_end = std::chrono::high_resolution_clock::now();
     if(flush_diff != default_diff)

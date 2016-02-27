@@ -1,13 +1,8 @@
 #include "ValidationNode.hpp"
 
-ValidationNode::ValidationNode(ValClass* validation){
-  val = validation;
-  result = 0;
+ValidationNode::ValidationNode(ValClass* validation): val(validation), result(0){}	// Constructor
 
-}
-
-ValidationNode::~ValidationNode()
-{
+ValidationNode::~ValidationNode() {	// Destructor
     delete val;
 }
 
@@ -18,6 +13,7 @@ ValClass* ValidationNode::getValidation(void){
 bool ValidationNode::getResult(){
   return result;
 }
+
 void ValidationNode::setResult(bool res){
-  result=res;
+  result = res;
 }

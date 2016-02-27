@@ -33,6 +33,7 @@ public:
 
 			ValidationNode* valNode = (ValidationNode*)validationList.safe_fake_popGetLast();
 			ValClass* val = valNode->getValidation();
+
 			if (valNode->getResult() == false){
 				conflict = valOptimize(val);	// calculate validation
 				valNode->setResult(conflict);	// set the result in the validation
@@ -67,15 +68,11 @@ public:
 	        {
 	            // Go to the next query
 	            conflict = false;   // Se periptwsh poy den uparxei allo query
-	            continue;				// no need to check the next queries for this validation
+            	continue;			// no need to check the next queries for this validation
 	        }
 
 	        if (q->columnCount == 0)    // an einai keno kai mesa sta oria tote conflict
-	        {
 				continue;
-	            // conflict = true;
-	            // break;
-	        }
 
 	        conflict = q->validate(*Journals[q->relationId], v->from, v->to);
 
