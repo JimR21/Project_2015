@@ -42,3 +42,77 @@ void ValClass::sortByColumnCount()
 {
     quickSort(queries, 0, queryCount);
 }
+
+bool ValClass::valOptimize()
+{
+    bool conflict;
+
+    // sort queries by column count
+	sortByColumnCount();
+
+    // Iterate over the validation's queries
+    for (unsigned i = 0; i != queryCount; i++)
+    {
+        conflict = true;
+        const QueryPtr q = queries[i];
+
+        // check an einai entos range
+        uint64_t max_tid = Journals[q->relationId]->getLastTID();
+
+        if (from > max_tid )	// mou dwse tid start pou einai megalutero tou max
+        {
+            // Go to the next query
+            conflict = false;  	 	// Se periptwsh poy den uparxei allo query
+            continue;				// no need to check the next queries for this validation
+        }
+
+        if (q->columnCount == 0)    // an einai keno το skiparw
+            continue;
+
+        conflict = q->validate(from, to);
+
+		if(conflict == true)
+			break;
+    }
+
+    return conflict;
+}
+//=======================================================================
+
+#if VAL_HASHTABLE == 1
+bool ValClass::valHashOptimize()
+{
+	bool conflict;
+
+    // sort queries by column count
+	sortByColumnCount();
+
+    // Iterate over the validation's queries
+    for (unsigned i = 0; i != queryCount; i++)
+    {
+        conflict = true;
+        const QueryPtr q = queries[i];
+
+        // check an einai entos range
+        uint64_t max_tid = Journals[q->relationId]->getLastTID();
+        if (from > max_tid )	// mou dwse tid start pou einai megalutero tou max || keno query
+        {
+            // Go to the next query
+            conflict = false;   // Se periptwsh poy den uparxei allo query
+            continue;				// no need to check the next queries for this validation
+        }
+
+        if (q->columnCount == 0)    // an einai keno kai mesa sta oria tote conflict
+            continue;
+
+        conflict = q->hashValidate(Journals[q->relationId], from, to);
+
+		if(conflict == true)
+			break;
+    }
+
+    return conflict;
+}
+#endif
+
+//=======================================================================

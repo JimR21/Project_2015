@@ -21,6 +21,12 @@ public:
 
     void sortByColumnCount();
 
+    bool valOptimize();
+
+#if VAL_HASHTABLE == 1
+    bool valHashOptimize();
+#endif
+
 private:
     // Quicksort operations
     void quickSort(QueryPtr* A, const int &p, const int &q);

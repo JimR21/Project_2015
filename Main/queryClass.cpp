@@ -36,7 +36,7 @@ QueryClass::QueryClass(const uint32_t &relId, const uint32_t &colCount, ColumnPt
     columns = cols;
 }
 
-bool QueryClass::validate(Journal &journal, uint64_t &from, uint64_t &to)
+bool QueryClass::validate(uint64_t &from, uint64_t &to)
 {
     bool conflict = true;
 
@@ -91,7 +91,7 @@ bool QueryClass::validate(Journal &journal, uint64_t &from, uint64_t &to)
     unsigned psize1 = priority1->size();
     if(psize1 == 1)
     {
-        records_to_check = journal.getRecordsbyKey(priority1->get(0)->value, from, to);
+        records_to_check = Journals[relationId]->getRecordsbyKey(priority1->get(0)->value, from, to);
         if(records_to_check == NULL)
         {
             delete priority1;
@@ -102,7 +102,7 @@ bool QueryClass::validate(Journal &journal, uint64_t &from, uint64_t &to)
     }
     else
     {
-        records_to_check = journal.getJournalRecords(from, to);
+        records_to_check = Journals[relationId]->getJournalRecords(from, to);
     }
 
     unsigned psize2 = priority2->size();
@@ -174,7 +174,7 @@ bool QueryClass::validate(Journal &journal, uint64_t &from, uint64_t &to)
 }
 
 #if VAL_HASHTABLE == 1
-bool QueryClass::hashValidate(Journal *journal, uint64_t &from, uint64_t &to)
+bool QueryClass::hashValidate(uint64_t &from, uint64_t &to)
 {
     bool conflict = true;
 
@@ -224,12 +224,12 @@ bool QueryClass::hashValidate(Journal *journal, uint64_t &from, uint64_t &to)
             bit = NULL;
         }
 
-        bit = journal->val_htable.getbdata(priority2->get(j)->key, &counter);
+        bit = Journals[relationId]->val_htable.getbdata(priority2->get(j)->key, &counter);
 
         if(bit == NULL)	                   // not calculated case
         {
             if(records_to_check == NULL)
-                records_to_check = journal->getJournalRecords(from, to);
+                records_to_check = Journals[relationId]->getJournalRecords(from, to);
             bit = priority2->get(j)->checkColumn(*records_to_check);
         }
 
@@ -249,10 +249,10 @@ bool QueryClass::hashValidate(Journal *journal, uint64_t &from, uint64_t &to)
             return false;
         }
         if((counter > 0) && (forget <= from))
-            journal->val_htable.UpdateValData(priority2->get(j)->key, bit);
+            Journals[relationId]->val_htable.UpdateValData(priority2->get(j)->key, bit);
 
         if((counter == 0) || (forget > from))           // Delete key
-            journal->val_htable.deleteKey(priority2->get(j)->key);
+            Journals[relationId]->val_htable.deleteKey(priority2->get(j)->key);
     }
 
     unsigned psize3 = priority3->size();
@@ -263,12 +263,12 @@ bool QueryClass::hashValidate(Journal *journal, uint64_t &from, uint64_t &to)
             delete bit;
             bit = NULL;
         }
-        bit = journal->val_htable.getbdata(priority3->get(j)->key, &counter);
+        bit = Journals[relationId]->val_htable.getbdata(priority3->get(j)->key, &counter);
 
         if(bit == NULL)	                   // not calculated case
         {
             if(records_to_check == NULL)
-                records_to_check = journal->getJournalRecords(from, to);
+                records_to_check = Journals[relationId]->getJournalRecords(from, to);
 
             bit = priority3->get(j)->checkColumn(*records_to_check);
         }
@@ -289,10 +289,10 @@ bool QueryClass::hashValidate(Journal *journal, uint64_t &from, uint64_t &to)
             return false;
         }
         if((counter > 0) && (forget <= from))
-            journal->val_htable.UpdateValData(priority3->get(j)->key, bit);
+            Journals[relationId]->val_htable.UpdateValData(priority3->get(j)->key, bit);
 
         if((counter == 0) || (forget > from))          // Delete key
-            journal->val_htable.deleteKey(priority3->get(j)->key);
+            Journals[relationId]->val_htable.deleteKey(priority3->get(j)->key);
     }
 
     delete priority2;

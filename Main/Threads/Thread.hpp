@@ -19,8 +19,7 @@ extern pthread_cond_t  counter_cv;
 class Thread : public ThreadInterface
 {
 	DArray<ValidationNode*>& validationList;
-
-	void valOptimize();
+	
 public:
 
 	Thread(DArray<ValidationNode*>& validations) : validationList(validations) {}
@@ -35,7 +34,7 @@ public:
 			ValClass* val = valNode->getValidation();
 
 			if (valNode->getResult() == false){
-				conflict = valOptimize(val);	// calculate validation
+				conflict = val->valOptimize();	// calculate validation
 				valNode->setResult(conflict);	// set the result in the validation
 			}
 			pthread_mutex_lock(&counter_mutex);	// lock counter
@@ -48,40 +47,6 @@ public:
         }
         return NULL;
     }
-	// =============================================================================================
-	bool valOptimize(ValClass *v)
-	{
-	    bool conflict;
-
-	    // sort queries by column count
-		v->sortByColumnCount();
-
-	    // Iterate over the validation's queries
-	    for (unsigned i = 0; i != v->queryCount; i++)
-	    {
-	        conflict = true;
-	        const QueryPtr q = v->queries[i];
-
-	        // check an einai entos range
-	        uint64_t max_tid = Journals[q->relationId]->getLastTID();
-	        if (v->from > max_tid )	// mou dwse tid start pou einai megalutero tou max || keno query
-	        {
-	            // Go to the next query
-	            conflict = false;   // Se periptwsh poy den uparxei allo query
-            	continue;			// no need to check the next queries for this validation
-	        }
-
-	        if (q->columnCount == 0)    // an einai keno kai mesa sta oria tote conflict
-				continue;
-
-	        conflict = q->validate(*Journals[q->relationId], v->from, v->to);
-
-			if(conflict == true)
-				break;
-	    }
-
-	    return conflict;
-	}
 };
 
 #endif

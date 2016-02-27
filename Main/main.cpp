@@ -24,7 +24,6 @@ void setBitsetValue(int index, char *array){
 	array[bit_index] = array[bit_index] | (1 << (7 - bit_number));	// update !!
 }
 
-bool valOptimize(ValClass *v);      // Part 1 Optimizations
 bool valHashOptimize(ValClass *v);
 unsigned forget = 0;
 
@@ -296,10 +295,10 @@ void validateAndMove(DArray<ValidationNode*>* validationList,DArray<bool>* resul
 			#if VAL_THREADS == 1	// sto thread case apla tha kaneis tin metafora apo val se res
 									// ta vals einai idi ipologismena apo ta threads
 			#elif VAL_HASHTABLE == 1
-				conflict = valHashOptimize(val);
+				conflict = val->valHashOptimize();
 				validationNode->setResult(conflict);
 			#else
-				conflict = valOptimize(val);
+				conflict = val->valOptimize();
 				validationNode->setResult(conflict);
 			#endif
 		}
@@ -391,78 +390,6 @@ static void processDestroySchema()
     destroy_diff = destroy_end - destroy_start;
 }
 //================================================================================================
-bool valOptimize(ValClass *v)
-{
-    bool conflict;
-
-    // sort queries by column count
-	v->sortByColumnCount();
-
-    // Iterate over the validation's queries
-    for (unsigned i = 0; i != v->queryCount; i++)
-    {
-        conflict = true;
-        const QueryPtr q = v->queries[i];
-
-        // check an einai entos range
-        uint64_t max_tid = Journals[q->relationId]->getLastTID();
-
-        if (v->from > max_tid )	// mou dwse tid start pou einai megalutero tou max
-        {
-            // Go to the next query
-            conflict = false;  	 	// Se periptwsh poy den uparxei allo query
-            continue;				// no need to check the next queries for this validation
-        }
-
-        if (q->columnCount == 0)    // an einai keno το skiparw
-            continue;
-
-        conflict = q->validate(*Journals[q->relationId], v->from, v->to);
-
-		if(conflict == true)
-			break;
-    }
-
-    return conflict;
-}
-//=======================================================================
-#if VAL_HASHTABLE == 1
-bool valHashOptimize(ValClass * v)
-{
-	bool conflict;
-
-    // sort queries by column count
-	v->sortByColumnCount();
-
-    // Iterate over the validation's queries
-    for (unsigned i = 0; i != v->queryCount; i++)
-    {
-        conflict = true;
-        const QueryPtr q = v->queries[i];
-
-        // check an einai entos range
-        uint64_t max_tid = Journals[q->relationId]->getLastTID();
-        if (v->from > max_tid )	// mou dwse tid start pou einai megalutero tou max || keno query
-        {
-            // Go to the next query
-            conflict = false;   // Se periptwsh poy den uparxei allo query
-            continue;				// no need to check the next queries for this validation
-        }
-
-        if (q->columnCount == 0)    // an einai keno kai mesa sta oria tote conflict
-            continue;
-
-        conflict = q->hashValidate(Journals[q->relationId], v->from, v->to);
-
-		if(conflict == true)
-			break;
-    }
-
-    return conflict;
-}
-#endif
-
-//=======================================================================
 
 //=====================================================
 //================== MAIN PROGRAM =====================
