@@ -80,11 +80,13 @@ DArray<T>::DArray(unsigned icapacity) : capacity(icapacity), n(0) {
 #if VAL_THREADS == 1
 	//=========================================================
 	template <class T>
-	DArray<T>::DArray(char c, char threadsafe) : capacity(32768), n(0), index(0) {
+	DArray<T>::DArray(char c, char threadsafe) : capacity(5000), n(0), index(0) {
 		arr = new T[capacity];
 
 		pthread_mutex_init(&arr_mutex, NULL);	// initialize mutex
 		pthread_cond_init(&arr_condv, NULL);	// initialize cond var
+
+        mainFlag = false;
 	}
 	//=========================================================
 	template <class T>				  // prin to delete tha ginetai kai auto
@@ -127,7 +129,7 @@ DArray<T>::DArray(unsigned icapacity) : capacity(icapacity), n(0) {
 	template <class T>
 	T DArray<T>::safe_fake_popGetLast() {
 		pthread_mutex_lock(&arr_mutex);	// lock arr
-			while (index == 0 || mainFlag == false) {	// no items available to pop
+			while (mainFlag == false || index == 0) {	// no items available to pop
 				pthread_cond_wait(&arr_condv, &arr_mutex);	// release mutex & wait till the condition is signaled
 			}
 			T item = arr[index-1];

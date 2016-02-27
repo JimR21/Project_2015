@@ -5,6 +5,11 @@ ValidationNode::ValidationNode(ValClass* validation){
 
 }
 
+ValidationNode::~ValidationNode()
+{
+    delete val;
+}
+
 ValClass* ValidationNode::getValidation(void){
   return val;
 }

@@ -7,7 +7,7 @@ Val_bdata::Val_bdata(std::string ikey, unsigned range)
 	key = ikey;
 	counter = 1;
 	//vals = new DArray<Val_listbucket*>(2);
-	bitset = new Bitset();
+	bitset = NULL;
 
 	validated = false;
 	next = NULL;
@@ -24,12 +24,12 @@ void Val_bdata::insert(){
 }
 
 
-Bitset* Val_bdata::validate(char *array, int size){
+void Val_bdata::validate(Bitset* bit){
 
 	validated = true;	// to predicate se auto to range einai pleon validated
 
 	// update to bitset
-	bitset->validateBitset(array, size);
+	bitset = new Bitset(*bit);
 
-	return bitset;
+	return;
 }

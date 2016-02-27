@@ -7,9 +7,9 @@ class Key_HashTable : public Gen_HashTable
 public:
     void insert(unsigned key, unsigned int tid, unsigned int offset);
 
-	DArray<uint64_t>* getHashRecords(unsigned &key, uint64_t &start_tid, uint64_t &end_tid);
+	DArray<unsigned>* getHashRecords(unsigned &key, uint64_t &start_tid, uint64_t &end_tid);
 
-	DArray<uint64_t>* getHashRecords(unsigned &key);
+	DArray<unsigned>* getHashRecords(unsigned &key);
 
 	bool existCheck(unsigned key,uint64_t, uint64_t);
 

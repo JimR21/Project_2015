@@ -42,4 +42,8 @@ public:
 #if TID_HASHTABLE == 1
     int tidSearchRecord(unsigned tid);
 #endif
+
+#if VAL_HASHTABLE == 1
+    Bitset* getBitsetbyKey(unsigned key, uint64_t start_tid, uint64_t end_tid);	// Uses Key_HashTable
+#endif
 };

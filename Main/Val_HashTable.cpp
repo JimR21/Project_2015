@@ -22,31 +22,31 @@ Val_HashTable::Val_HashTable()
 Val_HashTable::~Val_HashTable()
 {
 	// Delete bucketArray
-	// Val_bdata* data;
-	// Val_bdata* nextdata;
-	// BucketVal* bucket;
-    // for(unsigned i = 0; i < size; i++)
-    // {
-    //     if(Buckets.get(i) != NULL)
-    //     {
-	// 		bucket = Buckets.get(i);
-    //         unsigned p = pow(2, bucket->localDepth);
-	// 		if(bucket->empty == false)
-	// 		{
-	// 			data = bucket->first;
-	// 			nextdata = NULL;
-	// 			for(int j = 0; j < bucket->counter; j++)
-	// 			{
-	// 				nextdata = data->next;
-	// 				delete data;
-	// 				data = nextdata;
-	// 			}
-	// 		}
-    //         delete bucket;
-    //         for(unsigned j = i; j < size; j+=p)
-    //             Buckets.set(j, NULL);
-    //     }
-    // }
+	Val_bdata* data;
+	Val_bdata* nextdata;
+	BucketVal* bucket;
+    for(unsigned i = 0; i < size; i++)
+    {
+        if(Buckets.get(i) != NULL)
+        {
+			bucket = Buckets.get(i);
+            unsigned p = pow(2, bucket->localDepth);
+			// if(bucket->empty == false)
+			// {
+			// 	data = bucket->first;
+			// 	nextdata = NULL;
+			// 	for(int j = 0; j < bucket->counter; j++)
+			// 	{
+			// 		nextdata = data->next;
+			// 		delete data;
+			// 		data = nextdata;
+			// 	}
+			// }
+            delete bucket;
+            for(unsigned j = i; j < size; j+=p)
+                Buckets.set(j, NULL);
+        }
+    }
 }
 
 // int Val_HashTable::hashFunction(const string& key)
@@ -259,7 +259,7 @@ Bitset* Val_HashTable::getbdata(std::string key, int *counter)
 				tempdata->counter--;
 				*counter = tempdata->counter;
 				if (tempdata->validated == true)
-					return tempdata->bitset;
+					return new Bitset(*tempdata->bitset);
 				else
 					return NULL;
 			}
@@ -312,8 +312,6 @@ int Val_HashTable::deleteKey(string key)
 		}
 		return 1;
     }
-    else
-        // cout << "Delete: Key " << key << " not found" << endl;
     return 0;
 }
 
@@ -368,7 +366,7 @@ void Val_HashTable::halveTableSize()
 unsigned Val_HashTable::getsize()
 {	return size; }
 
-Bitset* Val_HashTable::UpdateValData(std::string key, char *array, int size){
+void Val_HashTable::UpdateValData(std::string key, Bitset* bit){
 	unsigned hashed_key;
     hashed_key = hashFunction(key);
 	int index = getBucketIndex(hashed_key, globalDepth); // koitaw ta globaldepth deksia bits gia na dw se poio index tha paw
@@ -382,11 +380,12 @@ Bitset* Val_HashTable::UpdateValData(std::string key, char *array, int size){
 		{
 			if(key.compare(tempdata->key) == 0)
 			{
-				return tempdata->validate(array, size);
+				tempdata->validate(bit);
+				return;
 			}
 			tempdata = tempdata->next;
 		} while(tempdata != NULL);
 	}
 
-	return NULL;
+	return;
 }

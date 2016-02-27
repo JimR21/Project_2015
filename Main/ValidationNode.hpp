@@ -9,10 +9,8 @@ private:
   bool result;
 public:
   ValidationNode(ValClass*);
+  ~ValidationNode();
   ValClass* getValidation(void);
   bool getResult();
   void setResult(bool);
-
-
-
 };

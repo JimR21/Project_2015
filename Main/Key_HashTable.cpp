@@ -89,13 +89,13 @@ void Key_HashTable::insert(unsigned int key, unsigned tid, unsigned offset)
 }
 //=======================================================================================================
 
-DArray<uint64_t>* Key_HashTable::getHashRecords(unsigned &key, uint64_t &start_tid, uint64_t &end_tid){
+DArray<unsigned>* Key_HashTable::getHashRecords(unsigned &key, uint64_t &start_tid, uint64_t &end_tid){
 	unsigned hashed_key;
     hashed_key = hashFunction(key);
 	int index = getBucketIndex(hashed_key, globalDepth); // koitaw ta globaldepth deksia bits gia na dw se poio index tha paw
     Bucket* tempBucket = bucketArray.get(index);
 
-    DArray<uint64_t>* array = new DArray<uint64_t>(100);
+    DArray<unsigned>* array = new DArray<unsigned>(100);
 
 	if((tempBucket->empty == false) && (tempBucket->key == key))
     {
@@ -129,14 +129,14 @@ DArray<uint64_t>* Key_HashTable::getHashRecords(unsigned &key, uint64_t &start_t
 	return array;
 }
 //=======================================================================================================
-DArray<uint64_t>* Key_HashTable::getHashRecords(unsigned &key)
+DArray<unsigned>* Key_HashTable::getHashRecords(unsigned &key)
 {
     unsigned hashed_key;
     hashed_key = hashFunction(key);
 	int index = getBucketIndex(hashed_key, globalDepth); // koitaw ta globaldepth deksia bits gia na dw se poio index tha paw
     Bucket* tempBucket = bucketArray.get(index);
 
-	DArray<uint64_t>* array = new DArray<uint64_t>();
+	DArray<unsigned>* array = new DArray<unsigned>();
 
     if((tempBucket->empty == false) && (tempBucket->key == key)){
         BucketData* tempData = tempBucket->first;

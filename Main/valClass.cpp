@@ -11,8 +11,8 @@ ValClass::~ValClass()
 {
     for(unsigned i = 0; i < queryCount; i++)
         delete queries[i];
-    if(queryCount > 1)
-        delete queries;
+
+    delete[] queries;
 }
 
 void ValClass::quickSort(QueryPtr* A, const int &p, const int &q)

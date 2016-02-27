@@ -1,3 +1,5 @@
+#ifndef JOURNALRECORD_HPP
+#define JOURNALRECORD_HPP
 #include <iostream>
 #include <stdint.h>
 #include "DArray.hpp"
@@ -27,3 +29,4 @@ public:
 	void addValue(uint64_t, uint32_t);
 	void printRecord();
 };
+#endif

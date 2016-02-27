@@ -117,7 +117,7 @@ int Journal::tidSearchRecord(unsigned tid)
 //================================================================================================
 DArray<JournalRecord*> * Journal::getRecordsbyKey(unsigned key, uint64_t start_tid, uint64_t end_tid)
 {
-    DArray<uint64_t>* offsets = key_htable.getHashRecords(key, start_tid, end_tid);
+    DArray<unsigned>* offsets = key_htable.getHashRecords(key, start_tid, end_tid);
 
     if(offsets == NULL)
         return NULL;
@@ -133,3 +133,47 @@ DArray<JournalRecord*> * Journal::getRecordsbyKey(unsigned key, uint64_t start_t
     delete offsets;
     return records;
 }
+//================================================================================================
+#if VAL_HASHTABLE == 1
+Bitset* Journal::getBitsetbyKey(unsigned key, uint64_t start_tid, uint64_t end_tid)
+{
+    DArray<unsigned>* offsets = key_htable.getHashRecords(key, start_tid, end_tid);
+    unsigned start_offset, end_offset, i;
+
+    if(offsets == NULL)
+        return NULL;
+
+#if TID_HASHTABLE == 1
+	while((start_offset = tidSearchRecord(start_tid)) == -1)	// psakse se pio index tou Journal tha ksekinisw na psaxnw
+        start_tid += 1;							// an den yparxei to tid pou mou dwse san start psakse to epomeno
+    while((end_offset = tidSearchRecord(end_tid)) == -1)
+        end_tid -= 1;
+
+#else
+    while((start_offset = searchRecord(start_tid)) == -1)	// psakse se pio index tou Journal tha ksekinisw na psaxnw
+        start_tid += 1;								// an den yparxei to tid pou mou dwse san start psakse to epomeno
+    while((end_offset = searchRecord(end_tid)) == -1)
+        end_tid -= 1;
+#endif
+
+    int rsize = Records->size();
+    for (i = end_offset; i < rsize; i++)
+    {
+        uint64_t tid = (Records->get(i))->getTransactionId();
+        if (tid > end_tid)  	// an exw kseperasei to end_tid
+            break;
+    }
+
+    end_offset = i;
+
+    Bitset* bit = new Bitset((end_offset - start_offset)/8 + 1);
+
+    for(i = 0; i < offsets->size(); i++)
+    {
+        bit->setBitsetValue(offsets->get(i) - start_offset);
+    }
+
+    delete offsets;
+    return bit;
+}
+#endif

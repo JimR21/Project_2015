@@ -1,9 +1,13 @@
 #ifndef QUERYCLASS_HPP
 #define QUERYCLASS_HPP
 #include <inttypes.h>
+
 #include "columnClass.hpp"
 #include "Journal.hpp"
 
+extern unsigned forget;
+
+std::string stringBuilder(int start, int end, int col, int op, uint64_t value);
 
 class QueryClass
 {
@@ -20,6 +24,10 @@ public:
     QueryClass(const uint32_t &relId, const uint32_t &colCount, ColumnPtr * cols);
 
     bool validate(Journal &journal, uint64_t &form, uint64_t &to);
+
+#if VAL_HASHTABLE == 1
+    bool hashValidate(Journal *journal, uint64_t &from, uint64_t &to);
+#endif
 };
 
 typedef QueryClass* QueryPtr;

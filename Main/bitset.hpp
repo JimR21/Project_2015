@@ -24,16 +24,26 @@ public:
 
 	Bitset(const Bitset &bit);
 
-	void setBitsetValue(int index, char *array);	// set Bitset index to 1
-	int getBitsetValue(int index, char *array);		// get the value of this index
+	// TODO: setters getters xwris arrays
 
-	int getBitsetArray(int index);		// get the value of this index
+	void setBitsetValue(int index, char *array);	// set Bitset index to 1
+
+	unsigned getBitsetValue(unsigned index, char *array);		// get the value of this index
+
+	void setBitsetValue(unsigned index);	// set Bitset index to 1
+
+	unsigned getBitsetValue(unsigned index);		// get the value of this index
 
 	void printBitset(char c); // print the array
 
 	void validateBitset(char *array, int size);
 
+	bool validateBitset();
+
+	void addBitset(Bitset * bit);
+
 	char* getBitsetArray();
+
 	int getSize();
 
 };

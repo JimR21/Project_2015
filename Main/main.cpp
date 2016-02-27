@@ -10,11 +10,13 @@
 #include <pthread.h>
 #include "Bucket.hpp"
 #include "valClass.hpp"
-#include "ValidationIndex.hpp"
 #include "Threads/Thread.hpp"
 
-using namespace std;
+#define ROUNDS 1		// Default = 1
 
+unsigned flush_counter = 0;
+
+using namespace std;
 
 void printBitset(char c){
 	int i;
@@ -42,11 +44,8 @@ void quickSort(QueryPtr* A, int p,int q);
 int partition(QueryPtr* A, int p,int q);
 
 
-string stringBuilder(int start, int end, int col, int op, uint64_t value);
 bool valOptimize(ValClass *v);      // Part 1 Optimizations
 bool valHashOptimize(ValClass *v);
-//void threadExecuteValidations(DArray<ValClass*>* validationArray);
-char* checkColumn(ColumnPtr c, DArray<JournalRecord*> * records);
 unsigned forget = 0;
 
 using ns = chrono::milliseconds;
@@ -66,8 +65,6 @@ static uint32_t* schema = NULL;  // keeps the # of columns for every relation
 Journal** Journals = NULL;       // keeps the Journal for every relation
 DArray<bool> validationResults;	 // den xreiazetai new einai sto scope tis main
 DArray<Query::Column>* subqueries_to_check;
-
-ValidationIndex valIndex;
 
 DArray<bool> resultValidationList;
 
@@ -273,28 +270,20 @@ static void processValidationQueries(ValidationQueries *v){
         val_diff = val_end - val_start;
 }
 //================================================================================================
-void* threadExecuteValidations(void* parameterArray){                                          //this function call every thread to execute its validation list
-	DArray<Val_listbucket*>* validationArray=(DArray<Val_listbucket*>*)parameterArray;
-	for(int i=0;i<validationArray->size();i++){
-		bool conflict = valOptimize(validationArray->get(i)->getVal());
-		validationArray->get(i)->setResult(conflict);
-	}
-	pthread_exit(NULL);
-
-}
-//================================================================================================
 bool printValidationsUntilFlush(DArray<bool>* resultValidationList,uint64_t validationId){
 	unsigned i = 0;
+
 	// oso exw pragmata sto resultValidationList mou
 	while (resultValidationList->size() != 0){
 
 		if(validationId - lastFlushId < i)	// an vrika valID > tou flush val ID vges
 		   return true;
 
-		// myfile << "Validation " << lastFlushId + i << " : " << resultValidationList->GetLast() << endl;	// alliws tupwse to apotelesma
+		// cout << "Validation " << lastFlushId + i << " : " << resultValidationList->getLast() << endl;	// alliws tupwse to apotelesma
 		resultValidationList->popLast();
 		i++;
 	}
+	lastFlushId += i;
 	return false;
 }
 //================================================================================================
@@ -317,6 +306,8 @@ void validateAndMove(DArray<ValidationNode*>* validationList,DArray<bool>* resul
 		#endif
 
 		resultValidationList->push_back(validationNode->getResult());
+
+		delete validationNode;
 		validationList->popLast();
 
 		// edw tha borousame sto thread case na kanoume copy to valList sto resultValidationList
@@ -327,7 +318,16 @@ void validateAndMove(DArray<ValidationNode*>* validationList,DArray<bool>* resul
 //================================================================================================
 static void processFlush(Flush *fl){
 
-	// cout << "FLUSH " << fl->validationId << endl;
+#if ROUNDS > 1
+	if(flush_counter < ROUNDS)
+	{
+		flush_counter++;
+		return;
+	}
+	else
+		flush_counter = 1;
+#endif
+
 	flush_start = std::chrono::high_resolution_clock::now();
 
 	#if VAL_THREADS == 1
@@ -364,7 +364,7 @@ static void processFlush(Flush *fl){
 		printValidationsUntilFlush(&resultValidationList,fl->validationId);
 	}
 
-	lastFlushId = fl->validationId;
+	// cout << "Tid: " << fl->validationId << endl;
 
     flush_end = std::chrono::high_resolution_clock::now();
     if(flush_diff != default_diff)
@@ -387,27 +387,11 @@ static void processDestroySchema()
     free(schema);
     free(Journals);
 
+	for(int i = 0; i < validationList.size(); i++)
+		delete validationList.get(i);
+
     destroy_end = std::chrono::high_resolution_clock::now();
     destroy_diff = destroy_end - destroy_start;
-}
-//================================================================================================
-string stringBuilder(int start, int end, int col, int op, uint64_t value){
-    string key;
-
-    key = to_string(start) + "-" + to_string(end) + "c" + to_string(col);
-
-    switch(op){
-        case Equal: key += "="; break;
-        case NotEqual: key += "!"; break;
-        case Less: key += "<"; break;
-        case LessOrEqual: key += "["; break;
-        case Greater: key += ">"; break;
-        case GreaterOrEqual: key += "]"; break;
-    }
-
-    key += to_string(value);
-
-    return key;
 }
 //================================================================================================
 bool valOptimize(ValClass *v)
@@ -450,136 +434,42 @@ bool valOptimize(ValClass *v)
 #if VAL_HASHTABLE == 1
 bool valHashOptimize(ValClass * v)
 {
-	int bitset_size;
-	int current_rel = -1;
-    bool conflict = false;
+	bool conflict;
 
-	Bitset *resultBitset = NULL;
+    // sort queries by column count
+	v->sortByColumnCount();
 
-	DArray<JournalRecord*> *recs = NULL;
-
-	// sort queries by column count
-	// std::sort(v->queries, v->queries + v->queryCount, sorting());
-	quickSort(v->queries, 0, v->queryCount);
-
-	// for every query of this validation
-    for(unsigned i = 0; i < v->queryCount; i++)
+    // Iterate over the validation's queries
+    for (unsigned i = 0; i != v->queryCount; i++)
     {
-        QueryPtr q = v->queries[i];
+        conflict = true;
+        const QueryPtr q = v->queries[i];
 
-		//=============================
-		// check an einai entos range
-		//=============================
-		uint64_t max_tid = Journals[q->relationId]->getLastTID();
-
-		if (v->from > max_tid ){	// mou dwse tid start pou einai megalutero tou max || keno query{
-			if (i == v->queryCount - 1)
-				delete recs;
-		    continue;			// Go to the next query
-		}
-		//=========================
-		// empty query ~> conflict
-		//=========================
-		if (q->columnCount == 0){
-			conflict = true; break;}
-
-		if (current_rel == -1 || current_rel != q->relationId){
-			delete recs;
-			recs = Journals[q->relationId]->getJournalRecords(v->from, v->to);
-			current_rel = q->relationId;
-		}
-
-		// for every subquery of this query
-        for (unsigned w = 0; w < q->columnCount; w++)
+        // check an einai entos range
+        uint64_t max_tid = Journals[q->relationId]->getLastTID();
+        if (v->from > max_tid )	// mou dwse tid start pou einai megalutero tou max || keno query
         {
-            ColumnPtr c = q->columns[w];
-			conflict = false;
-
-			// check if bitset is calculated
-			int counter;
-
-            Bitset* bitset = Journals[q->relationId]->val_htable.getbdata(c->key, &counter);
-            if(bitset == NULL)	// not calculated case
-            {
-				bitset_size = recs->size();
-
-            	bitset = Journals[q->relationId]->val_htable.UpdateValData(c->key, checkColumn(c, recs), bitset_size);
-
-            }
-
-			if (w == 0)	// an eimai sto 1o predicate
-				resultBitset = new Bitset(*bitset);
-			else		// an eimai sta epomena predicates apla kane tin praksi
-				for (int j = 0; j < bitset->getSize(); j++)
-					(resultBitset->getBitsetArray())[j] = (resultBitset->getBitsetArray())[j] & (bitset->getBitsetArray())[j];
-
-			// Delete
-			if((counter == 0) && (forget > v->from)){
-				// cout << "Deleting in val: " << v->validationId << endl;
-				Journals[q->relationId]->val_htable.deleteKey(c->key);
-			}
-			for (int j = 0; j < resultBitset->getSize(); j++)
-				if ((resultBitset->getBitsetArray())[j] != 0){
-					conflict = true;
-					break;
-				}
-			if(conflict == false)
-				break;
+            // Go to the next query
+            conflict = false;   // Se periptwsh poy den uparxei allo query
+            continue;				// no need to check the next queries for this validation
         }
 
-		delete resultBitset;
+        if (q->columnCount == 0)    // an einai keno kai mesa sta oria tote conflict
+        {
+            conflict = true;
+            break;
+        }
 
-		if(conflict == true){
-			delete recs;
+        conflict = q->hashValidate(Journals[q->relationId], v->from, v->to);
+
+		if(conflict == true)
 			break;
-		}
-		if(i == v->queryCount - 1){
-			delete recs;
-		}
-
     }
 
-	cout << conflict;
-
-	return conflict;
+    return conflict;
 }
 #endif
-//=======================================================================
-char* checkColumn(ColumnPtr c, DArray<JournalRecord*> * records)
-{
-	char *bitset;
 
-	bool result;
-    unsigned size = records->size();
-
-	// DArray<bool>* bitset = new DArray<bool>(size);
-	bitset = (char*)malloc(size/8 + 1);
-
-	for (unsigned i = 0; i < size/8 + 1; i++)
-		bitset[i] = 0;
-
-	uint64_t tuple_value, query_value;
-    for(unsigned i = 0; i < size; i++)
-    {
-        tuple_value = records->get(i)->getValue(c->column);
-        query_value = c->value;
-        switch (c->op)
-        {
-            case Equal:     result=(tuple_value == query_value); break;
-            case NotEqual: 	result=(tuple_value != query_value); break;
-            case Less: 		result=(tuple_value < query_value); break;
-            case LessOrEqual: result=(tuple_value <= query_value); break;
-            case Greater: 	result=(tuple_value > query_value); break;
-            case GreaterOrEqual: result=(tuple_value >= query_value); break;
-            default: result = false ; break;
-        }
-		if (result == true)
-			setBitsetValue(i, bitset);
-    }
-	// printBitset(*bitset);
-	// cout << endl;
-    return bitset;
-}
 //=======================================================================
 void quickSort(QueryPtr* A, int p,int q)
 {
@@ -649,7 +539,7 @@ int main(int argc, char **argv) {
 		switch (head.type) {
 			case MessageHead::Done:
 
-                //processDestroySchema();
+                // processDestroySchema();
 
                 globalend = std::chrono::high_resolution_clock::now();
                 globaldiff = globalend - globalstart;
