@@ -37,8 +37,6 @@ protected:
 	bool popKey(BucketVal* bucket, std::string key);
 
 public:
-	// DEBUG
-    unsigned inserts;
 
 	Val_HashTable();
 
@@ -47,6 +45,7 @@ public:
 	unsigned getsize();
 
 	//int hashFunction(const std::string& key);
+
     void insert(std::string key, unsigned range);
 
 	int deleteKey(std::string key);

@@ -12,11 +12,6 @@ Gen_HashTable::Gen_HashTable()
     size = HASHTABLE_SIZE;
     maxLocalCounter.push_back(HASHTABLE_SIZE);
 
-    // DEBUG
-    inserts = 0;
-
-	// cout << "Hash Table created!" << endl;
-
     for(unsigned i = 0; i < HASHTABLE_SIZE; i++)
         bucketArray.push_back(new Bucket());
 }
@@ -47,20 +42,6 @@ uint32_t Gen_HashTable::getBucketIndex(uint64_t hash, int depth)
 	return hash & ( (1 << depth) - 1);
 }
 //=======================================================================================================
-// void Gen_HashTable::doubleTableSize()
-// {
-//     globalDepth++;
-//     //unsigned new_size = size*2;
-//     bucketArray.specialDouble();
-//     // for(unsigned i = size; i < new_size; i++)
-//     // {
-//     //     bucketArray.push_back(bucketArray.get(i-size));
-//     // }
-//     size *= 2;
-//     maxLocalCounter.push_back(0);        // Otan diplasiazetai o index sigoura de tha yparxei kanena bucket me localDepth = globalDepth
-//
-// }
-//=======================================================================================================
 void Gen_HashTable::halveTableSize()
 {
     globalDepth--;
@@ -80,7 +61,6 @@ int Gen_HashTable::deleteKey(unsigned key)
     unsigned idx = getBucketIndex(hashed_key, globalDepth);
     Bucket* tempBucket = bucketArray.get(idx);
 
-    // TESTING IF
     if((tempBucket->empty == false) && (tempBucket->key == key))
     {
         if(tempBucket->localDepth < globalDepth)            // An einai local < global tote kane empty to bucket
@@ -112,7 +92,5 @@ int Gen_HashTable::deleteKey(unsigned key)
         }
         return 1;
     }
-    else
-        // cout << "Delete: Key " << key << " not found" << endl;
     return 0;
 }

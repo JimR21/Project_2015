@@ -29,25 +29,9 @@ protected:
 
 public:
 
-    // DEBUG
-    unsigned inserts;
-
     Gen_HashTable();
 
     ~Gen_HashTable();
-
-    // void insert(unsigned key, unsigned int tid, unsigned int offset);
-    //
-	// DArray<uint64_t>* getHashRecord(unsigned key, uint64_t start_tid, uint64_t end_tid);
-    //
-	// DArray<uint64_t>* getHashRecords(unsigned key);
-    //
-	// bool existCheck(unsigned key,uint64_t, uint64_t);
-    //
-    // // Mask
-    //
-    // // Returns offset for Journal
-	// int getLastJournalInsert(unsigned key);
 
     unsigned getsize();
 

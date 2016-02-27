@@ -65,7 +65,6 @@ void BucketVal::addBucketData(string key, unsigned range)
 
 void BucketVal::addBucketData(Val_bdata* valdata)
 {
-	//valdata->next = NULL;
 	if(first == NULL)
 	{
 		first = valdata;

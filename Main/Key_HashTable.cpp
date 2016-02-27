@@ -16,9 +16,6 @@ void Key_HashTable::insert(unsigned int key, unsigned tid, unsigned offset)
     if(tempBucket->empty == true)
     {
         tempBucket->insert(key, tid, offset);
-
-        // DEBUG
-		inserts++;
     }
     else
     {
@@ -83,8 +80,6 @@ void Key_HashTable::insert(unsigned int key, unsigned tid, unsigned offset)
                     maxLocalCounter.set(maxLocalCounter.size()-1, maxLocalCounter.get(maxLocalCounter.size()-1)+2);
             }
         }
-        // DEBUG
-		inserts++;
     }
 }
 //=======================================================================================================
@@ -119,8 +114,6 @@ DArray<unsigned>* Key_HashTable::getHashRecords(unsigned &key, uint64_t &start_t
         }
         return array;
 	}
-	else
-        // cout << "getHashRecord: Key not found" << endl;
     if(array->size() == 0)
     {
         delete array;
@@ -154,8 +147,6 @@ DArray<unsigned>* Key_HashTable::getHashRecords(unsigned &key)
         }
         return array;
 	}
-    else
-        // cout << "getHashRecords: Key not found" << endl;
     if(array->size() == 0)
     {
         delete array;
@@ -189,14 +180,12 @@ int Key_HashTable::getLastJournalInsert(const uint64_t &key)  // NEW
     unsigned idx = getBucketIndex(hashed_key, globalDepth);
     Bucket* tempBucket = bucketArray.get(idx);
 
-    //  TESTING IF
     if((tempBucket->empty == false) && (tempBucket->key == key))
     {
         BucketData* bdata = tempBucket->last;
         return bdata->getOffsetLast();
     }
-    else
-        // cout << "Key not found" << endl;
+    
     return -1;
 }
 //=======================================================================================================

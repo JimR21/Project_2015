@@ -11,9 +11,6 @@ Val_HashTable::Val_HashTable()
     size = HASHTABLE_SIZE;
     maxLocalCounter.push_back(HASHTABLE_SIZE);
 
-    // DEBUG
-    inserts = 0;
-
 	// Constructor gia to val hash me ta new buckets
 	for(unsigned i = 0; i < HASHTABLE_SIZE; i++)
         Buckets.push_back(new BucketVal());
@@ -31,17 +28,6 @@ Val_HashTable::~Val_HashTable()
         {
 			bucket = Buckets.get(i);
             unsigned p = pow(2, bucket->localDepth);
-			// if(bucket->empty == false)
-			// {
-			// 	data = bucket->first;
-			// 	nextdata = NULL;
-			// 	for(int j = 0; j < bucket->counter; j++)
-			// 	{
-			// 		nextdata = data->next;
-			// 		delete data;
-			// 		data = nextdata;
-			// 	}
-			// }
             delete bucket;
             for(unsigned j = i; j < size; j+=p)
                 Buckets.set(j, NULL);
@@ -142,30 +128,17 @@ void Val_HashTable::split(uint32_t index, uint32_t depth, BucketVal* newbucket, 
 	oldbucket->localDepth++;
 
 	Buckets.set(index, newbucket);
-
-	if(oldbucket->first == NULL && oldbucket->counter == 1)
-	{
-		cout << "Wrong" << endl;
-	}
 }
 
 void Val_HashTable::insert(std::string key, unsigned range)
 {
-	// cout << "Array size: "<< size << endl;
 	uint64_t hashed_key;
 	hashed_key = hashFunction(key);
 	uint32_t index = getBucketIndex(hashed_key, globalDepth); // koitaw ta globalDepth deksia bits gia na dw se poio index tha paw
     BucketVal* tempBucket = Buckets.get(index);
 
-	//cout <<"String: " << key << " | HKey: " << hashed_key << " | Index: " << index << endl;
-
 	if(tempBucket->empty == true)
-    {
         tempBucket->insert(key,range);
-
-		// DEBUG
-		inserts++;
-    }
 	else
 	{
 		Val_bdata* tempData = tempBucket->keySearch(key);
@@ -233,12 +206,8 @@ void Val_HashTable::insert(std::string key, unsigned range)
 	                if(local == globalDepth)   // An to local iso me global tote ta 2 bucket exoun localDepth = globalDepth kai to maxLocalCounter auksanetai kata 2
 	                    maxLocalCounter.set(maxLocalCounter.size()-1, maxLocalCounter.get(maxLocalCounter.size()-1)+2);
 	            }
-
-				// DEBUG
-				inserts++;
 			}
 		}
-		// cout << "VGIKA INSERT" << endl;
 	}
 }
 
@@ -266,7 +235,6 @@ Bitset* Val_HashTable::getbdata(std::string key, int *counter)
 			tempdata = tempdata->next;
 		} while(tempdata != NULL);
 	}
-    //cout << "getbdata: Key not found" << endl;
 	*counter = -1;
     return NULL;
 }
@@ -278,7 +246,6 @@ int Val_HashTable::deleteKey(string key)
     unsigned idx = getBucketIndex(hashed_key, globalDepth);
     BucketVal* bucket = Buckets.get(idx);
 
-    // TESTING IF
     if((bucket->empty == false) && (popKey(bucket, key)))
     {
 		if(bucket->counter == 0)

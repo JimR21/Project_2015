@@ -105,7 +105,7 @@ bool ValClass::valHashOptimize()
         if (q->columnCount == 0)    // an einai keno kai mesa sta oria tote conflict
             continue;
 
-        conflict = q->hashValidate(Journals[q->relationId], from, to);
+        conflict = q->hashValidate(from, to);
 
 		if(conflict == true)
 			break;

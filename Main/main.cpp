@@ -274,7 +274,7 @@ bool printValidationsUntilFlush(DArray<bool>* resultValidationList,uint64_t vali
 		if(validationId - lastValId < i)	// an vrika valID > tou flush val ID vges
 		   return true;
 
-		// cout << "Validation " << lastValId + i << " : " << resultValidationList->getLast() << endl;	// alliws tupwse to apotelesma
+		cout << "Validation " << lastValId + i << " : " << resultValidationList->getLast() << endl;	// alliws tupwse to apotelesma
 		resultValidationList->popLast();
 		i++;
 	}
