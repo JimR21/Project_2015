@@ -12,8 +12,6 @@
 #include "valClass.hpp"
 #include "Threads/Thread.hpp"
 
-#define ROUNDS 1		// Default = 1
-
 unsigned flush_counter = 0;
 
 using namespace std;
@@ -66,6 +64,7 @@ int relationCount = 0;
 int val_offset = 0;
 uint32_t maxColumnCounts = 0;
 
+unsigned lastValId = 0;
 unsigned lastFlushId = 0;
 
 //=====================================================
@@ -273,14 +272,14 @@ bool printValidationsUntilFlush(DArray<bool>* resultValidationList,uint64_t vali
 	// oso exw pragmata sto resultValidationList mou
 	while (resultValidationList->size() != 0){
 
-		if(validationId - lastFlushId < i)	// an vrika valID > tou flush val ID vges
+		if(validationId - lastValId < i)	// an vrika valID > tou flush val ID vges
 		   return true;
 
-		// cout << "Validation " << lastFlushId + i << " : " << resultValidationList->getLast() << endl;	// alliws tupwse to apotelesma
+		// cout << "Validation " << lastValId + i << " : " << resultValidationList->getLast() << endl;	// alliws tupwse to apotelesma
 		resultValidationList->popLast();
 		i++;
 	}
-	lastFlushId += i;
+	lastValId += i;
 	return false;
 }
 //================================================================================================
@@ -318,6 +317,8 @@ void validateAndMove(DArray<ValidationNode*>* validationList,DArray<bool>* resul
 //================================================================================================
 static void processFlush(Flush *fl){
 
+	lastFlushId = fl->validationId;
+
 #if ROUNDS > 1
 	if(flush_counter < ROUNDS)
 	{
@@ -349,7 +350,6 @@ static void processFlush(Flush *fl){
 				pthread_cond_wait(&counter_cv, &counter_mutex);	// release mutex & wait till the condition is signaled
 			}
 			validationList.mainFlag = false;
-			// cout << "Workers are done" << endl;
 	    pthread_mutex_unlock(&counter_mutex);	// unlock counter
 	#endif
 
@@ -407,7 +407,7 @@ bool valOptimize(ValClass *v)
         // check an einai entos range
         uint64_t max_tid = Journals[q->relationId]->getLastTID();
 
-        if (v->from > max_tid )	// mou dwse tid start pou einai megalutero tou max || keno query
+        if (v->from > max_tid )	// mou dwse tid start pou einai megalutero tou max
         {
             // Go to the next query
             conflict = false;  	 	// Se periptwsh poy den uparxei allo query
@@ -505,6 +505,16 @@ int main(int argc, char **argv) {
 		// And interpret it
 		switch (head.type) {
 			case MessageHead::Done:
+
+				#if ROUNDS > 1
+					if (flush_counter > 1)
+					{
+						flush_counter = ROUNDS;
+						struct Flush* fl = new struct Flush;
+						fl->validationId = lastFlushId;
+						processFlush(fl);
+					}
+				#endif
 
                 // processDestroySchema();
 
