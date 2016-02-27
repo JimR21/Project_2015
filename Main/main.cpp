@@ -219,6 +219,8 @@ static void processTransaction(Transaction *t){
 //================================================================================================
 static void processValidationQueries(ValidationQueries *v){
 
+	bool flag = false;
+
 	// cout << "Val Id " << v->validationId << endl;
     const char* reader = v->queries;
 	int size = sizeof(ValidationQueries) * v->queryCount ;
@@ -232,8 +234,19 @@ static void processValidationQueries(ValidationQueries *v){
 
         ColumnPtr * columns = new ColumnPtr[q->columnCount];
 
-		// calculate total records in range for the bitset allocation
-		// int records_in_range = Journals[q->relationId]->countRecordsInRange(v->from, v->to);
+		//=============================================================
+		//=============================================================
+		//=============================================================
+
+        // check an einai entos range
+        uint64_t max_tid = Journals[q->relationId]->getLastTID();
+
+		if ((v->from < max_tid) && q->columnCount == 0){	// an keno query kai entos range
+            flag = true; // vrika keno kai entos
+        }
+		//=============================================================
+		//=============================================================
+		//=============================================================
 
         // iterate over subqueries of this query
 		for (unsigned w = 0; w < q->columnCount; w++)
@@ -259,8 +272,17 @@ static void processValidationQueries(ValidationQueries *v){
 
     ValClass* val = new ValClass(v->validationId, v->from, v->to, v->queryCount, queries);
 
+	//=============================================================
+	//=============================================================
+	ValidationNode *validation = new ValidationNode(val);
+
+	if (flag)	// vrika true query
+		validation->setResult(flag);	// kanw olo to val true
+	//=============================================================
+	//=============================================================
+
 	// Add validation
-  	validationList.push_back(new ValidationNode(val));
+  	validationList.push_back(validation);
 
 
     val_end = std::chrono::high_resolution_clock::now();
@@ -279,7 +301,7 @@ bool printValidationsUntilFlush(DArray<bool>* resultValidationList,uint64_t vali
 		if(validationId - lastFlushId < i)	// an vrika valID > tou flush val ID vges
 		   return true;
 
-		// cout << "Validation " << lastFlushId + i << " : " << resultValidationList->getLast() << endl;	// alliws tupwse to apotelesma
+		cout << "Validation " << lastFlushId + i << " : " << resultValidationList->getLast() << endl;	// alliws tupwse to apotelesma
 		resultValidationList->popLast();
 		i++;
 	}
@@ -295,15 +317,18 @@ void validateAndMove(DArray<ValidationNode*>* validationList,DArray<bool>* resul
 		ValClass* val = validationNode->getValidation();
 		bool conflict = false;
 
-		#if VAL_THREADS == 1	// sto thread case apla tha kaneis tin metafora apo val se res
-								// ta vals einai idi ipologismena apo ta threads
-		#elif VAL_HASHTABLE == 1
-			conflict = valHashOptimize(val);
-			validationNode->setResult(conflict);
-		#else
-			conflict = valOptimize(val);
-			validationNode->setResult(conflict);
-		#endif
+		if (validationNode->getResult() == false) {	// an den exei vrethei true apo panw
+
+			#if VAL_THREADS == 1	// sto thread case apla tha kaneis tin metafora apo val se res
+									// ta vals einai idi ipologismena apo ta threads
+			#elif VAL_HASHTABLE == 1
+				conflict = valHashOptimize(val);
+				validationNode->setResult(conflict);
+			#else
+				conflict = valOptimize(val);
+				validationNode->setResult(conflict);
+			#endif
+		}
 
 		resultValidationList->push_back(validationNode->getResult());
 
@@ -409,18 +434,16 @@ bool valOptimize(ValClass *v)
 
         // check an einai entos range
         uint64_t max_tid = Journals[q->relationId]->getLastTID();
+
         if (v->from > max_tid )	// mou dwse tid start pou einai megalutero tou max || keno query
         {
             // Go to the next query
-            conflict = false;   // Se periptwsh poy den uparxei allo query
+            conflict = false;  	 	// Se periptwsh poy den uparxei allo query
             continue;				// no need to check the next queries for this validation
         }
 
-        if (q->columnCount == 0)    // an einai keno kai mesa sta oria tote conflict
-        {
-            conflict = true;
-            break;
-        }
+        if (q->columnCount == 0)    // an einai keno το skiparw
+            continue;
 
         conflict = q->validate(*Journals[q->relationId], v->from, v->to);
 
@@ -455,10 +478,7 @@ bool valHashOptimize(ValClass * v)
         }
 
         if (q->columnCount == 0)    // an einai keno kai mesa sta oria tote conflict
-        {
-            conflict = true;
-            break;
-        }
+            continue;
 
         conflict = q->hashValidate(Journals[q->relationId], v->from, v->to);
 
@@ -471,32 +491,7 @@ bool valHashOptimize(ValClass * v)
 #endif
 
 //=======================================================================
-void quickSort(QueryPtr* A, int p,int q)
-{
-    int r;
-    if(p < q)
-    {
-        r = partition(A, p,q);
-        quickSort(A,p,r);
-        quickSort(A,r+1,q);
-    }
-}
 
-
-int partition(QueryPtr* A, int p,int q)
-{
-    unsigned x = A[p]->columnCount;
-    int i = p;
-
-    for(int j = p + 1; j < q; j++)
-        if(A[j]->columnCount <= x){
-            i = i + 1;
-            swap(A[i], A[j]);
-        }
-
-    swap(A[i],A[p]);
-    return i;
-}
 //=====================================================
 //================== MAIN PROGRAM =====================
 //=====================================================

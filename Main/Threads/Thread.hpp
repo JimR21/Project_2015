@@ -33,9 +33,10 @@ public:
 
 			ValidationNode* valNode = (ValidationNode*)validationList.safe_fake_popGetLast();
 			ValClass* val = valNode->getValidation();
-			conflict = valOptimize(val);	// calculate validation
-			valNode->setResult(conflict);	// set the result in the validation
-
+			if (valNode->getResult() == false){
+				conflict = valOptimize(val);	// calculate validation
+				valNode->setResult(conflict);	// set the result in the validation
+			}
 			pthread_mutex_lock(&counter_mutex);	// lock counter
 				jobs--;
 				if (jobs == 0){
@@ -71,8 +72,9 @@ public:
 
 	        if (q->columnCount == 0)    // an einai keno kai mesa sta oria tote conflict
 	        {
-	            conflict = true;
-	            break;
+				continue;
+	            // conflict = true;
+	            // break;
 	        }
 
 	        conflict = q->validate(*Journals[q->relationId], v->from, v->to);

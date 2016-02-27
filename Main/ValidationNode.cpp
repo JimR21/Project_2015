@@ -1,7 +1,8 @@
 #include "ValidationNode.hpp"
 
 ValidationNode::ValidationNode(ValClass* validation){
-  val=validation;
+  val = validation;
+  result = 0;
 
 }
 
