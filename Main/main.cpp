@@ -73,7 +73,7 @@ unsigned lastFlushId = 0;
 //==============================================================================================
 static void processDefineSchema(DefineSchema *s){
 
-    def_start = std::chrono::high_resolution_clock::now();
+    // def_start = std::chrono::high_resolution_clock::now();
 
 	unsigned int i;
 
@@ -94,14 +94,14 @@ static void processDefineSchema(DefineSchema *s){
     for(i = 0; i < s->relationCount; i++)    			// For every relation
   		Journals[i] = new Journal(s->columnCounts[i]);  // Create empty Journal
 
-    def_end = std::chrono::high_resolution_clock::now();
-    def_diff = def_end - def_start;
+    // def_end = std::chrono::high_resolution_clock::now();
+    // def_diff = def_end - def_start;
 
 }
 //================================================================================================
 static void processTransaction(Transaction *t){
 
-    tran_start = std::chrono::high_resolution_clock::now();
+    // tran_start = std::chrono::high_resolution_clock::now();
 
     unsigned i;
 	int index;
@@ -183,12 +183,12 @@ static void processTransaction(Transaction *t){
 		reader+=sizeof(TransactionOperationInsert)+(sizeof(uint64_t)*o->rowCount*schema[o->relationId]);
     }
 
-    tran_end = std::chrono::high_resolution_clock::now();
+    // tran_end = std::chrono::high_resolution_clock::now();
 
-    if(tran_diff != default_diff)
-        tran_diff = tran_diff + tran_end - tran_start;
-    else
-        tran_diff = tran_end - tran_start;
+    // if(tran_diff != default_diff)
+    //     tran_diff = tran_diff + tran_end - tran_start;
+    // else
+    //     tran_diff = tran_end - tran_start;
 }
 //================================================================================================
 static void processValidationQueries(ValidationQueries *v){
@@ -258,11 +258,11 @@ static void processValidationQueries(ValidationQueries *v){
   	validationList.push_back(validation);
 
 
-    val_end = std::chrono::high_resolution_clock::now();
-    if(val_diff != default_diff)
-        val_diff = val_diff + val_end - val_start;
-    else
-        val_diff = val_end - val_start;
+    // val_end = std::chrono::high_resolution_clock::now();
+    // if(val_diff != default_diff)
+    //     val_diff = val_diff + val_end - val_start;
+    // else
+    //     val_diff = val_end - val_start;
 }
 //================================================================================================
 bool printValidationsUntilFlush(DArray<bool>* resultValidationList,uint64_t validationId){
@@ -274,7 +274,7 @@ bool printValidationsUntilFlush(DArray<bool>* resultValidationList,uint64_t vali
 		if(validationId - lastValId < i)	// an vrika valID > tou flush val ID vges
 		   return true;
 
-		cout << "Validation " << lastValId + i << " : " << resultValidationList->getLast() << endl;	// alliws tupwse to apotelesma
+		// cout << "Validation " << lastValId + i << " : " << resultValidationList->getLast() << endl;	// alliws tupwse to apotelesma
 		resultValidationList->popLast();
 		i++;
 	}
@@ -328,7 +328,7 @@ static void processFlush(Flush *fl){
 		flush_counter = 1;
 #endif
 
-	flush_start = std::chrono::high_resolution_clock::now();
+	// flush_start = std::chrono::high_resolution_clock::now();
 
 	#if VAL_THREADS == 1
 
@@ -362,11 +362,11 @@ static void processFlush(Flush *fl){
 	}
 
 
-    flush_end = std::chrono::high_resolution_clock::now();
-    if(flush_diff != default_diff)
-        flush_diff = flush_diff + flush_end - flush_start;
-    else
-        flush_diff = flush_end - flush_start;
+    // flush_end = std::chrono::high_resolution_clock::now();
+    // if(flush_diff != default_diff)
+    //     flush_diff = flush_diff + flush_end - flush_start;
+    // else
+    //     flush_diff = flush_end - flush_start;
 }
 //================================================================================================
 static void processForget(Forget *fo)
@@ -376,7 +376,7 @@ static void processForget(Forget *fo)
 //================================================================================================
 static void processDestroySchema()
 {
-    destroy_start = std::chrono::high_resolution_clock::now();
+    // destroy_start = std::chrono::high_resolution_clock::now();
 
     for(int i = 0; i < relationCount; i++) // For every relation
 		delete Journals[i];
@@ -386,8 +386,8 @@ static void processDestroySchema()
 	for(int i = 0; i < validationList.size(); i++)
 		delete validationList.get(i);
 
-    destroy_end = std::chrono::high_resolution_clock::now();
-    destroy_diff = destroy_end - destroy_start;
+    // destroy_end = std::chrono::high_resolution_clock::now();
+    // destroy_diff = destroy_end - destroy_start;
 }
 //================================================================================================
 
@@ -448,11 +448,11 @@ int main(int argc, char **argv) {
                 globalend = std::chrono::high_resolution_clock::now();
                 globaldiff = globalend - globalstart;
 
-              cout << "Define schema elapsed time is :  " << def_diff.count() << " s " << endl;
-              cout << "Transactions elapsed time is :  " << tran_diff.count() << " s " << endl;
-              cout << "Validations elapsed time is :  " << val_diff.count() << " s " << endl;
-              cout << "Flush elapsed time is :  " << flush_diff.count() << " s " << endl;
-              cout << "Destroy elapsed time is :  " << destroy_diff.count() << " s " << endl;
+            //   cout << "Define schema elapsed time is :  " << def_diff.count() << " s " << endl;
+            //   cout << "Transactions elapsed time is :  " << tran_diff.count() << " s " << endl;
+            //   cout << "Validations elapsed time is :  " << val_diff.count() << " s " << endl;
+            //   cout << "Flush elapsed time is :  " << flush_diff.count() << " s " << endl;
+            //   cout << "Destroy elapsed time is :  " << destroy_diff.count() << " s " << endl;
               cout << "Overal elapsed time is :  " << globaldiff.count() << " s " << endl;
 
 			  	#if VAL_THREADS == 1

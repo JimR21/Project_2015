@@ -35,10 +35,18 @@ Val_HashTable::~Val_HashTable()
     }
 }
 
-// int Val_HashTable::hashFunction(const string& key)
-// {
-//
-// }
+unsigned int Val_HashTable::BKDRHash(const std::string& str)
+{
+   unsigned int seed = 131; // 31 131 1313 13131 131313 etc..
+   unsigned int hash = 0;
+
+   for(std::size_t i = 0; i < str.length(); i++)
+   {
+      hash = (hash * seed) + str[i];
+   }
+
+   return hash;
+}
 
 uint32_t Val_HashTable::getBucketIndex(uint64_t hash, int depth)
 {
@@ -63,7 +71,7 @@ bool Val_HashTable::splitcheck(uint32_t index, uint32_t depth)
 	uint32_t bindex;
 	do
 	{
-		bhashed_key = hashFunction(tempdata->key);
+		bhashed_key = BKDRHash(tempdata->key);
 		bindex = getBucketIndex(bhashed_key, depth);
 		if(bindex != index)
 		{
@@ -84,7 +92,7 @@ void Val_HashTable::split(uint32_t index, uint32_t depth, BucketVal* newbucket, 
 
 	do
 	{	// gia BUCKET_OVERFLOW epanalipseis
-		bhashed_key = hashFunction(tempdata->key);
+		bhashed_key = BKDRHash(tempdata->key);
 		bindex = getBucketIndex(bhashed_key, depth);
 		if(bindex == index)
 		{
@@ -133,7 +141,7 @@ void Val_HashTable::split(uint32_t index, uint32_t depth, BucketVal* newbucket, 
 void Val_HashTable::insert(std::string key, unsigned range)
 {
 	uint64_t hashed_key;
-	hashed_key = hashFunction(key);
+	hashed_key = BKDRHash(key);
 	uint32_t index = getBucketIndex(hashed_key, globalDepth); // koitaw ta globalDepth deksia bits gia na dw se poio index tha paw
     BucketVal* tempBucket = Buckets.get(index);
 
@@ -214,7 +222,7 @@ void Val_HashTable::insert(std::string key, unsigned range)
 Bitset* Val_HashTable::getbdata(std::string key, int *counter)
 {
 	unsigned hashed_key;
-    hashed_key = hashFunction(key);
+    hashed_key = BKDRHash(key);
 	int index = getBucketIndex(hashed_key, globalDepth); // koitaw ta globaldepth deksia bits gia na dw se poio index tha paw
     BucketVal* bucket = Buckets.get(index);
 	Val_bdata* tempdata = bucket->first;
@@ -242,7 +250,7 @@ Bitset* Val_HashTable::getbdata(std::string key, int *counter)
 int Val_HashTable::deleteKey(string key)
 {
 	unsigned hashed_key;
-    hashed_key = hashFunction(key);
+    hashed_key = BKDRHash(key);
     unsigned idx = getBucketIndex(hashed_key, globalDepth);
     BucketVal* bucket = Buckets.get(idx);
 
@@ -335,7 +343,7 @@ unsigned Val_HashTable::getsize()
 
 void Val_HashTable::UpdateValData(std::string key, Bitset* bit){
 	unsigned hashed_key;
-    hashed_key = hashFunction(key);
+    hashed_key = BKDRHash(key);
 	int index = getBucketIndex(hashed_key, globalDepth); // koitaw ta globaldepth deksia bits gia na dw se poio index tha paw
 
 	BucketVal* bucket = Buckets.get(index);

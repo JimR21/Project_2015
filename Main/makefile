@@ -20,4 +20,4 @@ clean:
 	$(RM) Threads/*.gch
 
 stats:
-	g++  -std=c++0x statsmain.cpp Journal.cpp JournalRecord.cpp Gen_HashTable.cpp Key_HashTable.cpp Tid_HashTable.cpp Bucket.cpp BucketData.cpp ValidationNode.cpp -pthread -o statsmain.out
+	g++ -g -w -std=c++0x statsmain.cpp Journal.cpp JournalRecord.cpp Gen_HashTable.cpp Key_HashTable.cpp Val_HashTable.cpp Tid_HashTable.cpp Bucket.cpp BucketData.cpp BucketVal.cpp Val_bdata.cpp valClass.cpp queryClass.cpp columnClass.cpp bitset.cpp Val_listbucket.cpp ValidationNode.cpp Threads/ThreadInterface.cpp -pthread -o statsmain.out

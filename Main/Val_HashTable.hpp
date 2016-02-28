@@ -44,7 +44,7 @@ public:
 
 	unsigned getsize();
 
-	//int hashFunction(const std::string& key);
+	unsigned int BKDRHash(const std::string& str);
 
     void insert(std::string key, unsigned range);
 
