@@ -8,6 +8,7 @@
 #include <string>
 #include <fstream>
 #include <iostream>
+#include "Journal.hpp"
 
 using namespace std;
 
@@ -379,6 +380,8 @@ ValStats vs;
 FlStats fls;
 ForStats frs;
 SpecialStats specs;
+
+Journal** Journals;
 
 
 static uint32_t* schema = NULL;
